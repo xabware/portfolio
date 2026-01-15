@@ -1,0 +1,9 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+python-dotenv==1.0.1
+openai==1.56.0
+langchain==0.3.13
+langchain-openai==0.2.14
+chromadb==0.5.23
+pydantic==2.10.5
+httpx==0.28.1

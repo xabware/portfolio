@@ -1,0 +1,70 @@
+.experience-section {
+  margin: 1.5rem 0;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border-color);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -2.5rem;
+  top: 0.5rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  border: 3px solid var(--card-bg);
+  box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.timeline-content h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.timeline-company {
+  color: var(--primary-color);
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+}
+
+.timeline-content p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.education-item h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.education-institution {
+  color: var(--primary-color);
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+}
