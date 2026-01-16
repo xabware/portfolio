@@ -11,7 +11,7 @@ interface CardProps {
 const Card = memo(({ title, children, className = '' }: CardProps) => {
   return (
     <div className={`card ${className}`}>
-      {title && <h3 className="card-title">{title}</h3>}
+      {title && <h2 className="card-title">{title}</h2>}
       <div className="card-content">{children}</div>
     </div>
   );

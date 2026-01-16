@@ -63,8 +63,7 @@ const Skills = memo(() => {
   return (
     <div className="section-content">
       <div className="skills-header">
-        <h2>{t.technicalSkills}</h2>
-        <p>{t.skillsSubtitle}</p>
+        <p className="section-subtitle">{t.skillsSubtitle}</p>
       </div>
 
       <div className="skills-grid">

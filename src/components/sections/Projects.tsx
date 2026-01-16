@@ -47,14 +47,13 @@ const Projects = memo(() => {
   return (
     <div className="section-content">
       <div className="projects-header">
-        <h2>{t.myProjects}</h2>
-        <p>{t.projectsSubtitle}</p>
+        <p className="section-subtitle">{t.projectsSubtitle}</p>
       </div>
 
       <div className="projects-grid">
         {projects.map((project) => (
           <Card key={project.id} className="project-card">
-            <h3 className="project-title">{project.title}</h3>
+            <h2 className="project-title">{project.title}</h2>
             <p className="project-description">{project.description}</p>
             <div className="project-tech">
               {project.tech.map((tech, index) => (

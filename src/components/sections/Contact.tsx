@@ -82,8 +82,7 @@ const Contact = memo(() => {
   return (
     <div className="section-content">
       <div className="contact-header">
-        <h2>{t.contactTitle}</h2>
-        <p>{t.contactSubtitle}</p>
+        <p className="section-subtitle">{t.contactSubtitle}</p>
       </div>
 
       <div className="contact-grid">
@@ -103,7 +102,7 @@ const Contact = memo(() => {
                     <Icon size={24} />
                   </div>
                   <div className="contact-details">
-                    <h4>{method.title}</h4>
+                    <h3>{method.title}</h3>
                     <p>{method.value}</p>
                   </div>
                 </a>

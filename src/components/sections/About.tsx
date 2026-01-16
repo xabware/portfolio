@@ -25,7 +25,7 @@ const About = memo(() => {
             <div className="timeline-item">
               <div className="timeline-dot"></div>
               <div className="timeline-content">
-                <h4>{t.seniorFullStack}</h4>
+                <h3>{t.seniorFullStack}</h3>
                 <p className="timeline-company">{t.techCompany}</p>
                 <p>
                   {t.seniorDescription}
@@ -35,7 +35,7 @@ const About = memo(() => {
             <div className="timeline-item">
               <div className="timeline-dot"></div>
               <div className="timeline-content">
-                <h4>{t.fullStackDeveloper}</h4>
+                <h3>{t.fullStackDeveloper}</h3>
                 <p className="timeline-company">{t.startupTech}</p>
                 <p>
                   {t.fullStackDescription}
@@ -45,7 +45,7 @@ const About = memo(() => {
             <div className="timeline-item">
               <div className="timeline-dot"></div>
               <div className="timeline-content">
-                <h4>{t.juniorDeveloper}</h4>
+                <h3>{t.juniorDeveloper}</h3>
                 <p className="timeline-company">{t.softwareAgency}</p>
                 <p>
                   {t.juniorDescription}
@@ -58,7 +58,7 @@ const About = memo(() => {
 
       <Card title={t.education}>
         <div className="education-item">
-          <h4>{t.degree}</h4>
+          <h3>{t.degree}</h3>
           <p className="education-institution">{t.university}</p>
           <p>{t.degreeDescription}</p>
         </div>
