@@ -13,10 +13,15 @@ const Contact = lazy(() => import('./components/sections/Contact'));
 
 function App() {
   const [activeSection, setActiveSection] = useState('home');
+  const [chatMounted, setChatMounted] = useState(false);
 
   const handleSectionChange = useCallback((section: string) => {
     setActiveSection(section);
-  }, []);
+    // Montar el chat la primera vez que se accede
+    if (section === 'chat' && !chatMounted) {
+      setChatMounted(true);
+    }
+  }, [chatMounted]);
 
   const renderSection = () => {
     switch (activeSection) {
@@ -28,8 +33,6 @@ function App() {
         return <Projects />;
       case 'skills':
         return <Skills />;
-      case 'chat':
-        return <Chat />;
       case 'contact':
         return <Contact />;
       default:
@@ -42,10 +45,26 @@ function App() {
       <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
       <div className="main-content">
         <Header onNavigate={handleSectionChange} />
-        <main className="content-area">
-          <Suspense fallback={<div className="loading">Cargando...</div>}>
-            {renderSection()}
-          </Suspense>
+        <main className={`content-area ${activeSection === 'chat' ? 'chat-active' : ''}`}>
+          {activeSection !== 'chat' && (
+            <Suspense fallback={<div className="loading">Cargando...</div>}>
+              {renderSection()}
+            </Suspense>
+          )}
+          {/* Chat permanece montado pero oculto para mantener la conversación */}
+          {chatMounted && activeSection === 'chat' && (
+            <Suspense fallback={<div className="loading">Cargando chat...</div>}>
+              <Chat />
+            </Suspense>
+          )}
+          {/* Mantener chat en memoria pero sin renderizar cuando no está activo */}
+          {chatMounted && activeSection !== 'chat' && (
+            <div style={{ display: 'none' }}>
+              <Suspense fallback={null}>
+                <Chat />
+              </Suspense>
+            </div>
+          )}
         </main>
       </div>
     </div>
