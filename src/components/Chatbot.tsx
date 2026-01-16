@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, AlertCircle } from 'lucide-react';
+import { Send, Bot, User, AlertCircle, Sparkles } from 'lucide-react';
 import { useWebLLM } from '../hooks/useWebLLM';
 import './Chatbot.css';
 
@@ -11,11 +11,12 @@ interface Message {
 }
 
 const Chatbot = () => {
-  const { isLoading: isModelLoading, isInitialized, error: modelError, sendMessage, initProgress } = useWebLLM();
+  const { isLoading: isModelLoading, isInitialized, error: modelError, sendMessage, initProgress, initialize } = useWebLLM();
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoadingResponse, setIsLoadingResponse] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -38,6 +39,11 @@ const Chatbot = () => {
       setMessages([welcomeMessage]);
     }
   }, [isInitialized, messages.length]);
+
+  const handleStartChat = async () => {
+    setHasStarted(true);
+    await initialize();
+  };
 
   const handleSend = async () => {
     if (!inputValue.trim() || isLoadingResponse || !isInitialized) return;
@@ -83,6 +89,31 @@ const Chatbot = () => {
       handleSend();
     }
   };
+
+  // Mostrar botón inicial si aún no se ha iniciado
+  if (!hasStarted) {
+    return (
+      <div className="chatbot-container">
+        <div className="chatbot-welcome">
+          <div className="welcome-icon">
+            <Bot size={48} />
+          </div>
+          <h3>Asistente Virtual con IA</h3>
+          <p className="welcome-description">
+            Chat con IA ejecutándose localmente en tu navegador.
+            Privado y seguro.
+          </p>
+          <button className="start-chat-button" onClick={handleStartChat}>
+            <Sparkles size={18} />
+            Iniciar Chatbot
+          </button>
+          <small className="welcome-note">
+            Se descargará el modelo (~300MB). Puede tardar unos minutos.
+          </small>
+        </div>
+      </div>
+    );
+  }
 
   // Mostrar estado de carga del modelo
   if (isModelLoading || !isInitialized) {

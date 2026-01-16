@@ -1,18 +1,23 @@
 import { Moon, Sun, Languages } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useTranslations } from '../translations';
+import SearchBar from './SearchBar';
 import './Header.css';
 
-const Header = () => {
+interface HeaderProps {
+  onNavigate?: (section: string) => void;
+}
+
+const Header = ({ onNavigate }: HeaderProps) => {
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
-  const t = useTranslations(language);
 
   return (
     <header className="header">
       <div className="header-content">
-        <h1>{t.dashboardPortfolio}</h1>
+        <div className="header-search">
+          <SearchBar onNavigate={onNavigate || (() => {})} />
+        </div>
         <div className="header-actions">
           <button className="language-toggle" onClick={toggleLanguage} aria-label="Toggle language">
             <Languages size={20} />

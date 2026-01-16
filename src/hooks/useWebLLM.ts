@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import * as webllm from '@mlc-ai/web-llm';
 
 export interface UseWebLLMReturn {
@@ -7,6 +7,7 @@ export interface UseWebLLMReturn {
   error: string | null;
   sendMessage: (message: string) => Promise<string>;
   initProgress: string;
+  initialize: () => Promise<void>;
 }
 
 export const useWebLLM = () => {
@@ -16,52 +17,37 @@ export const useWebLLM = () => {
   const [error, setError] = useState<string | null>(null);
   const [initProgress, setInitProgress] = useState<string>('No inicializado');
 
-  useEffect(() => {
-    let isMounted = true;
+  const initialize = useCallback(async () => {
+    if (isInitialized || isLoading) return;
 
-    const initEngine = async () => {
-      try {
-        setIsLoading(true);
-        setInitProgress('Inicializando motor de IA...');
+    try {
+      setIsLoading(true);
+      setError(null);
+      setInitProgress('Inicializando motor de IA...');
 
-        const newEngine = await webllm.CreateMLCEngine(
-          // Usar un modelo pequeño y eficiente para el navegador
-          'Phi-3.5-mini-instruct-q4f16_1-MLC',
-          {
-            initProgressCallback: (progress) => {
-              if (isMounted) {
-                setInitProgress(progress.text);
-              }
-            },
-          }
-        );
-
-        if (isMounted) {
-          setEngine(newEngine);
-          setIsInitialized(true);
-          setInitProgress('Modelo cargado y listo');
-          setError(null);
+      const newEngine = await webllm.CreateMLCEngine(
+        // Usar un modelo pequeño y eficiente para el navegador
+        'Phi-3.5-mini-instruct-q4f16_1-MLC',
+        {
+          initProgressCallback: (progress) => {
+            setInitProgress(progress.text);
+          },
         }
-      } catch (err) {
-        if (isMounted) {
-          const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
-          setError(`Error al inicializar el modelo: ${errorMessage}`);
-          setInitProgress('Error en la inicialización');
-          console.error('Error initializing WebLLM:', err);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
+      );
 
-    initEngine();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+      setEngine(newEngine);
+      setIsInitialized(true);
+      setInitProgress('Modelo cargado y listo');
+      setError(null);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      setError(`Error al inicializar el modelo: ${errorMessage}`);
+      setInitProgress('Error en la inicialización');
+      console.error('Error initializing WebLLM:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isInitialized, isLoading]);
 
   const sendMessage = useCallback(
     async (message: string): Promise<string> => {
@@ -101,5 +87,6 @@ Mantén las respuestas concisas pero informativas (máximo 3-4 oraciones).`;
     error,
     sendMessage,
     initProgress,
+    initialize,
   };
 };
