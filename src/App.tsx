@@ -24,6 +24,8 @@ function App() {
     if (section === 'chat' && !chatMounted) {
       setChatMounted(true);
     }
+    // Scroll al inicio cuando cambia de sección
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [chatMounted]);
 
   const renderSection = () => {
