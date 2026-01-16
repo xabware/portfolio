@@ -91,6 +91,18 @@ a {
 
 button {
   font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mejorar tamaño de toque en móviles */
+@media (max-width: 768px) {
+  button, a, input, textarea, select {
+    min-height: 44px;
+  }
+  
+  * {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
 }
 
 ::-webkit-scrollbar {
@@ -109,4 +121,12 @@ button {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
+}
+
+/* Scrollbar más delgado en móviles */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
 }

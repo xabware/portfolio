@@ -39,6 +39,7 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.5rem;
+  gap: 0.5rem;
 }
 
 .skill-name {
@@ -50,6 +51,7 @@
   font-size: 0.85rem;
   color: var(--text-secondary);
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .skill-bar {
@@ -91,4 +93,43 @@
   background: var(--primary-color);
   color: white;
   transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .skills-header h2 {
+    font-size: 1.75rem;
+  }
+
+  .skills-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .skill-name {
+    font-size: 0.9rem;
+  }
+
+  .skill-level {
+    font-size: 0.75rem;
+  }
+
+  .skill-tag {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .skills-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .tags-container {
+    gap: 0.5rem;
+  }
+
+  .skill-tag {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.7rem;
+  }
 }

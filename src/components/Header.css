@@ -44,6 +44,8 @@
   gap: 0.5rem;
   color: var(--text-primary);
   transition: all 0.2s ease;
+  min-width: 40px;
+  min-height: 40px;
 }
 
 .language-toggle span {
@@ -59,10 +61,40 @@
 
 @media (max-width: 768px) {
   .header {
-    left: 60px;
+    left: 0;
+    height: 60px;
+  }
+
+  .header-content {
+    padding: 0 1rem;
   }
 
   .header h1 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+  }
+
+  .header-actions {
+    gap: 0.5rem;
+  }
+
+  .theme-toggle,
+  .language-toggle {
+    padding: 0.4rem;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .language-toggle span {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header h1 {
+    font-size: 1rem;
+  }
+
+  .header-actions {
+    gap: 0.4rem;
   }
 }

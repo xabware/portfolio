@@ -12,12 +12,14 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  line-height: 1.2;
 }
 
 .hero-subtitle {
   font-size: 1.25rem;
   color: var(--text-secondary);
   margin: 0;
+  line-height: 1.5;
 }
 
 .stats-grid {
@@ -61,6 +63,11 @@
 }
 
 @media (max-width: 768px) {
+  .hero-section {
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+  }
+
   .hero-title {
     font-size: 2rem;
   }
@@ -69,7 +76,44 @@
     font-size: 1rem;
   }
 
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
   .stat-number {
     font-size: 2rem;
+  }
+
+  .stat-label {
+    font-size: 0.85rem;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 1.5rem 0;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-title {
+    font-size: 1.75rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-number {
+    font-size: 1.75rem;
   }
 }
