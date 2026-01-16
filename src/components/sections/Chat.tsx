@@ -1,8 +1,10 @@
-import Chatbot from '../Chatbot';
+import { lazy, Suspense } from 'react';
 import Card from '../Card';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
 import './Chat.css';
+
+const Chatbot = lazy(() => import('../Chatbot'));
 
 const Chat = () => {
   const { language } = useLanguage();
@@ -22,7 +24,9 @@ const Chat = () => {
       </Card>
 
       <div className="chat-section">
-        <Chatbot />
+        <Suspense fallback={<div className="loading">Cargando chat...</div>}>
+          <Chatbot />
+        </Suspense>
       </div>
     </div>
   );

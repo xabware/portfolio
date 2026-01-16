@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Home from './components/sections/Home';
-import About from './components/sections/About';
-import Projects from './components/sections/Projects';
-import Skills from './components/sections/Skills';
-import Chat from './components/sections/Chat';
-import Contact from './components/sections/Contact';
 import './App.css';
+
+// Lazy load non-critical sections
+const About = lazy(() => import('./components/sections/About'));
+const Projects = lazy(() => import('./components/sections/Projects'));
+const Skills = lazy(() => import('./components/sections/Skills'));
+const Chat = lazy(() => import('./components/sections/Chat'));
+const Contact = lazy(() => import('./components/sections/Contact'));
 
 function App() {
   const [activeSection, setActiveSection] = useState('home');
@@ -36,7 +38,11 @@ function App() {
       <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
       <div className="main-content">
         <Header />
-        <main className="content-area">{renderSection()}</main>
+        <main className="content-area">
+          <Suspense fallback={<div className="loading">Cargando...</div>}>
+            {renderSection()}
+          </Suspense>
+        </main>
       </div>
     </div>
   );
