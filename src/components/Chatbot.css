@@ -207,12 +207,11 @@
 
 .chatbot-input input:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .chatbot-input input::placeholder {
-  color: var(--text-secondary);
-  opacity: 0.6;
+  color: var(--text-muted);
 }
 
 .chatbot-input button {
@@ -312,7 +311,7 @@
 }
 
 .chatbot-error svg {
-  color: #ef4444;
+  color: var(--error-color);
 }
 
 @keyframes pulse {

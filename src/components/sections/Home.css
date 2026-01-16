@@ -8,11 +8,19 @@
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 1rem;
+  color: var(--text-primary);
   background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   line-height: 1.2;
+}
+
+/* Fallback para navegadores que no soportan background-clip */
+@supports not (background-clip: text) {
+  .hero-title {
+    color: var(--primary-color);
+  }
 }
 
 .hero-subtitle {
