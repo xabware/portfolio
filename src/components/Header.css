@@ -1,13 +1,13 @@
 .header {
   height: 70px;
-  background: var(--header-bg);
+  background: var(--bg-secondary);
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border-color);
   position: fixed;
   top: 0;
   left: 250px;
   right: 0;
   z-index: 100;
-  backdrop-filter: blur(10px);
   transition: left 0.3s ease;
 }
 
@@ -62,7 +62,6 @@
 .theme-toggle:hover,
 .language-toggle:hover {
   background: var(--hover-bg);
-  transform: scale(1.05);
 }
 
 @media (max-width: 768px) {

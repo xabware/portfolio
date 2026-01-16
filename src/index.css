@@ -13,8 +13,6 @@
 [data-theme='light'] {
   --bg-primary: #f5f7fa;
   --bg-secondary: #ffffff;
-  --sidebar-bg: #ffffff;
-  --header-bg: rgba(255, 255, 255, 0.8);
   --card-bg: #ffffff;
   --border-color: #e5e7eb;
   
@@ -39,8 +37,6 @@
 [data-theme='dark'] {
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
-  --sidebar-bg: #1e293b;
-  --header-bg: rgba(30, 41, 59, 0.8);
   --card-bg: #1e293b;
   --border-color: #334155;
   
@@ -99,10 +95,6 @@ button {
   button, a, input, textarea, select {
     min-height: 44px;
   }
-  
-  * {
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  }
 }
 
 ::-webkit-scrollbar {
@@ -121,12 +113,4 @@ button {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
-}
-
-/* Scrollbar más delgado en móviles */
-@media (max-width: 768px) {
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
 }

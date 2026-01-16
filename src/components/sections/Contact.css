@@ -5,13 +5,12 @@
 
 .contact-header h2 {
   font-size: 2rem;
-  margin: 0 0 0.5rem 0;
+  margin-bottom: 0.5rem;
   color: var(--text-primary);
 }
 
 .contact-header p {
   color: var(--text-secondary);
-  margin: 0;
 }
 
 .contact-grid {
@@ -54,13 +53,12 @@
 }
 
 .contact-details h4 {
-  margin: 0 0 0.25rem 0;
+  margin-bottom: 0.25rem;
   color: var(--text-primary);
   font-size: 1rem;
 }
 
 .contact-details p {
-  margin: 0;
   color: var(--text-secondary);
   font-size: 0.9rem;
   word-break: break-word;

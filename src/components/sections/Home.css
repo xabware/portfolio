@@ -7,7 +7,7 @@
 .hero-title {
   font-size: 3rem;
   font-weight: 700;
-  margin: 0 0 1rem 0;
+  margin-bottom: 1rem;
   background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -18,7 +18,6 @@
 .hero-subtitle {
   font-size: 1.25rem;
   color: var(--text-secondary);
-  margin: 0;
   line-height: 1.5;
 }
 
@@ -53,8 +52,6 @@
 
 .features-list {
   list-style: none;
-  padding: 0;
-  margin: 0;
 }
 
 .features-list li {

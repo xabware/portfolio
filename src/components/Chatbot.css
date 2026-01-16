@@ -24,7 +24,6 @@
 }
 
 .chatbot-welcome h3 {
-  margin: 0;
   font-size: 1.25rem;
   color: var(--text-primary);
 }
@@ -33,16 +32,11 @@
   color: var(--text-secondary);
   max-width: 350px;
   line-height: 1.5;
-  margin: 0;
   font-size: 0.9rem;
 }
 
 .start-chat-button {
-  background: linear-gradient(
-    135deg,
-    var(--primary-color),
-    var(--primary-hover)
-  );
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
   color: white;
   border: none;
   padding: 0.75rem 1.75rem;
@@ -53,14 +47,12 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transition: transform 0.2s ease;
   margin-top: 0.5rem;
 }
 
 .start-chat-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
 .start-chat-button:active {
@@ -147,7 +139,6 @@
 }
 
 .message-content p {
-  margin: 0;
   line-height: 1.5;
   font-size: 0.95rem;
 }
@@ -200,7 +191,6 @@
   padding: 1rem 1.5rem;
   background: var(--input-bg);
   border-top: 1px solid var(--border-color);
-  flex-shrink: 0;
 }
 
 .chatbot-input input {
@@ -235,12 +225,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .chatbot-input button:hover:not(:disabled) {
   background: var(--primary-hover);
-  transform: scale(1.05);
 }
 
 .chatbot-input button:disabled {
@@ -248,27 +237,9 @@
   cursor: not-allowed;
 }
 
-.chatbot-messages::-webkit-scrollbar {
-  width: 8px;
-}
-
-.chatbot-messages::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.chatbot-messages::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-}
-
-.chatbot-messages::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
-}
-
 @media (max-width: 768px) {
   .chatbot-messages {
     padding: 1rem;
-    padding-bottom: 1rem;
   }
 
   .message-content {
@@ -282,9 +253,6 @@
   .chatbot-input {
     padding: 0.75rem 1rem;
     gap: 0.5rem;
-    flex-shrink: 0;
-    background: var(--input-bg);
-    border-top: 1px solid var(--border-color);
   }
 
   .chatbot-input input {
@@ -300,7 +268,6 @@
 @media (max-width: 480px) {
   .chatbot-messages {
     padding: 0.75rem;
-    padding-bottom: 0.75rem;
     gap: 0.75rem;
   }
 
@@ -312,11 +279,9 @@
   .message-content {
     max-width: 80%;
     padding: 0.75rem 1rem;
-  }
-
-  .message-content p {
     font-size: 0.875rem;
   }
+
   .chatbot-input input {
     padding: 0.625rem 0.75rem;
     font-size: 0.875rem;
@@ -362,14 +327,12 @@
 
 .chatbot-loading h3,
 .chatbot-error h3 {
-  margin: 0;
   font-size: 1.25rem;
   color: var(--text-primary);
 }
 
 .chatbot-loading p,
 .chatbot-error p {
-  margin: 0;
   color: var(--text-secondary);
   font-size: 0.95rem;
 }

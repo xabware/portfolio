@@ -1,14 +1,14 @@
 .sidebar {
   width: 250px;
   height: 100vh;
-  background: var(--sidebar-bg);
+  background: var(--bg-secondary);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   position: fixed;
   left: 0;
   top: 0;
-  transition: all 0.3s ease;
+  transition: width 0.3s ease;
   z-index: 999;
 }
 
@@ -103,16 +103,11 @@
 .sidebar-toggle:hover {
   background: var(--hover-bg);
   color: var(--text-primary);
-  transform: scale(1.05);
 }
 
 .sidebar.collapsed .sidebar-toggle {
   right: 50%;
   transform: translateX(50%);
-}
-
-.sidebar.collapsed .sidebar-toggle:hover {
-  transform: translateX(50%) scale(1.05);
 }
 
 /* Mobile: barra inferior fija */
