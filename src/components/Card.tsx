@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { ReactNode } from 'react';
 import './Card.css';
 
@@ -7,13 +8,15 @@ interface CardProps {
   className?: string;
 }
 
-const Card = ({ title, children, className = '' }: CardProps) => {
+const Card = memo(({ title, children, className = '' }: CardProps) => {
   return (
     <div className={`card ${className}`}>
       {title && <h3 className="card-title">{title}</h3>}
       <div className="card-content">{children}</div>
     </div>
   );
-};
+});
+
+Card.displayName = 'Card';
 
 export default Card;

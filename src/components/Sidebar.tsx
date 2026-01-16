@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, memo, useCallback } from 'react';
 import { Home, User, MessageSquare, Briefcase, Code, Mail, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTranslations } from '../translations';
@@ -9,7 +9,7 @@ interface SidebarProps {
   onSectionChange: (section: string) => void;
 }
 
-const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
+const Sidebar = memo(({ activeSection, onSectionChange }: SidebarProps) => {
   const { language } = useLanguage();
   const t = useTranslations(language);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -22,14 +22,18 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
     }
   }, [isCollapsed]);
   
-  const menuItems = [
+  const menuItems = useMemo(() => [
     { id: 'home', label: t.home, icon: Home },
     { id: 'about', label: t.about, icon: User },
     { id: 'projects', label: t.projects, icon: Briefcase },
     { id: 'skills', label: t.skills, icon: Code },
     { id: 'chat', label: t.chatbot, icon: MessageSquare },
     { id: 'contact', label: t.contact, icon: Mail },
-  ];
+  ], [t]);
+
+  const handleToggleCollapse = useCallback(() => {
+    setIsCollapsed(prev => !prev);
+  }, []);
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -54,13 +58,15 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
       </nav>
       <button 
         className="sidebar-toggle" 
-        onClick={() => setIsCollapsed(!isCollapsed)}
+        onClick={handleToggleCollapse}
         aria-label={isCollapsed ? t.sidebarExpandLabel : t.sidebarCollapseLabel}
       >
         {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
       </button>
     </aside>
   );
-};
+});
+
+Sidebar.displayName = 'Sidebar';
 
 export default Sidebar;

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Send, Bot, User, AlertCircle, Sparkles } from 'lucide-react';
 import { useWebLLM } from '../hooks/useWebLLM';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -12,7 +12,7 @@ interface Message {
   timestamp: Date;
 }
 
-const Chatbot = () => {
+const Chatbot = memo(() => {
   const { isLoading: isModelLoading, isInitialized, error: modelError, sendMessage, initProgress, initialize } = useWebLLM();
   const { language } = useLanguage();
   const t = useTranslations(language);
@@ -23,19 +23,22 @@ const Chatbot = () => {
   const [hasStarted, setHasStarted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
-  // Agregar mensaje de bienvenida cuando el modelo esté listo
+  // Agregar mensaje de bienvenida cuando el modelo esté listo (solo una vez)
+  const hasInitializedRef = useRef(false);
+  
   useEffect(() => {
-    if (isInitialized && messages.length === 0) {
+    if (isInitialized && messages.length === 0 && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
       const welcomeMessage: Message = {
-        id: '1',
+        id: 'welcome-1',
         text: t.chatbotWelcomeMessage,
         sender: 'bot',
         timestamp: new Date(),
@@ -44,12 +47,12 @@ const Chatbot = () => {
     }
   }, [isInitialized, messages.length, t.chatbotWelcomeMessage]);
 
-  const handleStartChat = async () => {
+  const handleStartChat = useCallback(async () => {
     setHasStarted(true);
     await initialize();
-  };
+  }, [initialize]);
 
-  const handleSend = async () => {
+  const handleSend = useCallback(async () => {
     if (!inputValue.trim() || isLoadingResponse || !isInitialized) return;
 
     const userMessage: Message = {
@@ -85,14 +88,14 @@ const Chatbot = () => {
     } finally {
       setIsLoadingResponse(false);
     }
-  };
+  }, [inputValue, isLoadingResponse, isInitialized, sendMessage, t.chatbotErrorMessage]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-  };
+  }, [handleSend]);
 
   // Mostrar botón inicial si aún no se ha iniciado
   if (!hasStarted) {
@@ -197,6 +200,8 @@ const Chatbot = () => {
       </div>
     </div>
   );
-};
+});
+
+Chatbot.displayName = 'Chatbot';
 
 export default Chatbot;

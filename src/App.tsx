@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Home from './components/sections/Home';
@@ -13,6 +13,10 @@ const Contact = lazy(() => import('./components/sections/Contact'));
 
 function App() {
   const [activeSection, setActiveSection] = useState('home');
+
+  const handleSectionChange = useCallback((section: string) => {
+    setActiveSection(section);
+  }, []);
 
   const renderSection = () => {
     switch (activeSection) {
@@ -35,9 +39,9 @@ function App() {
 
   return (
     <div className="app">
-      <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+      <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
       <div className="main-content">
-        <Header onNavigate={setActiveSection} />
+        <Header onNavigate={handleSectionChange} />
         <main className="content-area">
           <Suspense fallback={<div className="loading">Cargando...</div>}>
             {renderSection()}

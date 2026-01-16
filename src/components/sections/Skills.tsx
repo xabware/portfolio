@@ -1,12 +1,14 @@
+import { memo, useMemo } from 'react';
 import Card from '../Card';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
 import './Skills.css';
 
-const Skills = () => {
+const Skills = memo(() => {
   const { language } = useLanguage();
   const t = useTranslations(language);
-  const skillCategories = [
+  
+  const skillCategories = useMemo(() => [
     {
       title: t.frontend,
       skills: [
@@ -43,7 +45,20 @@ const Skills = () => {
         { name: 'CI/CD', level: 78 },
       ],
     },
-  ];
+  ], [t]);
+
+  const additionalSkills = useMemo(() => [
+    t.skillAgileScrum,
+    t.skillRestApis,
+    t.skillGraphQL,
+    t.skillMicroservices,
+    t.skillTesting,
+    t.skillUIUX,
+    t.skillResponsiveDesign,
+    t.skillPerformanceOptimization,
+    t.skillSecurityBestPractices,
+    t.skillTeamLeadership,
+  ], [t]);
 
   return (
     <div className="section-content">
@@ -77,19 +92,8 @@ const Skills = () => {
 
       <Card title={t.otherCompetencies} className="additional-skills">
         <div className="tags-container">
-          {[
-            t.skillAgileScrum,
-            t.skillRestApis,
-            t.skillGraphQL,
-            t.skillMicroservices,
-            t.skillTesting,
-            t.skillUIUX,
-            t.skillResponsiveDesign,
-            t.skillPerformanceOptimization,
-            t.skillSecurityBestPractices,
-            t.skillTeamLeadership,
-          ].map((skill, idx) => (
-            <span key={idx} className="skill-tag">
+          {additionalSkills.map((skill, idx) => (
+            <span key={`skill-${idx}`} className="skill-tag">
               {skill}
             </span>
           ))}
@@ -97,6 +101,8 @@ const Skills = () => {
       </Card>
     </div>
   );
-};
+});
+
+Skills.displayName = 'Skills';
 
 export default Skills;

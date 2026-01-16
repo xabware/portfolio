@@ -1,9 +1,10 @@
+import { memo } from 'react';
 import Card from '../Card';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
 import './About.css';
 
-const About = () => {
+const About = memo(() => {
   const { language } = useLanguage();
   const t = useTranslations(language);
   
@@ -64,6 +65,8 @@ const About = () => {
       </Card>
     </div>
   );
-};
+});
+
+About.displayName = 'About';
 
 export default About;

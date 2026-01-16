@@ -1,13 +1,15 @@
+import { useMemo, memo } from 'react';
 import Card from '../Card';
 import { ExternalLink, Github } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
 import './Projects.css';
 
-const Projects = () => {
+const Projects = memo(() => {
   const { language } = useLanguage();
   const t = useTranslations(language);
-  const projects = [
+  
+  const projects = useMemo(() => [
     {
       id: 1,
       title: t.ecommercePlatform,
@@ -40,7 +42,7 @@ const Projects = () => {
       github: 'https://github.com',
       demo: 'https://demo.com',
     },
-  ];
+  ], [t]);
 
   return (
     <div className="section-content">
@@ -76,6 +78,8 @@ const Projects = () => {
       </div>
     </div>
   );
-};
+});
+
+Projects.displayName = 'Projects';
 
 export default Projects;

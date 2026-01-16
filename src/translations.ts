@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { Language } from './contexts/LanguageContext';
 
 export const translations = {
@@ -261,8 +262,8 @@ export const translations = {
     skillSecurityBestPractices: 'Security Best Practices',
     skillTeamLeadership: 'Team Leadership',
   },
-};
+} as const;
 
 export const useTranslations = (language: Language) => {
-  return translations[language];
+  return useMemo(() => translations[language], [language]);
 };

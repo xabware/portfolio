@@ -1,11 +1,11 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, memo } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
 import './Chat.css';
 
 const Chatbot = lazy(() => import('../Chatbot'));
 
-const Chat = () => {
+const Chat = memo(() => {
   const { language } = useLanguage();
   const t = useTranslations(language);
   
@@ -16,6 +16,8 @@ const Chat = () => {
       </Suspense>
     </div>
   );
-};
+});
+
+Chat.displayName = 'Chat';
 
 export default Chat;

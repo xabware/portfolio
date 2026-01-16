@@ -1,12 +1,40 @@
+import { memo, useMemo } from 'react';
 import Card from '../Card';
 import { Mail, Linkedin, Github, Twitter } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
 import './Contact.css';
 
-const Contact = () => {
+const Contact = memo(() => {
   const { language } = useLanguage();
   const t = useTranslations(language);
+
+  const contactMethods = useMemo(() => [
+    {
+      icon: Mail,
+      title: t.email,
+      value: 'tu@email.com',
+      link: 'mailto:tu@email.com',
+    },
+    {
+      icon: Linkedin,
+      title: 'LinkedIn',
+      value: 'linkedin.com/in/tuperfil',
+      link: 'https://linkedin.com',
+    },
+    {
+      icon: Github,
+      title: 'GitHub',
+      value: 'github.com/tuusuario',
+      link: 'https://github.com',
+    },
+    {
+      icon: Twitter,
+      title: 'Twitter',
+      value: '@tuusuario',
+      link: 'https://twitter.com',
+    },
+  ], [t]);
   
   return (
     <div className="section-content">
@@ -18,60 +46,26 @@ const Contact = () => {
       <div className="contact-grid">
         <Card title={t.contactInfo} className="contact-card">
           <div className="contact-methods">
-            <a href="mailto:tu@email.com" className="contact-method">
-              <div className="contact-icon">
-                <Mail size={24} />
-              </div>
-              <div className="contact-details">
-                <h4>{t.email}</h4>
-                <p>tu@email.com</p>
-              </div>
-            </a>
-
-            <a
-              href="https://linkedin.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="contact-method"
-            >
-              <div className="contact-icon">
-                <Linkedin size={24} />
-              </div>
-              <div className="contact-details">
-                <h4>LinkedIn</h4>
-                <p>linkedin.com/in/tuperfil</p>
-              </div>
-            </a>
-
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="contact-method"
-            >
-              <div className="contact-icon">
-                <Github size={24} />
-              </div>
-              <div className="contact-details">
-                <h4>GitHub</h4>
-                <p>github.com/tuusuario</p>
-              </div>
-            </a>
-
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="contact-method"
-            >
-              <div className="contact-icon">
-                <Twitter size={24} />
-              </div>
-              <div className="contact-details">
-                <h4>Twitter</h4>
-                <p>@tuusuario</p>
-              </div>
-            </a>
+            {contactMethods.map((method, idx) => {
+              const Icon = method.icon;
+              return (
+                <a
+                  key={`contact-${idx}`}
+                  href={method.link}
+                  className="contact-method"
+                  target={method.link.startsWith('http') ? '_blank' : undefined}
+                  rel={method.link.startsWith('http') ? 'noopener noreferrer' : undefined}
+                >
+                  <div className="contact-icon">
+                    <Icon size={24} />
+                  </div>
+                  <div className="contact-details">
+                    <h4>{method.title}</h4>
+                    <p>{method.value}</p>
+                  </div>
+                </a>
+              );
+            })}
           </div>
         </Card>
 
@@ -110,6 +104,8 @@ const Contact = () => {
       </div>
     </div>
   );
-};
+});
+
+Contact.displayName = 'Contact';
 
 export default Contact;

@@ -1,11 +1,28 @@
+import { memo, useMemo } from 'react';
 import Card from '../Card';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
 import './Home.css';
 
-const Home = () => {
+const Home = memo(() => {
   const { language } = useLanguage();
   const t = useTranslations(language);
+  
+  const stats = useMemo(() => [
+    { number: '5+', label: t.yearsExperience },
+    { number: '50+', label: t.projectsCompleted },
+    { number: '30+', label: t.satisfiedClients },
+    { number: '10+', label: t.techMastered },
+  ], [t]);
+
+  const features = useMemo(() => [
+    t.modernDesign,
+    t.darkModeSupport,
+    t.aiChatbot,
+    t.responsiveDesign,
+    t.viteOptimized,
+    t.elegantInterface,
+  ], [t]);
   
   return (
     <div className="section-content">
@@ -17,22 +34,12 @@ const Home = () => {
       </div>
 
       <div className="stats-grid">
-        <Card className="stat-card">
-          <div className="stat-number">5+</div>
-          <div className="stat-label">{t.yearsExperience}</div>
-        </Card>
-        <Card className="stat-card">
-          <div className="stat-number">50+</div>
-          <div className="stat-label">{t.projectsCompleted}</div>
-        </Card>
-        <Card className="stat-card">
-          <div className="stat-number">30+</div>
-          <div className="stat-label">{t.satisfiedClients}</div>
-        </Card>
-        <Card className="stat-card">
-          <div className="stat-number">10+</div>
-          <div className="stat-label">{t.techMastered}</div>
-        </Card>
+        {stats.map((stat, index) => (
+          <Card key={`stat-${index}`} className="stat-card">
+            <div className="stat-number">{stat.number}</div>
+            <div className="stat-label">{stat.label}</div>
+          </Card>
+        ))}
       </div>
 
       <div className="info-grid">
@@ -43,17 +50,16 @@ const Home = () => {
         </Card>
         <Card title={t.features}>
           <ul className="features-list">
-            <li>{t.modernDesign}</li>
-            <li>{t.darkModeSupport}</li>
-            <li>{t.aiChatbot}</li>
-            <li>{t.responsiveDesign}</li>
-            <li>{t.viteOptimized}</li>
-            <li>{t.elegantInterface}</li>
+            {features.map((feature, index) => (
+              <li key={`feature-${index}`}>{feature}</li>
+            ))}
           </ul>
         </Card>
       </div>
     </div>
   );
-};
+});
+
+Home.displayName = 'Home';
 
 export default Home;

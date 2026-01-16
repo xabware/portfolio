@@ -1,3 +1,4 @@
+import { memo, useCallback } from 'react';
 import { Moon, Sun, Languages } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -8,15 +9,19 @@ interface HeaderProps {
   onNavigate?: (section: string) => void;
 }
 
-const Header = ({ onNavigate }: HeaderProps) => {
+const Header = memo(({ onNavigate }: HeaderProps) => {
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
+
+  const handleNavigate = useCallback((section: string) => {
+    onNavigate?.(section);
+  }, [onNavigate]);
 
   return (
     <header className="header">
       <div className="header-content">
         <div className="header-search">
-          <SearchBar onNavigate={onNavigate || (() => {})} />
+          <SearchBar onNavigate={handleNavigate} />
         </div>
         <div className="header-actions">
           <button className="language-toggle" onClick={toggleLanguage} aria-label="Toggle language">
@@ -30,6 +35,8 @@ const Header = ({ onNavigate }: HeaderProps) => {
       </div>
     </header>
   );
-};
+});
+
+Header.displayName = 'Header';
 
 export default Header;

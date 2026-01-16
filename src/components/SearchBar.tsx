@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
 import { Search, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTranslations } from '../translations';
@@ -15,7 +15,7 @@ interface SearchBarProps {
   onNavigate: (section: string) => void;
 }
 
-const SearchBar = ({ onNavigate }: SearchBarProps) => {
+const SearchBar = memo(({ onNavigate }: SearchBarProps) => {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -23,8 +23,8 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
   const { language } = useLanguage();
   const t = useTranslations(language);
 
-  // Contenido indexado de todas las secciones
-  const getSearchableContent = () => [
+  // Contenido indexado de todas las secciones (memoizado)
+  const searchableContent = useMemo(() => [
     // Home
     {
       section: 'home',
@@ -61,83 +61,82 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
       title: t.contact,
       content: `${t.contactTitle} ${t.contactSubtitle} ${t.email} ${t.sendMessage} ${t.contactInfo} contacto mensaje`,
     },
-  ];
+  ], [t]);
 
-  // Efecto para manejar la búsqueda
-  useEffect(() => {
-    const performSearch = () => {
-      if (!query.trim()) {
-        setResults([]);
-        return;
+  // Función de búsqueda memoizada
+  const performSearch = useCallback(() => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+
+    const queryLower = query.toLowerCase();
+    const foundResults: SearchResult[] = [];
+
+    searchableContent.forEach((item) => {
+      const contentLower = item.content.toLowerCase();
+      const titleLower = item.title.toLowerCase();
+
+      // Calcular relevancia
+      let relevance = 0;
+      
+      // Mayor peso si coincide con el título
+      if (titleLower.includes(queryLower)) {
+        relevance += 10;
       }
 
-      const queryLower = query.toLowerCase();
-      const foundResults: SearchResult[] = [];
-      const searchableContent = getSearchableContent();
+      // Peso por coincidencias en el contenido
+      const matches = contentLower.match(new RegExp(queryLower, 'gi'));
+      if (matches) {
+        relevance += matches.length;
+      }
 
-      searchableContent.forEach((item) => {
-        const contentLower = item.content.toLowerCase();
-        const titleLower = item.title.toLowerCase();
-
-        // Calcular relevancia
-        let relevance = 0;
-        
-        // Mayor peso si coincide con el título
-        if (titleLower.includes(queryLower)) {
-          relevance += 10;
-        }
-
-        // Peso por coincidencias en el contenido
-        const matches = contentLower.match(new RegExp(queryLower, 'gi'));
-        if (matches) {
-          relevance += matches.length;
-        }
-
-        // Búsqueda de palabras individuales
-        const queryWords = queryLower.split(' ').filter(w => w.length > 2);
-        queryWords.forEach(word => {
-          const wordMatches = contentLower.match(new RegExp(word, 'gi'));
-          if (wordMatches) {
-            relevance += wordMatches.length * 0.5;
-          }
-        });
-
-        if (relevance > 0) {
-          // Extraer un fragmento relevante del contenido
-          const index = contentLower.indexOf(queryLower);
-          let snippet = '';
-          
-          if (index !== -1) {
-            const start = Math.max(0, index - 30);
-            const end = Math.min(item.content.length, index + queryLower.length + 50);
-            snippet = item.content.substring(start, end);
-            if (start > 0) snippet = '...' + snippet;
-            if (end < item.content.length) snippet = snippet + '...';
-          } else {
-            snippet = item.content.substring(0, 80) + '...';
-          }
-
-          foundResults.push({
-            section: item.section,
-            title: item.title,
-            content: snippet,
-            relevance,
-          });
+      // Búsqueda de palabras individuales
+      const queryWords = queryLower.split(' ').filter(w => w.length > 2);
+      queryWords.forEach(word => {
+        const wordMatches = contentLower.match(new RegExp(word, 'gi'));
+        if (wordMatches) {
+          relevance += wordMatches.length * 0.5;
         }
       });
 
-      // Ordenar por relevancia
-      foundResults.sort((a, b) => b.relevance - a.relevance);
-      setResults(foundResults.slice(0, 6)); // Máximo 6 resultados
-    };
+      if (relevance > 0) {
+        // Extraer un fragmento relevante del contenido
+        const index = contentLower.indexOf(queryLower);
+        let snippet = '';
+        
+        if (index !== -1) {
+          const start = Math.max(0, index - 30);
+          const end = Math.min(item.content.length, index + queryLower.length + 50);
+          snippet = item.content.substring(start, end);
+          if (start > 0) snippet = '...' + snippet;
+          if (end < item.content.length) snippet = snippet + '...';
+        } else {
+          snippet = item.content.substring(0, 80) + '...';
+        }
 
+        foundResults.push({
+          section: item.section,
+          title: item.title,
+          content: snippet,
+          relevance,
+        });
+      }
+    });
+
+    // Ordenar por relevancia
+    foundResults.sort((a, b) => b.relevance - a.relevance);
+    setResults(foundResults.slice(0, 6)); // Máximo 6 resultados
+  }, [query, searchableContent]);
+
+  // Efecto para manejar la búsqueda con debounce
+  useEffect(() => {
     const timer = setTimeout(() => {
       performSearch();
-    }, 300); // Debounce de 300ms
+    }, 300);
 
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, language]);
+  }, [query, performSearch]);
 
   // Cerrar al hacer clic fuera
   useEffect(() => {
@@ -151,17 +150,17 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleResultClick = (section: string) => {
+  const handleResultClick = useCallback((section: string) => {
     onNavigate(section);
     setQuery('');
     setResults([]);
     setIsOpen(false);
-  };
+  }, [onNavigate]);
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     setQuery('');
     setResults([]);
-  };
+  }, []);
 
   return (
     <div className="search-bar-container" ref={searchRef}>
@@ -207,6 +206,8 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
       )}
     </div>
   );
-};
+});
+
+SearchBar.displayName = 'SearchBar';
 
 export default SearchBar;
