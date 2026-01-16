@@ -39,6 +39,9 @@
   font-size: 14px;
   color: var(--text-color);
   font-family: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .search-input::placeholder {
