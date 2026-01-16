@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User } from 'lucide-react';
+import { Send, Bot, User, AlertCircle, Sparkles } from 'lucide-react';
+import { useWebLLM } from '../hooks/useWebLLM';
 import './Chatbot.css';
 
 interface Message {
@@ -10,16 +11,12 @@ interface Message {
 }
 
 const Chatbot = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: '¡Hola! Soy tu asistente virtual. Puedo responder preguntas sobre mi experiencia, proyectos y habilidades. ¿En qué puedo ayudarte?',
-      sender: 'bot',
-      timestamp: new Date(),
-    },
-  ]);
+  const { isLoading: isModelLoading, isInitialized, error: modelError, sendMessage, initProgress, initialize } = useWebLLM();
+  
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingResponse, setIsLoadingResponse] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -30,36 +27,26 @@ const Chatbot = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Esta función simulará la conexión con tu backend RAG
-  // Reemplázala con tu llamada real a la API
-  const sendToRAG = async (userMessage: string): Promise<string> => {
-    // Simula una llamada a API
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Usa el mensaje del usuario para generar respuesta
-    console.log('Mensaje del usuario:', userMessage);
-    
-    // Aquí es donde conectarás tu backend RAG
-    // const response = await fetch('http://your-api-url/chat', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ message: userMessage })
-    // });
-    // const data = await response.json();
-    // return data.response;
+  // Agregar mensaje de bienvenida cuando el modelo esté listo
+  useEffect(() => {
+    if (isInitialized && messages.length === 0) {
+      const welcomeMessage: Message = {
+        id: '1',
+        text: '¡Hola! Soy tu asistente virtual con IA ejecutándose localmente en tu navegador. Puedo responder preguntas sobre tecnología, desarrollo y mucho más. ¿En qué puedo ayudarte?',
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+      setMessages([welcomeMessage]);
+    }
+  }, [isInitialized, messages.length]);
 
-    // Respuesta simulada por ahora
-    const responses = [
-      'Basándome en mi base de conocimiento, puedo decirte que tengo experiencia en desarrollo web full-stack.',
-      'Mis proyectos principales incluyen aplicaciones con React, Node.js y bases de datos vectoriales.',
-      'Estoy especializado en crear soluciones modernas y escalables utilizando las últimas tecnologías.',
-      'Me encantaría contarte más sobre mi experiencia. ¿Hay algo específico que te gustaría saber?',
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
+  const handleStartChat = async () => {
+    setHasStarted(true);
+    await initialize();
   };
 
   const handleSend = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim() || isLoadingResponse || !isInitialized) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -69,11 +56,12 @@ const Chatbot = () => {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = inputValue;
     setInputValue('');
-    setIsLoading(true);
+    setIsLoadingResponse(true);
 
     try {
-      const botResponse = await sendToRAG(inputValue);
+      const botResponse = await sendMessage(currentInput);
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: botResponse,
@@ -85,13 +73,13 @@ const Chatbot = () => {
       console.error('Error en el chat:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: 'Lo siento, ha ocurrido un error. Por favor, intenta de nuevo.',
+        text: error instanceof Error ? error.message : 'Lo siento, ha ocurrido un error. Por favor, intenta de nuevo.',
         sender: 'bot',
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false);
+      setIsLoadingResponse(false);
     }
   };
 
@@ -101,6 +89,60 @@ const Chatbot = () => {
       handleSend();
     }
   };
+
+  // Mostrar botón inicial si aún no se ha iniciado
+  if (!hasStarted) {
+    return (
+      <div className="chatbot-container">
+        <div className="chatbot-welcome">
+          <div className="welcome-icon">
+            <Bot size={48} />
+          </div>
+          <h3>Asistente Virtual con IA</h3>
+          <p className="welcome-description">
+            Chat con IA ejecutándose localmente en tu navegador.
+            Privado y seguro.
+          </p>
+          <button className="start-chat-button" onClick={handleStartChat}>
+            <Sparkles size={18} />
+            Iniciar Chatbot
+          </button>
+          <small className="welcome-note">
+            Se descargará el modelo (~300MB). Puede tardar unos minutos.
+          </small>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar estado de carga del modelo
+  if (isModelLoading || !isInitialized) {
+    return (
+      <div className="chatbot-container">
+        <div className="chatbot-loading">
+          <Bot size={48} />
+          <h3>Cargando modelo de IA...</h3>
+          <p>{initProgress}</p>
+          <div className="loading-spinner"></div>
+          <small>Esto puede tardar unos minutos la primera vez. El modelo se descarga y ejecuta completamente en tu navegador.</small>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar error si hay alguno
+  if (modelError) {
+    return (
+      <div className="chatbot-container">
+        <div className="chatbot-error">
+          <AlertCircle size={48} />
+          <h3>Error al cargar el modelo</h3>
+          <p>{modelError}</p>
+          <small>Por favor, recarga la página o verifica que tu navegador soporte WebGPU.</small>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chatbot-container">
@@ -121,7 +163,7 @@ const Chatbot = () => {
             </div>
           </div>
         ))}
-        {isLoading && (
+        {isLoadingResponse && (
           <div className="message bot">
             <div className="message-icon">
               <Bot size={20} />
@@ -144,9 +186,9 @@ const Chatbot = () => {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
-          disabled={isLoading}
+          disabled={isLoadingResponse || !isInitialized}
         />
-        <button onClick={handleSend} disabled={isLoading || !inputValue.trim()}>
+        <button onClick={handleSend} disabled={isLoadingResponse || !inputValue.trim() || !isInitialized}>
           <Send size={20} />
         </button>
       </div>

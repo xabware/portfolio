@@ -37,7 +37,7 @@ function App() {
     <div className="app">
       <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
       <div className="main-content">
-        <Header />
+        <Header onNavigate={setActiveSection} />
         <main className="content-area">
           <Suspense fallback={<div className="loading">Cargando...</div>}>
             {renderSection()}

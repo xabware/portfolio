@@ -1,23 +1,16 @@
-.chat-info {
-  margin-bottom: 1.5rem;
-}
-
-.chat-features {
+.chat-full-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  flex-direction: column;
+  padding: 0;
 }
 
-.feature-badge {
-  padding: 0.5rem 1rem;
-  background: var(--tag-bg);
-  color: var(--primary-color);
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.chat-section {
-  width: 100%;
+.chat-full-screen .chatbot-container {
+  border-radius: 0;
+  border: none;
+  height: 100%;
 }

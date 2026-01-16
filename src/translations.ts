@@ -94,6 +94,12 @@ export const translations = {
     message: 'Mensaje',
     writeMessage: 'Escribe tu mensaje aquí...',
     sendButton: 'Enviar Mensaje',
+    
+    // Search
+    searchPlaceholder: 'Buscar en todo el portfolio...',
+    searchResultPlural: 'resultados encontrados',
+    searchResultSingular: 'resultado encontrado',
+    searchNoResults: 'No se encontraron resultados',
   },
   en: {
     // Header
@@ -188,6 +194,12 @@ export const translations = {
     message: 'Message',
     writeMessage: 'Write your message here...',
     sendButton: 'Send Message',
+    
+    // Search
+    searchPlaceholder: 'Search across portfolio...',
+    searchResultPlural: 'results found',
+    searchResultSingular: 'result found',
+    searchNoResults: 'No results found',
   },
 };
 

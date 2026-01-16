@@ -1,11 +1,75 @@
 .chatbot-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 180px);
+  height: 100%;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   overflow: hidden;
+}
+
+.chatbot-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  height: 100%;
+  gap: 1rem;
+}
+
+.welcome-icon {
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.chatbot-welcome h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.welcome-description {
+  color: var(--text-secondary);
+  max-width: 350px;
+  line-height: 1.5;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.start-chat-button {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  color: white;
+  border: none;
+  padding: 0.75rem 1.75rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  margin-top: 0.5rem;
+}
+
+.start-chat-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.start-chat-button:active {
+  transform: translateY(0);
+}
+
+.welcome-note {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  max-width: 350px;
+  line-height: 1.3;
+  margin-top: 0.5rem;
 }
 
 .chatbot-messages {
@@ -259,5 +323,74 @@
 
   .chatbot-input button {
     padding: 0.625rem 0.875rem;
+  }
+}
+
+/* Estados de carga y error */
+.chatbot-loading,
+.chatbot-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.chatbot-loading svg,
+.chatbot-error svg {
+  color: var(--primary-color);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.chatbot-error svg {
+  color: #ef4444;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.chatbot-loading h3,
+.chatbot-error h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.chatbot-loading p,
+.chatbot-error p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.chatbot-loading small,
+.chatbot-error small {
+  color: var(--text-secondary);
+  opacity: 0.7;
+  font-size: 0.85rem;
+  max-width: 400px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }

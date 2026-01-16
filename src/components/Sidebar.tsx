@@ -1,4 +1,5 @@
-import { Home, User, MessageSquare, Briefcase, Code, Mail } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Home, User, MessageSquare, Briefcase, Code, Mail, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTranslations } from '../translations';
 import './Sidebar.css';
@@ -11,6 +12,15 @@ interface SidebarProps {
 const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
   const { language } = useLanguage();
   const t = useTranslations(language);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  
+  useEffect(() => {
+    if (isCollapsed) {
+      document.body.classList.add('sidebar-collapsed');
+    } else {
+      document.body.classList.remove('sidebar-collapsed');
+    }
+  }, [isCollapsed]);
   
   const menuItems = [
     { id: 'home', label: t.home, icon: Home },
@@ -22,7 +32,7 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
   ];
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <h2>{t.portfolio}</h2>
       </div>
@@ -34,6 +44,7 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
               key={item.id}
               className={`sidebar-item ${activeSection === item.id ? 'active' : ''}`}
               onClick={() => onSectionChange(item.id)}
+              title={isCollapsed ? item.label : undefined}
             >
               <Icon size={20} />
               <span>{item.label}</span>
@@ -41,6 +52,13 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
           );
         })}
       </nav>
+      <button 
+        className="sidebar-toggle" 
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        aria-label={isCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+      >
+        {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+      </button>
     </aside>
   );
 };
