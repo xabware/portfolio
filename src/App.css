@@ -69,6 +69,8 @@
   
   .content-area:has(.chat-full-screen) {
     padding: 0;
+    margin-top: 0;
+    overflow: hidden;
   }
 
   .section-content {
