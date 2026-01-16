@@ -1,0 +1,2 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/Chatbot-Cjc-4FqX.js","assets/index-DYIcCQ4n.js","assets/index-WU8WZb4a.css","assets/Chatbot-BjmN-Qil.css"])))=>i.map(i=>d[i]);
+import{j as a,r as s,_ as t}from"./index-DYIcCQ4n.js";const e=s.lazy(()=>t(()=>import("./Chatbot-Cjc-4FqX.js"),__vite__mapDeps([0,1,2,3]))),l=()=>a.jsx("div",{className:"chat-full-screen",children:a.jsx(s.Suspense,{fallback:a.jsx("div",{className:"loading",children:"Cargando chat..."}),children:a.jsx(e,{})})});export{l as default};
