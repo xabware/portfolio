@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 import Card from '../Card';
 import { Mail, Linkedin, Github, Twitter } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -8,6 +8,24 @@ import './Contact.css';
 const Contact = memo(() => {
   const { language } = useLanguage();
   const t = useTranslations(language);
+  const [showNotification, setShowNotification] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    // Aquí iría la lógica real de envío del correo
+    // Por ahora solo mostramos la notificación
+    
+    setShowNotification(true);
+    
+    // Ocultar la notificación después de 3 segundos
+    setTimeout(() => {
+      setShowNotification(false);
+    }, 3000);
+    
+    // Resetear el formulario
+    e.currentTarget.reset();
+  };
 
   const contactMethods = useMemo(() => [
     {
@@ -70,7 +88,12 @@ const Contact = memo(() => {
         </Card>
 
         <Card title={t.sendMessage} className="contact-form-card">
-          <form className="contact-form">
+          {showNotification && (
+            <div className="success-notification">
+              {t.messageSent}
+            </div>
+          )}
+          <form className="contact-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="name">{t.name}</label>
               <input type="text" id="name" placeholder={t.yourName} required />

@@ -95,6 +95,7 @@ export const translations = {
     message: 'Mensaje',
     writeMessage: 'Escribe tu mensaje aquí...',
     sendButton: 'Enviar Mensaje',
+    messageSent: '✓ Mensaje enviado correctamente',
     
     // Search
     searchPlaceholder: 'Buscar en todo el portfolio...',
@@ -226,6 +227,7 @@ export const translations = {
     message: 'Message',
     writeMessage: 'Write your message here...',
     sendButton: 'Send Message',
+    messageSent: '✓ Message sent successfully',
     
     // Search
     searchPlaceholder: 'Search across portfolio...',
