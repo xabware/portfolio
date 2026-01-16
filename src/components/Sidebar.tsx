@@ -55,7 +55,7 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
       <button 
         className="sidebar-toggle" 
         onClick={() => setIsCollapsed(!isCollapsed)}
-        aria-label={isCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+        aria-label={isCollapsed ? t.sidebarExpandLabel : t.sidebarCollapseLabel}
       >
         {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
       </button>

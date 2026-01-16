@@ -78,16 +78,16 @@ const Skills = () => {
       <Card title={t.otherCompetencies} className="additional-skills">
         <div className="tags-container">
           {[
-            'Agile/Scrum',
-            'REST APIs',
-            'GraphQL',
-            'Microservicios',
-            'Testing (Jest, Pytest)',
-            'UI/UX Design',
-            'Responsive Design',
-            'Performance Optimization',
-            'Security Best Practices',
-            'Team Leadership',
+            t.skillAgileScrum,
+            t.skillRestApis,
+            t.skillGraphQL,
+            t.skillMicroservices,
+            t.skillTesting,
+            t.skillUIUX,
+            t.skillResponsiveDesign,
+            t.skillPerformanceOptimization,
+            t.skillSecurityBestPractices,
+            t.skillTeamLeadership,
           ].map((skill, idx) => (
             <span key={idx} className="skill-tag">
               {skill}

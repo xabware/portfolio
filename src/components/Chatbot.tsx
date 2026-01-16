@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, AlertCircle, Sparkles } from 'lucide-react';
 import { useWebLLM } from '../hooks/useWebLLM';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useTranslations } from '../translations';
 import './Chatbot.css';
 
 interface Message {
@@ -12,6 +14,8 @@ interface Message {
 
 const Chatbot = () => {
   const { isLoading: isModelLoading, isInitialized, error: modelError, sendMessage, initProgress, initialize } = useWebLLM();
+  const { language } = useLanguage();
+  const t = useTranslations(language);
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -32,13 +36,13 @@ const Chatbot = () => {
     if (isInitialized && messages.length === 0) {
       const welcomeMessage: Message = {
         id: '1',
-        text: '¡Hola! Soy tu asistente virtual con IA ejecutándose localmente en tu navegador. Puedo responder preguntas sobre tecnología, desarrollo y mucho más. ¿En qué puedo ayudarte?',
+        text: t.chatbotWelcomeMessage,
         sender: 'bot',
         timestamp: new Date(),
       };
       setMessages([welcomeMessage]);
     }
-  }, [isInitialized, messages.length]);
+  }, [isInitialized, messages.length, t.chatbotWelcomeMessage]);
 
   const handleStartChat = async () => {
     setHasStarted(true);
@@ -73,7 +77,7 @@ const Chatbot = () => {
       console.error('Error en el chat:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: error instanceof Error ? error.message : 'Lo siento, ha ocurrido un error. Por favor, intenta de nuevo.',
+        text: error instanceof Error ? error.message : t.chatbotErrorMessage,
         sender: 'bot',
         timestamp: new Date(),
       };
@@ -98,17 +102,16 @@ const Chatbot = () => {
           <div className="welcome-icon">
             <Bot size={48} />
           </div>
-          <h3>Asistente Virtual con IA</h3>
+          <h3>{t.chatbotWelcomeTitle}</h3>
           <p className="welcome-description">
-            Chat con IA ejecutándose localmente en tu navegador.
-            Privado y seguro.
+            {t.chatbotWelcomeDescription}
           </p>
           <button className="start-chat-button" onClick={handleStartChat}>
             <Sparkles size={18} />
-            Iniciar Chatbot
+            {t.chatbotStartButton}
           </button>
           <small className="welcome-note">
-            Se descargará el modelo (~300MB). Puede tardar unos minutos.
+            {t.chatbotDownloadNote}
           </small>
         </div>
       </div>
@@ -121,10 +124,10 @@ const Chatbot = () => {
       <div className="chatbot-container">
         <div className="chatbot-loading">
           <Bot size={48} />
-          <h3>Cargando modelo de IA...</h3>
+          <h3>{t.chatbotLoadingTitle}</h3>
           <p>{initProgress}</p>
           <div className="loading-spinner"></div>
-          <small>Esto puede tardar unos minutos la primera vez. El modelo se descarga y ejecuta completamente en tu navegador.</small>
+          <small>{t.chatbotLoadingNote}</small>
         </div>
       </div>
     );
@@ -136,9 +139,9 @@ const Chatbot = () => {
       <div className="chatbot-container">
         <div className="chatbot-error">
           <AlertCircle size={48} />
-          <h3>Error al cargar el modelo</h3>
+          <h3>{t.chatbotErrorTitle}</h3>
           <p>{modelError}</p>
-          <small>Por favor, recarga la página o verifica que tu navegador soporte WebGPU.</small>
+          <small>{t.chatbotErrorNote}</small>
         </div>
       </div>
     );
@@ -182,7 +185,7 @@ const Chatbot = () => {
       <div className="chatbot-input">
         <input
           type="text"
-          placeholder="Escribe tu pregunta..."
+          placeholder={t.chatbotInputPlaceholder}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}

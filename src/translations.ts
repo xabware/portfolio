@@ -100,6 +100,36 @@ export const translations = {
     searchResultPlural: 'resultados encontrados',
     searchResultSingular: 'resultado encontrado',
     searchNoResults: 'No se encontraron resultados',
+    
+    // Chatbot
+    chatbotWelcomeTitle: 'Asistente Virtual con IA',
+    chatbotWelcomeDescription: 'Chat con IA ejecutándose localmente en tu navegador. Privado y seguro.',
+    chatbotStartButton: 'Iniciar Chatbot',
+    chatbotDownloadNote: 'Se descargará el modelo (~300MB). Puede tardar unos minutos.',
+    chatbotLoadingTitle: 'Cargando modelo de IA...',
+    chatbotLoadingNote: 'Esto puede tardar unos minutos la primera vez. El modelo se descarga y ejecuta completamente en tu navegador.',
+    chatbotErrorTitle: 'Error al cargar el modelo',
+    chatbotErrorNote: 'Por favor, recarga la página o verifica que tu navegador soporte WebGPU.',
+    chatbotWelcomeMessage: '¡Hola! Soy tu asistente virtual con IA ejecutándose localmente en tu navegador. Puedo responder preguntas sobre tecnología, desarrollo y mucho más. ¿En qué puedo ayudarte?',
+    chatbotInputPlaceholder: 'Escribe tu pregunta...',
+    chatbotErrorMessage: 'Lo siento, ha ocurrido un error. Por favor, intenta de nuevo.',
+    chatLoading: 'Cargando chat...',
+    
+    // Sidebar
+    sidebarExpandLabel: 'Expandir sidebar',
+    sidebarCollapseLabel: 'Colapsar sidebar',
+    
+    // Skills - Additional Competencies
+    skillAgileScrum: 'Agile/Scrum',
+    skillRestApis: 'REST APIs',
+    skillGraphQL: 'GraphQL',
+    skillMicroservices: 'Microservicios',
+    skillTesting: 'Testing (Jest, Pytest)',
+    skillUIUX: 'UI/UX Design',
+    skillResponsiveDesign: 'Responsive Design',
+    skillPerformanceOptimization: 'Performance Optimization',
+    skillSecurityBestPractices: 'Security Best Practices',
+    skillTeamLeadership: 'Team Leadership',
   },
   en: {
     // Header
@@ -200,6 +230,36 @@ export const translations = {
     searchResultPlural: 'results found',
     searchResultSingular: 'result found',
     searchNoResults: 'No results found',
+    
+    // Chatbot
+    chatbotWelcomeTitle: 'AI Virtual Assistant',
+    chatbotWelcomeDescription: 'AI chat running locally in your browser. Private and secure.',
+    chatbotStartButton: 'Start Chatbot',
+    chatbotDownloadNote: 'The model will be downloaded (~300MB). It may take a few minutes.',
+    chatbotLoadingTitle: 'Loading AI model...',
+    chatbotLoadingNote: 'This may take a few minutes the first time. The model is downloaded and runs completely in your browser.',
+    chatbotErrorTitle: 'Error loading model',
+    chatbotErrorNote: 'Please reload the page or verify that your browser supports WebGPU.',
+    chatbotWelcomeMessage: 'Hello! I\'m your virtual assistant with AI running locally in your browser. I can answer questions about technology, development and much more. How can I help you?',
+    chatbotInputPlaceholder: 'Type your question...',
+    chatbotErrorMessage: 'Sorry, an error occurred. Please try again.',
+    chatLoading: 'Loading chat...',
+    
+    // Sidebar
+    sidebarExpandLabel: 'Expand sidebar',
+    sidebarCollapseLabel: 'Collapse sidebar',
+    
+    // Skills - Additional Competencies
+    skillAgileScrum: 'Agile/Scrum',
+    skillRestApis: 'REST APIs',
+    skillGraphQL: 'GraphQL',
+    skillMicroservices: 'Microservices',
+    skillTesting: 'Testing (Jest, Pytest)',
+    skillUIUX: 'UI/UX Design',
+    skillResponsiveDesign: 'Responsive Design',
+    skillPerformanceOptimization: 'Performance Optimization',
+    skillSecurityBestPractices: 'Security Best Practices',
+    skillTeamLeadership: 'Team Leadership',
   },
 };
 
