@@ -8,8 +8,11 @@ import './App.css';
 const About = lazy(() => import('./components/sections/About'));
 const Projects = lazy(() => import('./components/sections/Projects'));
 const Skills = lazy(() => import('./components/sections/Skills'));
-const Chat = lazy(() => import('./components/sections/Chat'));
 const Contact = lazy(() => import('./components/sections/Contact'));
+
+// Lazy load Chat AND WebLLMProvider together - solo se carga cuando se accede al chat
+const Chat = lazy(() => import('./components/sections/Chat'));
+const WebLLMProvider = lazy(() => import('./contexts/WebLLMContext').then(module => ({ default: module.WebLLMProvider })));
 
 function App() {
   const [activeSection, setActiveSection] = useState('home');
@@ -51,19 +54,15 @@ function App() {
               {renderSection()}
             </Suspense>
           )}
-          {/* Chat permanece montado pero oculto para mantener la conversación */}
-          {chatMounted && activeSection === 'chat' && (
-            <Suspense fallback={<div className="loading">Cargando chat...</div>}>
-              <Chat />
+          {/* Chat con WebLLM cargado solo cuando se accede por primera vez */}
+          {chatMounted && (
+            <Suspense fallback={<div className="loading">Cargando chat y modelo de IA...</div>}>
+              <WebLLMProvider>
+                <div style={{ display: activeSection === 'chat' ? 'block' : 'none' }}>
+                  <Chat />
+                </div>
+              </WebLLMProvider>
             </Suspense>
-          )}
-          {/* Mantener chat en memoria pero sin renderizar cuando no está activo */}
-          {chatMounted && activeSection !== 'chat' && (
-            <div style={{ display: 'none' }}>
-              <Suspense fallback={null}>
-                <Chat />
-              </Suspense>
-            </div>
           )}
         </main>
       </div>
