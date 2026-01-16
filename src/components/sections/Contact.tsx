@@ -3,28 +3,53 @@ import Card from '../Card';
 import { Mail, Linkedin, Github, Twitter } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
+import emailjs from '@emailjs/browser';
 import './Contact.css';
 
 const Contact = memo(() => {
   const { language } = useLanguage();
   const t = useTranslations(language);
   const [showNotification, setShowNotification] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsSending(true);
+    setIsError(false);
     
-    // Aquí iría la lógica real de envío del correo
-    // Por ahora solo mostramos la notificación
+    const form = e.currentTarget;
     
-    setShowNotification(true);
-    
-    // Ocultar la notificación después de 3 segundos
-    setTimeout(() => {
-      setShowNotification(false);
-    }, 3000);
-    
-    // Resetear el formulario
-    e.currentTarget.reset();
+    try {
+      // Configuración de EmailJS
+      // IMPORTANTE: Reemplaza estos valores con tus credenciales de EmailJS
+      const serviceId = 'YOUR_SERVICE_ID'; // Obtenlo de emailjs.com
+      const templateId = 'YOUR_TEMPLATE_ID'; // Obtenlo de emailjs.com
+      const publicKey = 'YOUR_PUBLIC_KEY'; // Obtenlo de emailjs.com
+      
+      await emailjs.sendForm(serviceId, templateId, form, publicKey);
+      
+      setShowNotification(true);
+      setIsError(false);
+      form.reset();
+      
+      // Ocultar la notificación después de 3 segundos
+      setTimeout(() => {
+        setShowNotification(false);
+      }, 3000);
+    } catch (error) {
+      console.error('Error al enviar el correo:', error);
+      setIsError(true);
+      setShowNotification(true);
+      
+      // Ocultar la notificación de error después de 4 segundos
+      setTimeout(() => {
+        setShowNotification(false);
+        setIsError(false);
+      }, 4000);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const contactMethods = useMemo(() => [
@@ -89,38 +114,42 @@ const Contact = memo(() => {
 
         <Card title={t.sendMessage} className="contact-form-card">
           {showNotification && (
-            <div className="success-notification">
-              {t.messageSent}
+            <div className={isError ? 'error-notification' : 'success-notification'}>
+              {isError ? t.messageError : t.messageSent}
             </div>
           )}
           <form className="contact-form" onSubmit={handleSubmit}>
+            <input type="hidden" name="to_email" value="tu@email.com" />
+            
             <div className="form-group">
               <label htmlFor="name">{t.name}</label>
-              <input type="text" id="name" placeholder={t.yourName} required />
+              <input type="text" id="name" name="from_name" placeholder={t.yourName} required disabled={isSending} />
             </div>
 
             <div className="form-group">
               <label htmlFor="email">{t.email}</label>
-              <input type="email" id="email" placeholder={t.yourEmail} required />
+              <input type="email" id="email" name="from_email" placeholder={t.yourEmail} required disabled={isSending} />
             </div>
 
             <div className="form-group">
               <label htmlFor="subject">{t.subject}</label>
-              <input type="text" id="subject" placeholder={t.messageSubject} required />
+              <input type="text" id="subject" name="subject" placeholder={t.messageSubject} required disabled={isSending} />
             </div>
 
             <div className="form-group">
               <label htmlFor="message">{t.message}</label>
               <textarea
                 id="message"
+                name="message"
                 rows={5}
                 placeholder={t.writeMessage}
                 required
+                disabled={isSending}
               ></textarea>
             </div>
 
-            <button type="submit" className="submit-btn">
-              {t.sendButton}
+            <button type="submit" className="submit-btn" disabled={isSending}>
+              {isSending ? t.sending : t.sendButton}
             </button>
           </form>
         </Card>

@@ -95,7 +95,9 @@ export const translations = {
     message: 'Mensaje',
     writeMessage: 'Escribe tu mensaje aquí...',
     sendButton: 'Enviar Mensaje',
+    sending: 'Enviando...',
     messageSent: '✓ Mensaje enviado correctamente',
+    messageError: '✗ Error al enviar. Intenta de nuevo',
     
     // Search
     searchPlaceholder: 'Buscar en todo el portfolio...',
@@ -227,7 +229,9 @@ export const translations = {
     message: 'Message',
     writeMessage: 'Write your message here...',
     sendButton: 'Send Message',
+    sending: 'Sending...',
     messageSent: '✓ Message sent successfully',
+    messageError: '✗ Error sending. Try again',
     
     // Search
     searchPlaceholder: 'Search across portfolio...',
