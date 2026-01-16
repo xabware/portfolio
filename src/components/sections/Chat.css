@@ -21,13 +21,16 @@
   .chat-full-screen {
     position: fixed;
     top: 60px;
-    bottom: 0;
+    left: 0;
+    right: 0;
+    bottom: 60px;
     height: auto;
   }
   
   .chat-full-screen .chatbot-container {
     height: 100%;
-    padding-bottom: 60px;
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -35,10 +38,9 @@
   .chat-full-screen {
     position: fixed;
     top: 60px;
-    bottom: 0;
-  }
-  
-  .chat-full-screen .chatbot-container {
-    padding-bottom: 60px;
+    left: 0;
+    right: 0;
+    bottom: 60px;
+    height: auto;
   }
 }

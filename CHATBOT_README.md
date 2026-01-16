@@ -76,6 +76,7 @@ Puedes personalizar el modelo editando `src/hooks/useWebLLM.ts`:
 ## 🆚 Comparación: Local vs Backend
 
 ### LLM Local (Actual)
+
 ✅ Sin latencia de red
 ✅ Total privacidad
 ✅ Funciona offline después de la primera carga
@@ -84,6 +85,7 @@ Puedes personalizar el modelo editando `src/hooks/useWebLLM.ts`:
 ❌ Limitado por hardware del cliente
 
 ### Backend RAG (Anterior)
+
 ✅ Modelos más potentes
 ✅ Sin requisitos de hardware del cliente
 ✅ Actualizaciones instantáneas
@@ -94,16 +96,19 @@ Puedes personalizar el modelo editando `src/hooks/useWebLLM.ts`:
 ## 🐛 Solución de Problemas
 
 ### El modelo no carga
+
 - Verifica que tu navegador soporte WebGPU
 - Limpia el caché del navegador
 - Asegúrate de tener suficiente espacio en disco
 
 ### Respuestas lentas
+
 - El hardware de tu dispositivo puede ser limitado
 - Cierra otras pestañas para liberar memoria
 - Considera usar un modelo más pequeño
 
 ### Error de WebGPU
+
 - Actualiza tu navegador a la última versión
 - Habilita WebGPU en las flags del navegador
 - Verifica que tu GPU sea compatible
