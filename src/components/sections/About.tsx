@@ -1,56 +1,53 @@
 import Card from '../Card';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useTranslations } from '../../translations';
 import './About.css';
 
 const About = () => {
+  const { language } = useLanguage();
+  const t = useTranslations(language);
+  
   return (
     <div className="section-content">
-      <Card title="Sobre mí">
+      <Card title={t.aboutMe}>
         <p>
-          Soy un desarrollador full-stack apasionado por crear soluciones innovadoras y
-          eficientes. Con más de 5 años de experiencia en el desarrollo web, me especializo
-          en tecnologías modernas como React, Node.js, y bases de datos tanto relacionales
-          como NoSQL.
+          {t.aboutDescription1}
         </p>
         <p>
-          Mi enfoque se centra en escribir código limpio, mantenible y escalable, siempre
-          buscando las mejores prácticas y las últimas tendencias en desarrollo de software.
+          {t.aboutDescription2}
         </p>
       </Card>
 
       <div className="experience-section">
-        <Card title="Experiencia Profesional">
+        <Card title={t.professionalExperience}>
           <div className="timeline">
             <div className="timeline-item">
               <div className="timeline-dot"></div>
               <div className="timeline-content">
-                <h4>Senior Full-Stack Developer</h4>
-                <p className="timeline-company">Tech Company | 2022 - Presente</p>
+                <h4>{t.seniorFullStack}</h4>
+                <p className="timeline-company">{t.techCompany}</p>
                 <p>
-                  Desarrollo de aplicaciones empresariales utilizando React, Node.js y
-                  microservicios. Implementación de arquitecturas escalables y sistemas
-                  distribuidos.
+                  {t.seniorDescription}
                 </p>
               </div>
             </div>
             <div className="timeline-item">
               <div className="timeline-dot"></div>
               <div className="timeline-content">
-                <h4>Full-Stack Developer</h4>
-                <p className="timeline-company">Startup Tech | 2020 - 2022</p>
+                <h4>{t.fullStackDeveloper}</h4>
+                <p className="timeline-company">{t.startupTech}</p>
                 <p>
-                  Desarrollo de MVP y productos desde cero. Trabajo con equipos ágiles y
-                  metodologías modernas de desarrollo.
+                  {t.fullStackDescription}
                 </p>
               </div>
             </div>
             <div className="timeline-item">
               <div className="timeline-dot"></div>
               <div className="timeline-content">
-                <h4>Junior Developer</h4>
-                <p className="timeline-company">Software Agency | 2019 - 2020</p>
+                <h4>{t.juniorDeveloper}</h4>
+                <p className="timeline-company">{t.softwareAgency}</p>
                 <p>
-                  Desarrollo frontend y backend de aplicaciones web. Aprendizaje de mejores
-                  prácticas y trabajo en equipo.
+                  {t.juniorDescription}
                 </p>
               </div>
             </div>
@@ -58,11 +55,11 @@ const About = () => {
         </Card>
       </div>
 
-      <Card title="Educación">
+      <Card title={t.education}>
         <div className="education-item">
-          <h4>Ingeniería en Sistemas Computacionales</h4>
-          <p className="education-institution">Universidad Tecnológica | 2015 - 2019</p>
-          <p>Especialización en desarrollo de software y sistemas distribuidos.</p>
+          <h4>{t.degree}</h4>
+          <p className="education-institution">{t.university}</p>
+          <p>{t.degreeDescription}</p>
         </div>
       </Card>
     </div>

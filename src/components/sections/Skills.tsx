@@ -1,10 +1,14 @@
 import Card from '../Card';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useTranslations } from '../../translations';
 import './Skills.css';
 
 const Skills = () => {
+  const { language } = useLanguage();
+  const t = useTranslations(language);
   const skillCategories = [
     {
-      title: 'Frontend',
+      title: t.frontend,
       skills: [
         { name: 'React', level: 95 },
         { name: 'TypeScript', level: 90 },
@@ -13,7 +17,7 @@ const Skills = () => {
       ],
     },
     {
-      title: 'Backend',
+      title: t.backend,
       skills: [
         { name: 'Node.js', level: 90 },
         { name: 'Python', level: 85 },
@@ -22,7 +26,7 @@ const Skills = () => {
       ],
     },
     {
-      title: 'Bases de Datos',
+      title: t.databases,
       skills: [
         { name: 'MongoDB', level: 85 },
         { name: 'PostgreSQL', level: 82 },
@@ -31,7 +35,7 @@ const Skills = () => {
       ],
     },
     {
-      title: 'DevOps & Tools',
+      title: t.devopsTools,
       skills: [
         { name: 'Git', level: 92 },
         { name: 'Docker', level: 80 },
@@ -44,8 +48,8 @@ const Skills = () => {
   return (
     <div className="section-content">
       <div className="skills-header">
-        <h2>Habilidades Técnicas</h2>
-        <p>Tecnologías y herramientas que domino</p>
+        <h2>{t.technicalSkills}</h2>
+        <p>{t.skillsSubtitle}</p>
       </div>
 
       <div className="skills-grid">
@@ -71,7 +75,7 @@ const Skills = () => {
         ))}
       </div>
 
-      <Card title="Otras Competencias" className="additional-skills">
+      <Card title={t.otherCompetencies} className="additional-skills">
         <div className="tags-container">
           {[
             'Agile/Scrum',

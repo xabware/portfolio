@@ -1,41 +1,41 @@
 import Card from '../Card';
 import { ExternalLink, Github } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useTranslations } from '../../translations';
 import './Projects.css';
 
 const Projects = () => {
+  const { language } = useLanguage();
+  const t = useTranslations(language);
   const projects = [
     {
       id: 1,
-      title: 'E-commerce Platform',
-      description:
-        'Plataforma de comercio electrónico completa con carrito de compras, pasarela de pago y panel de administración.',
+      title: t.ecommercePlatform,
+      description: t.ecommerceDescription,
       tech: ['React', 'Node.js', 'MongoDB', 'Stripe'],
       github: 'https://github.com',
       demo: 'https://demo.com',
     },
     {
       id: 2,
-      title: 'Task Management App',
-      description:
-        'Aplicación de gestión de tareas con funciones de colaboración en tiempo real y notificaciones.',
+      title: t.taskManagementApp,
+      description: t.taskManagementDescription,
       tech: ['React', 'Firebase', 'Material-UI'],
       github: 'https://github.com',
       demo: 'https://demo.com',
     },
     {
       id: 3,
-      title: 'AI Chatbot System',
-      description:
-        'Sistema de chatbot inteligente con procesamiento de lenguaje natural y base de conocimiento vectorial.',
+      title: t.aiChatbotSystem,
+      description: t.aiChatbotDescription,
       tech: ['Python', 'FastAPI', 'OpenAI', 'Pinecone'],
       github: 'https://github.com',
       demo: 'https://demo.com',
     },
     {
       id: 4,
-      title: 'Analytics Dashboard',
-      description:
-        'Dashboard de analíticas en tiempo real con visualizaciones interactivas y reportes personalizables.',
+      title: t.analyticsDashboard,
+      description: t.analyticsDashboardDescription,
       tech: ['React', 'D3.js', 'Express', 'PostgreSQL'],
       github: 'https://github.com',
       demo: 'https://demo.com',
@@ -45,8 +45,8 @@ const Projects = () => {
   return (
     <div className="section-content">
       <div className="projects-header">
-        <h2>Mis Proyectos</h2>
-        <p>Una selección de proyectos en los que he trabajado</p>
+        <h2>{t.myProjects}</h2>
+        <p>{t.projectsSubtitle}</p>
       </div>
 
       <div className="projects-grid">
@@ -64,11 +64,11 @@ const Projects = () => {
             <div className="project-links">
               <a href={project.github} target="_blank" rel="noopener noreferrer">
                 <Github size={18} />
-                Código
+                {t.code}
               </a>
               <a href={project.demo} target="_blank" rel="noopener noreferrer">
                 <ExternalLink size={18} />
-                Demo
+                {t.demo}
               </a>
             </div>
           </Card>
