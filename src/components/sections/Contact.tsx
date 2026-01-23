@@ -22,7 +22,6 @@ const Contact = memo(() => {
     const form = e.currentTarget;
     
     try {
-      // Configuración de EmailJS
       const serviceId = 'service_p926wet';
       const templateId = 'template_4aupjtt';
       const publicKey = 'Dg-aiS2kIuJ66I-Us';
@@ -33,16 +32,14 @@ const Contact = memo(() => {
       setIsError(false);
       form.reset();
       
-      // Ocultar la notificación después de 3 segundos
       setTimeout(() => {
         setShowNotification(false);
       }, 3000);
     } catch (error) {
-      console.error('Error al enviar el correo:', error);
+      console.error('Error sending email:', error);
       setIsError(true);
       setShowNotification(true);
       
-      // Ocultar la notificación de error después de 4 segundos
       setTimeout(() => {
         setShowNotification(false);
         setIsError(false);

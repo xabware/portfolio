@@ -22,6 +22,13 @@ export const translations = {
     projectsCompleted: 'Proyectos completados',
     aboutDashboard: 'Sobre este Dashboard',
     dashboardDescription: 'Este dashboard es un proyecto que he creado para compartir y unificar en un sitio todos los otros proyectos que vaya desarrollando. En mi repositorio de github tengo una rama con la plantilla sin mis datos personales que animo a cualquiera que esté leyendo esto a utilizar como base para su propio portfolio.',
+    features: 'Características',
+    modernDesign: '✨ Diseño moderno de dashboard',
+    darkModeSupport: '🌓 Soporte de tema claro/oscuro',
+    aiChatbot: '🤖 Chatbot IA integrado',
+    responsiveDesign: '📱 Diseño responsive',
+    viteOptimized: '⚡ Optimizado con Vite',
+    elegantInterface: '🎨 Interfaz intuitiva y elegante',
     
     // About
     aboutMe: 'Sobre mí',
@@ -150,8 +157,8 @@ export const translations = {
     contact: 'Contact',
     
     // Home
-    welcomeTitle: 'Welcome to my Portfolio',
-    welcomeSubtitle: 'Full-Stack Developer | React & Node.js Specialist',
+    welcomeTitle: 'Xabier Cía Valencia',
+    welcomeSubtitle: 'Full-Stack & AI Developer | Cloud Architecture',
     yearsExperience: 'Years of experience',
     projectsCompleted: 'Completed projects',
     satisfiedClients: 'Satisfied clients',
@@ -168,18 +175,18 @@ export const translations = {
     
     // About
     aboutMe: 'About Me',
-    aboutDescription1: 'I am a full-stack developer passionate about creating innovative and efficient solutions. With over 5 years of experience in web development, I specialize in modern technologies such as React, Node.js, and both relational and NoSQL databases.',
+    aboutDescription1: 'I am a curious and engaged person. I chose software engineering as a career because I was torn between too many fields—physics, biology, mathematics... And I felt that software engineering, due to its cross-cutting nature, would allow me to explore many areas and eventually discover what I was most passionate about in life.',
     aboutDescription2: 'My approach focuses on writing clean, maintainable, and scalable code, always seeking best practices and the latest trends in software development.',
     professionalExperience: 'Professional Experience',
-    seniorFullStack: 'Senior Full-Stack Developer',
-    techCompany: 'Tech Company | 2022 - Present',
-    seniorDescription: 'Development of enterprise applications using React, Node.js, and microservices. Implementation of scalable architectures and distributed systems.',
-    fullStackDeveloper: 'Full-Stack Developer',
-    startupTech: 'Startup Tech | 2020 - 2022',
-    fullStackDescription: 'Development of MVPs and products from scratch. Work with agile teams and modern development methodologies.',
-    juniorDeveloper: 'Junior Developer',
-    softwareAgency: 'Software Agency | 2019 - 2020',
-    juniorDescription: 'Frontend and backend development of web applications. Learning best practices and teamwork.',
+    seniorFullStack: 'Full-Stack Developer',
+    techCompany: 'Tracasa Instrumental | 2021 - Present',
+    seniorDescription: 'Development of government applications using mainly .NET, Angular, React and T-SQL. Architecture implementation and project planning, integration of artificial intelligence systems.',
+    fullStackDeveloper: 'Extracurricular Internship',
+    startupTech: 'Veridas | 2020',
+    fullStackDescription: 'Preparation of datasets to train facial recognition models. Design of mobile applications with Android Studio and Java.',
+    juniorDeveloper: 'Extracurricular Internship',
+    softwareAgency: 'Veridas | 2019',
+    juniorDescription: 'Preparation of datasets to train facial recognition models.',
     education: 'Education',
     educationItems: [
       {
@@ -277,7 +284,7 @@ export const translations = {
     skillPerformanceOptimization: 'Performance Optimization',
     skillSecurityBestPractices: 'Security Best Practices',
     skillTeamLeadership: 'Team Leadership',
-    skillAutonomia: '',
+    skillAutonomia: 'Autonomy',
   },
 } as const;
 
