@@ -1,6 +1,7 @@
 import { useMemo, memo } from 'react';
 import Card from '../Card';
-import { ExternalLink, Github } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
+import { GithubIcon } from '../BrandIcons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
 import './Projects.css';
@@ -64,7 +65,7 @@ const Projects = memo(() => {
             </div>
             <div className="project-links">
               <a href={project.github} target="_blank" rel="noopener noreferrer">
-                <Github size={18} />
+                <GithubIcon size={18} />
                 {t.code}
               </a>
               <a href={project.demo} target="_blank" rel="noopener noreferrer">

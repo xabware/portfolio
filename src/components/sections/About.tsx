@@ -57,10 +57,17 @@ const About = memo(() => {
       </div>
 
       <Card title={t.education}>
-        <div className="education-item">
-          <h3>{t.degree}</h3>
-          <p className="education-institution">{t.university}</p>
-          <p>{t.degreeDescription}</p>
+        <div className="timeline">
+          {t.educationItems.map((item, index) => (
+            <div key={index} className="timeline-item">
+              <div className="timeline-dot"></div>
+              <div className="timeline-content">
+                <h3>{item.degree}</h3>
+                <p className="timeline-company">{item.institution}</p>
+                <p>{item.description}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </Card>
     </div>

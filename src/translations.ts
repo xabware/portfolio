@@ -16,40 +16,40 @@ export const translations = {
     contact: 'Contacto',
     
     // Home
-    welcomeTitle: 'Bienvenido a mi Portfolio',
-    welcomeSubtitle: 'Desarrollador Full-Stack | Especialista en React & Node.js',
+    welcomeTitle: 'Xabier Cía Valencia',
+    welcomeSubtitle: 'Desarrollador Full-Stack y AI | Arquitectura de cloud',
     yearsExperience: 'Años de experiencia',
     projectsCompleted: 'Proyectos completados',
-    satisfiedClients: 'Clientes satisfechos',
-    techMastered: 'Tecnologías dominadas',
     aboutDashboard: 'Sobre este Dashboard',
-    dashboardDescription: 'Este portfolio está construido con React y Vite, implementando una interfaz moderna de dashboard con soporte para temas claro y oscuro. Incluye un chatbot inteligente con RAG (Retrieval-Augmented Generation) para responder preguntas sobre mi experiencia profesional.',
-    features: 'Características',
-    modernDesign: '✨ Diseño moderno tipo dashboard',
-    darkModeSupport: '🌓 Soporte para tema claro/oscuro',
-    aiChatbot: '🤖 Chatbot con IA integrada',
-    responsiveDesign: '📱 Diseño responsive',
-    viteOptimized: '⚡ Optimizado con Vite',
-    elegantInterface: '🎨 Interfaz intuitiva y elegante',
+    dashboardDescription: 'Este dashboard es un proyecto que he creado para compartir y unificar en un sitio todos los otros proyectos que vaya desarrollando. En mi repositorio de github tengo una rama con la plantilla sin mis datos personales que animo a cualquiera que esté leyendo esto a utilizar como base para su propio portfolio.',
     
     // About
     aboutMe: 'Sobre mí',
-    aboutDescription1: 'Soy un desarrollador full-stack apasionado por crear soluciones innovadoras y eficientes. Con más de 5 años de experiencia en el desarrollo web, me especializo en tecnologías modernas como React, Node.js, y bases de datos tanto relacionales como NoSQL.',
-    aboutDescription2: 'Mi enfoque se centra en escribir código limpio, mantenible y escalable, siempre buscando las mejores prácticas y las últimas tendencias en desarrollo de software.',
+    aboutDescription1: 'Soy una persona curiosa e implicada. Elegí como carrera la ingeniería de software porque estaba dudando entre demasiadas carreras, física, biología, matemáticas... Y sentí que la ingeniería de software, por su caracter transversal, me permitiría explorar muchas áreas y llegar a encontrar qué era lo que más me apasionaba en la vida.',
+    aboutDescription2: 'A día de hoy, soy consciente de que lo que me llamó de la informática, es su capacidad para transformar cada área del mundo de una forma distinta, y de impactar en tantas vidas de una forma positiva. Me gusta estar al día con los últimos avances tecnológicos, y encontrar formas de las que pueden mejorar la calidad de vida de las personas.',
     professionalExperience: 'Experiencia Profesional',
-    seniorFullStack: 'Senior Full-Stack Developer',
-    techCompany: 'Tech Company | 2022 - Presente',
-    seniorDescription: 'Desarrollo de aplicaciones empresariales utilizando React, Node.js y microservicios. Implementación de arquitecturas escalables y sistemas distribuidos.',
-    fullStackDeveloper: 'Full-Stack Developer',
-    startupTech: 'Startup Tech | 2020 - 2022',
-    fullStackDescription: 'Desarrollo de MVP y productos desde cero. Trabajo con equipos ágiles y metodologías modernas de desarrollo.',
-    juniorDeveloper: 'Junior Developer',
-    softwareAgency: 'Software Agency | 2019 - 2020',
-    juniorDescription: 'Desarrollo frontend y backend de aplicaciones web. Aprendizaje de mejores prácticas y trabajo en equipo.',
+    seniorFullStack: 'Full-Stack Developer',
+    techCompany: 'Tracasa instrumental | 2021 - Presente',
+    seniorDescription: 'Desarrollo de aplicaciones gubernamentales utilizando principalmente .NET, angular, react y T-SQL. Implementación de arquitectura y planificación de proyectos, integración de sistemas de inteligencia artificial.',
+    fullStackDeveloper: 'Prácticas extracurriculares',
+    startupTech: 'Veridas | 2020',
+    fullStackDescription: 'Preparación de conjuntos de datos para entrenar modelos de reconocimiento facial. Diseño de aplicaciones móviles con android studio y java.',
+    juniorDeveloper: 'Prácticas extracurriculares',
+    softwareAgency: 'Veridas | 2019',
+    juniorDescription: 'Preparación de conjuntos de datos para entrenar modelos de reconocimiento facial.',
     education: 'Educación',
-    degree: 'Ingeniería en Sistemas Computacionales',
-    university: 'Universidad Tecnológica | 2015 - 2019',
-    degreeDescription: 'Especialización en desarrollo de software y sistemas distribuidos.',
+    educationItems: [
+      {
+        degree: 'Master en Ingeniería informática',
+        institution: 'Universidad pública de Navarra | 2021-2024',
+        description: 'Master generalista que cubre los contenidos que se quedan fuera del grado.'
+      },
+      {
+        degree: 'Ingeniería informática',
+        institution: 'Universidad pública de Navarra | 2017-2021',
+        description: 'Especialización en Computación y sistemas inteligentes y en Tecnologías de la información.'
+      }
+    ],
     
     // Projects
     myProjects: 'Mis Proyectos',
@@ -127,14 +127,14 @@ export const translations = {
     // Skills - Additional Competencies
     skillAgileScrum: 'Agile/Scrum',
     skillRestApis: 'REST APIs',
-    skillGraphQL: 'GraphQL',
     skillMicroservices: 'Microservicios',
-    skillTesting: 'Testing (Jest, Pytest)',
+    skillTesting: 'Testing',
     skillUIUX: 'UI/UX Design',
     skillResponsiveDesign: 'Responsive Design',
     skillPerformanceOptimization: 'Performance Optimization',
     skillSecurityBestPractices: 'Security Best Practices',
-    skillTeamLeadership: 'Team Leadership',
+    skillTeamLeadership: 'Liderazgo',
+    skillAutonomia: 'Autonomía',
   },
   en: {
     // Header
@@ -181,9 +181,18 @@ export const translations = {
     softwareAgency: 'Software Agency | 2019 - 2020',
     juniorDescription: 'Frontend and backend development of web applications. Learning best practices and teamwork.',
     education: 'Education',
-    degree: 'Computer Systems Engineering',
-    university: 'Technological University | 2015 - 2019',
-    degreeDescription: 'Specialization in software development and distributed systems.',
+    educationItems: [
+      {
+        degree: 'Master in Computer Engineering',
+        institution: 'Public University of Navarre | 2021-2024',
+        description: 'Generalist master covering contents that are outside the undergraduate degree.'
+      },
+      {
+        degree: 'Computer Engineering',
+        institution: 'Public University of Navarre | 2017-2021',
+        description: 'Specialization in Computing and intelligent systems and in Information Technology.'
+      }
+    ],
     
     // Projects
     myProjects: 'My Projects',
@@ -261,7 +270,6 @@ export const translations = {
     // Skills - Additional Competencies
     skillAgileScrum: 'Agile/Scrum',
     skillRestApis: 'REST APIs',
-    skillGraphQL: 'GraphQL',
     skillMicroservices: 'Microservices',
     skillTesting: 'Testing (Jest, Pytest)',
     skillUIUX: 'UI/UX Design',
@@ -269,6 +277,7 @@ export const translations = {
     skillPerformanceOptimization: 'Performance Optimization',
     skillSecurityBestPractices: 'Security Best Practices',
     skillTeamLeadership: 'Team Leadership',
+    skillAutonomia: '',
   },
 } as const;
 

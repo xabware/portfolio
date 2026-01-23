@@ -13,36 +13,37 @@ const Skills = memo(() => {
       title: t.frontend,
       skills: [
         { name: 'React', level: 95 },
-        { name: 'TypeScript', level: 90 },
-        { name: 'CSS/Sass', level: 85 },
-        { name: 'Vue.js', level: 75 },
+        { name: 'ASP', level: 90 },
+        { name: 'CSS', level: 70 },
+        { name: 'Angular.js', level: 90 },
       ],
     },
     {
       title: t.backend,
       skills: [
-        { name: 'Node.js', level: 90 },
+        { name: '.NET', level: 90 },
         { name: 'Python', level: 85 },
-        { name: 'Express', level: 88 },
-        { name: 'FastAPI', level: 80 },
+        { name: 'Java', level: 75 },
+        { name: 'PHP', level: 80 },
       ],
     },
     {
       title: t.databases,
       skills: [
-        { name: 'MongoDB', level: 85 },
-        { name: 'PostgreSQL', level: 82 },
-        { name: 'Redis', level: 75 },
-        { name: 'Pinecone', level: 70 },
+        { name: 'Microsoft SQL Server', level: 95 },
+        { name: 'SQL', level: 95 },
+        { name: 'Entity Framework', level: 90 },
+        { name: 'T-SQL', level: 90 },
       ],
     },
     {
       title: t.devopsTools,
       skills: [
-        { name: 'Git', level: 92 },
-        { name: 'Docker', level: 80 },
-        { name: 'AWS', level: 75 },
-        { name: 'CI/CD', level: 78 },
+        { name: 'Git', level: 100 },
+        { name: 'Docker', level: 70 },
+        { name: 'Azure DevOps', level: 70 },
+        { name: 'AWS', level: 60 },
+        { name: 'CI/CD', level: 80 },
       ],
     },
   ], [t]);
@@ -50,7 +51,6 @@ const Skills = memo(() => {
   const additionalSkills = useMemo(() => [
     t.skillAgileScrum,
     t.skillRestApis,
-    t.skillGraphQL,
     t.skillMicroservices,
     t.skillTesting,
     t.skillUIUX,
@@ -58,6 +58,7 @@ const Skills = memo(() => {
     t.skillPerformanceOptimization,
     t.skillSecurityBestPractices,
     t.skillTeamLeadership,
+    t.skillAutonomia,
   ], [t]);
 
   return (

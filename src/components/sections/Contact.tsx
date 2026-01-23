@@ -1,6 +1,7 @@
 import { memo, useMemo, useState } from 'react';
 import Card from '../Card';
-import { Mail, Linkedin, Github, Twitter } from 'lucide-react';
+import { Mail } from 'lucide-react';
+import { LinkedinIcon, GithubIcon, TwitterIcon } from '../BrandIcons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
 import emailjs from '@emailjs/browser';
@@ -22,13 +23,12 @@ const Contact = memo(() => {
     
     try {
       // Configuración de EmailJS
-      // IMPORTANTE: Reemplaza estos valores con tus credenciales de EmailJS
-      const serviceId = 'YOUR_SERVICE_ID'; // Obtenlo de emailjs.com
-      const templateId = 'YOUR_TEMPLATE_ID'; // Obtenlo de emailjs.com
-      const publicKey = 'YOUR_PUBLIC_KEY'; // Obtenlo de emailjs.com
-      
+      const serviceId = 'service_p926wet';
+      const templateId = 'template_4aupjtt';
+      const publicKey = 'Dg-aiS2kIuJ66I-Us';
       await emailjs.sendForm(serviceId, templateId, form, publicKey);
-      
+      //Si has llegado a leer esto es que estás hurgando en mi página. Sí, son las credenciales para mandarme correos, enhorabuena.
+
       setShowNotification(true);
       setIsError(false);
       form.reset();
@@ -56,24 +56,24 @@ const Contact = memo(() => {
     {
       icon: Mail,
       title: t.email,
-      value: 'tu@email.com',
-      link: 'mailto:tu@email.com',
+      value: 'xabierciava@gmail.com',
+      link: 'mailto:xabierciava@gmail.com',
     },
     {
-      icon: Linkedin,
+      icon: LinkedinIcon,
       title: 'LinkedIn',
-      value: 'linkedin.com/in/tuperfil',
-      link: 'https://linkedin.com',
+      value: 'linkedin.com/in/xabier-cía-valencia-a7a097132',
+      link: 'https://www.linkedin.com/in/xabier-c%C3%ADa-valencia-a7a097132/',
     },
     {
-      icon: Github,
+      icon: GithubIcon,
       title: 'GitHub',
       value: 'github.com/tuusuario',
       link: 'https://github.com',
     },
     {
-      icon: Twitter,
-      title: 'Twitter',
+      icon: TwitterIcon,
+      title: 'X',
       value: '@tuusuario',
       link: 'https://twitter.com',
     },
