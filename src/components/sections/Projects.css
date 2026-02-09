@@ -63,6 +63,35 @@
   flex-wrap: wrap;
 }
 
+.learn-more-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.learn-more-button:hover {
+  background: var(--primary-hover);
+  transform: translateX(2px);
+}
+
+.learn-more-button svg {
+  transition: transform 0.2s ease;
+}
+
+.learn-more-button:hover svg {
+  transform: translateX(4px);
+}
+
 .project-links a {
   display: flex;
   align-items: center;

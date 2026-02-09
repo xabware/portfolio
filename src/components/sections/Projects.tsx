@@ -1,23 +1,26 @@
-import { useMemo, memo } from 'react';
+import { useMemo, memo, useState } from 'react';
 import Card from '../Card';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, ArrowRight } from 'lucide-react';
 import { GithubIcon } from '../BrandIcons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
+import ProjectDetail from './ProjectDetail';
 import './Projects.css';
 
 const Projects = memo(() => {
   const { language } = useLanguage();
   const t = useTranslations(language);
+  const [selectedProject, setSelectedProject] = useState<number | null>(null);
   
   const projects = useMemo(() => [
     {
       id: 1,
-      title: t.ecommercePlatform,
-      description: t.ecommerceDescription,
+      title: t.portfolioProject,
+      description: t.portfolioDescription,
       tech: ['React', 'Node.js', 'MongoDB', 'Stripe'],
       github: 'https://github.com',
       demo: 'https://demo.com',
+      detailedContent: t.project1Details,
     },
     {
       id: 2,
@@ -26,6 +29,7 @@ const Projects = memo(() => {
       tech: ['React', 'Firebase', 'Material-UI'],
       github: 'https://github.com',
       demo: 'https://demo.com',
+      detailedContent: t.project2Details,
     },
     {
       id: 3,
@@ -34,6 +38,7 @@ const Projects = memo(() => {
       tech: ['Python', 'FastAPI', 'OpenAI', 'Pinecone'],
       github: 'https://github.com',
       demo: 'https://demo.com',
+      detailedContent: t.project3Details,
     },
     {
       id: 4,
@@ -42,6 +47,7 @@ const Projects = memo(() => {
       tech: ['React', 'D3.js', 'Express', 'PostgreSQL'],
       github: 'https://github.com',
       demo: 'https://demo.com',
+      detailedContent: t.project4Details,
     },
   ], [t]);
 
@@ -64,6 +70,13 @@ const Projects = memo(() => {
               ))}
             </div>
             <div className="project-links">
+              <button 
+                className="learn-more-button"
+                onClick={() => setSelectedProject(project.id)}
+              >
+                {t.learnMore}
+                <ArrowRight size={18} />
+              </button>
               <a href={project.github} target="_blank" rel="noopener noreferrer">
                 <GithubIcon size={18} />
                 {t.code}
@@ -76,6 +89,13 @@ const Projects = memo(() => {
           </Card>
         ))}
       </div>
+
+      {selectedProject !== null && (
+        <ProjectDetail 
+          project={projects.find(p => p.id === selectedProject)!}
+          onClose={() => setSelectedProject(null)}
+        />
+      )}
     </div>
   );
 });

@@ -19,7 +19,7 @@ export default defineConfig({
       deleteOriginFile: false,
     }),
   ],
-  base: '/portfolio',
+  base: '/',
   optimizeDeps: {
     exclude: ['@mlc-ai/web-llm'],
   },
