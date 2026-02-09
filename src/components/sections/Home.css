@@ -53,6 +53,28 @@
   position: relative;
 }
 
+.stat-item-clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+}
+
+.stat-item-clickable:hover {
+  transform: translateY(-4px);
+  opacity: 0.9;
+  background: var(--hover-bg, rgba(var(--primary-rgb, 99, 102, 241), 0.05));
+}
+
+.stat-item-clickable:active {
+  transform: translateY(-2px);
+}
+
+.stat-item-clickable:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 4px;
+}
+
 .stat-item:not(:last-child)::after {
   content: '';
   position: absolute;

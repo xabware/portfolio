@@ -13,7 +13,8 @@ const Chatbot = memo(() => {
     error: modelError, 
     sendMessage, 
     initProgress, 
-    initialize, 
+    initialize,
+    reset,
     hasStarted, 
     setHasStarted,
     messages,
@@ -111,15 +112,25 @@ const Chatbot = memo(() => {
       addMessage(botMessage);
     } catch (error) {
       console.error('Error en el chat:', error);
+      
+      // Siempre detener el loading primero
+      setIsLoadingResponse(false);
+      
+      const errorMsg = error instanceof Error ? error.message : '';
+      
+      // Si es error de memoria o técnico, o el modelo no está listo (porque ya se reseteó)
+      if (errorMsg === 'MEMORY_ERROR' || errorMsg === 'TECHNICAL_ERROR' || errorMsg.includes('no está listo')) {
+        // El contexto ya ha manejado el reseteo o el modelo se cayó
+        return;
+      }
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: error instanceof Error ? error.message : t.chatbotErrorMessage,
+        text: errorMsg || t.chatbotErrorMessage,
         sender: 'bot',
         timestamp: new Date(),
       };
       addMessage(errorMessage);
-    } finally {
-      setIsLoadingResponse(false);
     }
   }, [inputValue, isLoadingResponse, isInitialized, sendMessage, t.chatbotErrorMessage, addMessage, setIsLoadingResponse]);
 
@@ -252,6 +263,47 @@ const Chatbot = memo(() => {
 
   // Mostrar error si hay alguno
   if (modelError) {
+    // Error específico de memoria GPU
+    if (modelError === 'MEMORY_ERROR') {
+      return (
+        <div className="chatbot-container">
+          <div className="chatbot-error">
+            <AlertCircle size={48} color="var(--warning-color, #ff9800)" />
+            <h3>{t.chatbotMemoryError}</h3>
+            <p>{t.chatbotMemoryErrorNote}</p>
+            <button 
+              className="start-chat-button" 
+              onClick={reset}
+              style={{ marginTop: '1rem' }}
+            >
+              {t.chatbotTryAgain}
+            </button>
+          </div>
+        </div>
+      );
+    }
+    
+    // Error técnico general
+    if (modelError === 'TECHNICAL_ERROR') {
+      return (
+        <div className="chatbot-container">
+          <div className="chatbot-error">
+            <AlertCircle size={48} color="var(--warning-color, #ff9800)" />
+            <h3>{t.chatbotTechnicalError}</h3>
+            <p>{t.chatbotTechnicalErrorNote}</p>
+            <button 
+              className="start-chat-button" 
+              onClick={reset}
+              style={{ marginTop: '1rem' }}
+            >
+              {t.chatbotTryAgain}
+            </button>
+          </div>
+        </div>
+      );
+    }
+    
+    // Otros errores
     return (
       <div className="chatbot-container">
         <div className="chatbot-error">

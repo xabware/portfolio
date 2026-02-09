@@ -90,11 +90,23 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
       setError(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
-      setError(`Error al inicializar el modelo: ${errorMessage}`);
+      
+      // Detectar error específico de memoria GPU
+      if (errorMessage.includes('Device was lost') || errorMessage.includes('GPUDeviceLostInfo') || errorMessage.includes('insufficient memory')) {
+        setError('MEMORY_ERROR'); // Marcador especial para el error de memoria
+      } else {
+        setError(`Error al inicializar el modelo: ${errorMessage}`);
+      }
+      
       setInitProgress('Error en la inicialización');
       console.error('Error initializing WebLLM:', err);
       engineRef.current = null;
       setIsInitialized(false);
+      
+      // Resetear el estado para volver a la pantalla inicial
+      setHasStarted(false);
+      setMessages([]);
+      setIsLoadingResponse(false);
     } finally {
       setIsLoading(false);
       isInitializingRef.current = false;
@@ -125,7 +137,30 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
         return reply.choices[0]?.message?.content || 'Lo siento, no pude generar una respuesta.';
       } catch (err) {
         console.error('Error sending message:', err);
-        throw new Error('Error al procesar tu mensaje. Por favor intenta de nuevo.');
+        const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+        
+        // Detectar error de memoria GPU durante el chat
+        if (errorMessage.includes('Device was lost') || errorMessage.includes('GPUDeviceLostInfo') || errorMessage.includes('insufficient memory')) {
+          // Primero lanzar el error, luego resetear
+          const error = new Error('MEMORY_ERROR');
+          // Resetear estado
+          engineRef.current = null;
+          setIsInitialized(false);
+          setError('MEMORY_ERROR');
+          setHasStarted(false);
+          setMessages([]);
+          throw error;
+        }
+        
+        // Otros errores técnicos - marcar como error técnico
+        const error = new Error('TECHNICAL_ERROR');
+        // Resetear estado
+        engineRef.current = null;
+        setIsInitialized(false);
+        setError('TECHNICAL_ERROR');
+        setHasStarted(false);
+        setMessages([]);
+        throw error;
       }
     },
     [isInitialized, currentLanguage]

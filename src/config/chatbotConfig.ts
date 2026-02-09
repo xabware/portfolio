@@ -155,7 +155,7 @@ export const detectGPUCapabilities = async (): Promise<GPUCapabilities> => {
       return defaultCapabilities;
     }
 
-    const adapterInfo = await adapter.requestAdapterInfo();
+    const adapterInfo = adapter.info;
     const gpuVendor = adapterInfo.vendor?.toLowerCase() || '';
     const gpuDevice = adapterInfo.device?.toLowerCase() || '';
     const gpuDescription = adapterInfo.description?.toLowerCase() || '';
