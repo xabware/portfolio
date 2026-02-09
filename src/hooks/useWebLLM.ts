@@ -1,5 +1,6 @@
 // Este archivo ahora es un re-export del contexto para mantener compatibilidad
 import type { Message } from '../contexts/WebLLMContext';
+import type { ModelConfig } from '../config/chatbotConfig';
 export { useWebLLM, type Message } from '../contexts/WebLLMContext';
 
 export interface UseWebLLMReturn {
@@ -17,4 +18,10 @@ export interface UseWebLLMReturn {
   clearMessages: () => void;
   isLoadingResponse: boolean;
   setIsLoadingResponse: (value: boolean) => void;
+  // Nuevas propiedades para selección de modelos
+  selectedModelId: string;
+  setSelectedModelId: (modelId: string) => void;
+  availableModels: ModelConfig[];
+  currentLanguage: 'es' | 'en';
+  setCurrentLanguage: (language: 'es' | 'en') => void;
 }

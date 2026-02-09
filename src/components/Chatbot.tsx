@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback, memo } from 'react';
-import { Send, Bot, User, AlertCircle, Sparkles } from 'lucide-react';
+import { Send, Bot, User, AlertCircle, Sparkles, ChevronDown, Cpu, Monitor } from 'lucide-react';
 import { useWebLLM, type Message } from '../hooks/useWebLLM';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTranslations } from '../translations';
+import { detectGPUCapabilities, getCompatibleModels, type GPUCapabilities } from '../config/chatbotConfig';
 import './Chatbot.css';
 
 const Chatbot = memo(() => {
@@ -18,14 +19,44 @@ const Chatbot = memo(() => {
     messages,
     addMessage,
     isLoadingResponse,
-    setIsLoadingResponse
+    setIsLoadingResponse,
+    selectedModelId,
+    setSelectedModelId,
+    availableModels,
+    setCurrentLanguage
   } = useWebLLM();
   const { language } = useLanguage();
   const t = useTranslations(language);
   
   const [inputValue, setInputValue] = useState('');
+  const [showModelSelector, setShowModelSelector] = useState(false);
+  const [gpuCapabilities, setGpuCapabilities] = useState<GPUCapabilities | null>(null);
+  const [isDetectingGPU, setIsDetectingGPU] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasInitializedRef = useRef(false);
+
+  // Detectar capacidades del GPU al montar
+  useEffect(() => {
+    const detectGPU = async () => {
+      setIsDetectingGPU(true);
+      try {
+        const capabilities = await detectGPUCapabilities();
+        setGpuCapabilities(capabilities);
+        
+        // Ya no auto-seleccionamos modelo compatible - el usuario puede elegir cualquiera
+      } catch (error) {
+        console.error('Error detecting GPU:', error);
+      } finally {
+        setIsDetectingGPU(false);
+      }
+    };
+    detectGPU();
+  }, []);
+
+  // Sincronizar el idioma del contexto con el idioma de la aplicación
+  useEffect(() => {
+    setCurrentLanguage(language);
+  }, [language, setCurrentLanguage]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -101,6 +132,9 @@ const Chatbot = memo(() => {
 
   // Mostrar botón inicial si aún no se ha iniciado
   if (!hasStarted) {
+    const compatibleModels = gpuCapabilities ? getCompatibleModels(gpuCapabilities) : [];
+    const selectedModel = compatibleModels.find(m => m.id === selectedModelId) || availableModels.find(m => m.id === selectedModelId);
+    
     return (
       <div className="chatbot-container">
         <div className="chatbot-welcome">
@@ -111,12 +145,87 @@ const Chatbot = memo(() => {
           <p className="welcome-description">
             {t.chatbotWelcomeDescription}
           </p>
+          
+          {/* Información del GPU */}
+          {gpuCapabilities && !isDetectingGPU && (
+            <div className="gpu-info">
+              <Monitor size={14} />
+              <span className="gpu-info-text">
+                {gpuCapabilities.isDedicatedGPU ? t.chatbotDedicatedGPU : t.chatbotIntegratedGPU}
+                {gpuCapabilities.gpuInfo !== 'Unknown' && ` - ${gpuCapabilities.gpuInfo}`}
+              </span>
+            </div>
+          )}
+          
+          {/* Selector de modelos */}
+          <div className="model-selector-container">
+            <label className="model-selector-label">
+              <Cpu size={16} />
+              {t.chatbotSelectModel}
+            </label>
+            <div className="model-selector-wrapper">
+              <button 
+                className="model-selector-button"
+                onClick={() => setShowModelSelector(!showModelSelector)}
+                disabled={isDetectingGPU}
+              >
+                {isDetectingGPU ? (
+                  <span className="model-name">{t.chatbotDetectingGPU}</span>
+                ) : (
+                  <>
+                    <span className={`model-category-badge ${selectedModel?.category}`}>
+                      {selectedModel?.category === 'small' ? t.chatbotModelSmall : 
+                       selectedModel?.category === 'medium' ? t.chatbotModelMedium : t.chatbotModelLarge}
+                    </span>
+                    <span className="model-name">{selectedModel?.name}</span>
+                    <ChevronDown size={16} className={showModelSelector ? 'rotated' : ''} />
+                  </>
+                )}
+              </button>
+              
+              {showModelSelector && gpuCapabilities && (
+                <div className="model-dropdown">
+                  {compatibleModels.map((model) => (
+                    <button
+                      key={model.id}
+                      className={`model-option ${model.id === selectedModelId ? 'selected' : ''} ${!model.isCompatible ? 'warning' : ''}`}
+                      onClick={() => {
+                        setSelectedModelId(model.id);
+                        setShowModelSelector(false);
+                      }}
+                    >
+                      <div className="model-option-header">
+                        <span className={`model-category-badge ${model.category}`}>
+                          {model.category === 'small' ? t.chatbotModelSmall : 
+                           model.category === 'medium' ? t.chatbotModelMedium : t.chatbotModelLarge}
+                        </span>
+                        <span className="model-option-name">{model.name}</span>
+                        {model.recommended && <span className="recommended-badge">{t.chatbotRecommended}</span>}
+                        {!model.isCompatible && <span className="warning-badge">{t.chatbotMayNotWork}</span>}
+                      </div>
+                      <p className="model-option-description">
+                        {language === 'es' ? model.description.es : model.description.en}
+                        {!model.isCompatible && model.warning && (
+                          <span className="model-warning"> ⚠️ {model.warning}</span>
+                        )}
+                      </p>
+                      <div className="model-option-specs">
+                        <span>{t.chatbotModelSize}: {model.size}</span>
+                        <span>VRAM: {model.vramRequirement}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          
           <button className="start-chat-button" onClick={handleStartChat}>
             <Sparkles size={18} />
             {t.chatbotStartButton}
           </button>
           <small className="welcome-note">
-            {t.chatbotDownloadNote}
+            {selectedModel?.size} {t.chatbotDownloadNote}
           </small>
           <small className="welcome-note" style={{ color: 'var(--warning-color, #ff9800)', marginTop: '0.5rem' }}>
             {t.chatbotResourceWarning}

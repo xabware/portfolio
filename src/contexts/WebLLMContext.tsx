@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import * as webllm from '@mlc-ai/web-llm';
+import { availableModels, defaultModelId, generateSystemPrompt, type ModelConfig } from '../config/chatbotConfig';
 
 export interface Message {
   id: string;
@@ -24,6 +25,12 @@ interface WebLLMContextType {
   clearMessages: () => void;
   isLoadingResponse: boolean;
   setIsLoadingResponse: (value: boolean) => void;
+  // Nuevas propiedades para selección de modelos
+  selectedModelId: string;
+  setSelectedModelId: (modelId: string) => void;
+  availableModels: ModelConfig[];
+  currentLanguage: 'es' | 'en';
+  setCurrentLanguage: (language: 'es' | 'en') => void;
 }
 
 const WebLLMContext = createContext<WebLLMContextType | undefined>(undefined);
@@ -38,6 +45,9 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingResponse, setIsLoadingResponse] = useState(false);
   const isInitializingRef = useRef(false);
+  // Nuevos estados para selección de modelos
+  const [selectedModelId, setSelectedModelId] = useState<string>(defaultModelId);
+  const [currentLanguage, setCurrentLanguage] = useState<'es' | 'en'>('es');
 
   const initialize = useCallback(async () => {
     // Evitar múltiples inicializaciones simultáneas
@@ -52,10 +62,24 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
       setInitProgress('Inicializando motor de IA...');
 
       const newEngine = await webllm.CreateMLCEngine(
-        'Phi-3.5-mini-instruct-q4f16_1-MLC',
+        selectedModelId,
         {
           initProgressCallback: (progress) => {
-            setInitProgress(progress.text);
+            // Mejorar los mensajes de progreso para el usuario
+            let userFriendlyText = progress.text;
+            
+            // Traducir mensajes comunes de WebLLM
+            if (progress.text.includes('Loading model from cache')) {
+              userFriendlyText = 'Cargando modelo desde caché del navegador...';
+            } else if (progress.text.includes('Fetching param cache')) {
+              userFriendlyText = 'Descargando modelo (primera vez)...';
+            } else if (progress.text.includes('Loading GPU shader modules')) {
+              userFriendlyText = 'Cargando shaders en GPU...';
+            } else if (progress.text.includes('Finish loading')) {
+              userFriendlyText = 'Finalizando carga del modelo...';
+            }
+            
+            setInitProgress(userFriendlyText);
           },
         }
       );
@@ -75,7 +99,7 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
       isInitializingRef.current = false;
     }
-  }, [isInitialized, isLoading]);
+  }, [isInitialized, isLoading, selectedModelId]);
 
   const sendMessage = useCallback(
     async (message: string): Promise<string> => {
@@ -84,20 +108,18 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const systemPrompt = `Eres un asistente virtual de un portafolio profesional. 
-Tu objetivo es responder preguntas sobre la experiencia, proyectos y habilidades del desarrollador de manera profesional y amigable.
-Si no tienes información específica, proporciona una respuesta general útil y profesional.
-Mantén las respuestas concisas pero informativas (máximo 3-4 oraciones).`;
+        // Usar el system prompt personalizado basado en el idioma
+        const systemPrompt = generateSystemPrompt(currentLanguage);
 
-        const messages: webllm.ChatCompletionMessageParam[] = [
+        const chatMessages: webllm.ChatCompletionMessageParam[] = [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message },
         ];
 
         const reply = await engineRef.current.chat.completions.create({
-          messages,
+          messages: chatMessages,
           temperature: 0.7,
-          max_tokens: 256,
+          max_tokens: 512,
         });
 
         return reply.choices[0]?.message?.content || 'Lo siento, no pude generar una respuesta.';
@@ -106,7 +128,7 @@ Mantén las respuestas concisas pero informativas (máximo 3-4 oraciones).`;
         throw new Error('Error al procesar tu mensaje. Por favor intenta de nuevo.');
       }
     },
-    [isInitialized]
+    [isInitialized, currentLanguage]
   );
 
   const reset = useCallback(() => {
@@ -155,8 +177,14 @@ Mantén las respuestas concisas pero informativas (máximo 3-4 oraciones).`;
       clearMessages,
       isLoadingResponse,
       setIsLoadingResponse,
+      // Nuevas propiedades para selección de modelos
+      selectedModelId,
+      setSelectedModelId,
+      availableModels,
+      currentLanguage,
+      setCurrentLanguage,
     }),
-    [isLoading, isInitialized, error, sendMessage, initProgress, initialize, reset, hasStarted, messages, addMessage, clearMessages, isLoadingResponse]
+    [isLoading, isInitialized, error, sendMessage, initProgress, initialize, reset, hasStarted, messages, addMessage, clearMessages, isLoadingResponse, selectedModelId, currentLanguage]
   );
 
   return <WebLLMContext.Provider value={value}>{children}</WebLLMContext.Provider>;
