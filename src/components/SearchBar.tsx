@@ -41,7 +41,7 @@ const SearchBar = memo(({ onNavigate }: SearchBarProps) => {
     {
       section: 'projects',
       title: t.projects,
-      content: `${t.myProjects} ${t.taskManagementApp} ${t.taskManagementDescription} ${t.aiChatbotSystem} ${t.aiChatbotDescription} ${t.analyticsDashboard} ${t.analyticsDashboardDescription} MongoDB React Firebase Python FastAPI`,
+      content: `${t.myProjects} ${t.projectsSubtitle} portfolio dashboard React TypeScript Vite WebLLM proyectos`,
     },
     // Skills
     {

@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 import Card from '../Card';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
+import { projects } from '../../data/projects';
 import './Home.css';
 
 const Home = memo(() => {
@@ -10,7 +11,7 @@ const Home = memo(() => {
   
   const stats = useMemo(() => [
     { number: '5+', label: t.yearsExperience },
-    { number: '1', label: t.projectsCompleted },
+    { number: `${projects.length}`, label: t.projectsCompleted },
   ], [t]);
 
   return (

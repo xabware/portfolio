@@ -4,6 +4,7 @@ import { ExternalLink, ArrowRight } from 'lucide-react';
 import { GithubIcon } from '../BrandIcons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
+import { getProjects } from '../../data/projects';
 import ProjectDetail from './ProjectDetail';
 import './Projects.css';
 
@@ -12,44 +13,9 @@ const Projects = memo(() => {
   const t = useTranslations(language);
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
   
-  const projects = useMemo(() => [
-    {
-      id: 1,
-      title: t.portfolioProject,
-      description: t.portfolioDescription,
-      tech: ['React', 'Node.js', 'MongoDB', 'Stripe'],
-      github: 'https://github.com',
-      demo: 'https://demo.com',
-      detailedContent: t.project1Details,
-    },
-    {
-      id: 2,
-      title: t.taskManagementApp,
-      description: t.taskManagementDescription,
-      tech: ['React', 'Firebase', 'Material-UI'],
-      github: 'https://github.com',
-      demo: 'https://demo.com',
-      detailedContent: t.project2Details,
-    },
-    {
-      id: 3,
-      title: t.aiChatbotSystem,
-      description: t.aiChatbotDescription,
-      tech: ['Python', 'FastAPI', 'OpenAI', 'Pinecone'],
-      github: 'https://github.com',
-      demo: 'https://demo.com',
-      detailedContent: t.project3Details,
-    },
-    {
-      id: 4,
-      title: t.analyticsDashboard,
-      description: t.analyticsDashboardDescription,
-      tech: ['React', 'D3.js', 'Express', 'PostgreSQL'],
-      github: 'https://github.com',
-      demo: 'https://demo.com',
-      detailedContent: t.project4Details,
-    },
-  ], [t]);
+  // Los proyectos ahora se cargan desde src/data/projects.ts
+  // Edita ese archivo para añadir, modificar o eliminar proyectos
+  const projects = useMemo(() => getProjects(language), [language]);
 
   return (
     <div className="section-content">
