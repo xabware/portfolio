@@ -7,6 +7,14 @@ import { getProjects } from '../../data/projects';
 import { getExperiences, getEducation } from '../../data/about';
 import { getSkillCategories } from '../../data/skills';
 
+// Generador pseudoaleatorio con seed para resultados determinísticos
+function seededRandom(seed: number): () => number {
+  return () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+}
+
 // Detectar dispositivo móvil
 function isMobileDevice(): boolean {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
@@ -111,29 +119,19 @@ function Sun({ language }: { language: Language }) {
   );
 }
 
+// Calcular ángulo inicial determinista basado en el id
+function getInitialAngle(id: string): number {
+  return id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) * 0.1 % (Math.PI * 2);
+}
+
 // Componente del Planeta
 function Planet({ data, language, cameraPosition, onSelect, selectedPlanet }: PlanetProps) {
   const groupRef = useRef<THREE.Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
-  const [angle, setAngle] = useState(Math.random() * Math.PI * 2);
+  // Usar función en useState para calcular ángulo inicial una sola vez
+  const [angle, setAngle] = useState(() => getInitialAngle(data.id));
   const [showDetails, setShowDetails] = useState(false);
-  
-  // Calcular distancia de la cámara al planeta
-  const distanceToCamera = useMemo(() => {
-    if (!groupRef.current) return 100;
-    const planetPos = new THREE.Vector3(
-      Math.cos(angle) * data.orbitRadius,
-      0,
-      Math.sin(angle) * data.orbitRadius
-    );
-    return cameraPosition.distanceTo(planetPos);
-  }, [cameraPosition, angle, data.orbitRadius]);
-  
-  // Mostrar detalles si estamos cerca
-  useEffect(() => {
-    setShowDetails(distanceToCamera < 8);
-  }, [distanceToCamera]);
   
   useFrame(() => {
     // Órbita
@@ -142,6 +140,10 @@ function Planet({ data, language, cameraPosition, onSelect, selectedPlanet }: Pl
     if (groupRef.current) {
       groupRef.current.position.x = Math.cos(angle) * data.orbitRadius;
       groupRef.current.position.z = Math.sin(angle) * data.orbitRadius;
+      
+      // Calcular distancia a la cámara y mostrar detalles si estamos cerca
+      const dist = cameraPosition.distanceTo(groupRef.current.position);
+      setShowDetails(dist < 8);
     }
     
     if (meshRef.current) {
@@ -319,7 +321,7 @@ function SpaceshipControls() {
   const initialized = useRef(false);
   const isMobile = useRef(isMobileDevice());
   
-  const SPEED = 0.08;
+  const SPEED = 0.03;
   const FRICTION = 0.92;
   const LOOK_SPEED = 0.025;
 
@@ -491,10 +493,12 @@ function VirtualJoystick({ side, onMove }: VirtualJoystickProps) {
 
 // Controles móviles
 function MobileControls() {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return isMobileDevice();
+  });
 
   useEffect(() => {
-    setIsMobile(isMobileDevice());
     const handleResize = () => setIsMobile(isMobileDevice());
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -519,18 +523,19 @@ function MobileControls() {
 }
 
 // Partículas de fondo
-function FloatingParticles({ count = 300 }: { count?: number }) {
+function FloatingParticles({ count = 300, seed = 12345 }: { count?: number; seed?: number }) {
   const geometry = useMemo(() => {
+    const random = seededRandom(seed);
     const positions = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 100;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 100;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 100;
+      positions[i * 3] = (random() - 0.5) * 100;
+      positions[i * 3 + 1] = (random() - 0.5) * 100;
+      positions[i * 3 + 2] = (random() - 0.5) * 100;
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     return geo;
-  }, [count]);
+  }, [count, seed]);
 
   const particlesRef = useRef<THREE.Points>(null);
 
@@ -622,7 +627,7 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
       color: '#60a5fa',
       size: 1.2,
       orbitRadius: 10,
-      orbitSpeed: 0.3,
+      orbitSpeed: 0.03,
       items: projects.map(p => ({
         id: `project-${p.id}`,
         title: p.title,
@@ -640,7 +645,7 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
       color: '#34d399',
       size: 1.0,
       orbitRadius: 16,
-      orbitSpeed: 0.2,
+      orbitSpeed: 0.02,
       items: experiences.map((exp, idx) => ({
         id: `exp-${idx}`,
         title: exp.title,
@@ -658,7 +663,7 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
       color: '#f472b6',
       size: 0.8,
       orbitRadius: 22,
-      orbitSpeed: 0.15,
+      orbitSpeed: 0.015,
       items: educationItems.map((edu, idx) => ({
         id: `edu-${idx}`,
         title: edu.degree,
@@ -676,7 +681,7 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
       color: '#a78bfa',
       size: 0.9,
       orbitRadius: 28,
-      orbitSpeed: 0.1,
+      orbitSpeed: 0.01,
       items: skillCategories.flatMap(cat => 
         cat.skills.slice(0, 3).map(skill => ({
           id: `skill-${skill.name}`,
