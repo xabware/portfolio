@@ -18,6 +18,16 @@ import { getSkillCategories, getAdditionalSkills } from './skills';
 import { getPersonalInfo, getExperiences, getEducation } from './about';
 
 /**
+ * Interfaz para contenido searchable
+ */
+export interface SearchableItem {
+  section: string;
+  title: string;
+  content: string;
+  projectId?: number;
+}
+
+/**
  * Genera el contexto del desarrollador para el chatbot
  * Construye dinámicamente la información desde los datos reales
  */
@@ -160,7 +170,7 @@ INSTRUCTIONS:
  * Genera el contenido indexable para la búsqueda
  * Este contenido se construye dinámicamente desde los datos reales
  */
-export function generateSearchableContent(language: Language, translations: Record<string, string | string[]>) {
+export function generateSearchableContent(language: Language, translations: Record<string, string | string[]>): SearchableItem[] {
   const projects = getProjects(language);
   const skillCategories = getSkillCategories(language);
   const additionalSkills = getAdditionalSkills(language);
@@ -168,12 +178,18 @@ export function generateSearchableContent(language: Language, translations: Reco
   const experiences = getExperiences(language);
   const education = getEducation(language);
 
+  // Helper para convertir a string de forma segura
+  const toStr = (val: string | string[] | undefined): string => {
+    if (!val) return '';
+    return Array.isArray(val) ? val.join(' ') : val;
+  };
+
   // Construir contenido searchable por sección
-  const content = [];
+  const content: SearchableItem[] = [];
 
   // About - con información real
   const aboutContent = [
-    translations.aboutMe,
+    toStr(translations.aboutMe),
     ...personalInfo,
     ...experiences.map(exp => `${exp.title} ${exp.company} ${exp.description}`),
     ...education.map(edu => `${edu.degree} ${edu.institution} ${edu.description}`),
@@ -182,21 +198,21 @@ export function generateSearchableContent(language: Language, translations: Reco
 
   content.push({
     section: 'about',
-    title: translations.about,
+    title: toStr(translations.about),
     content: aboutContent,
   });
 
   // Projects - con proyectos reales
   const projectsContent = [
-    translations.myProjects,
-    translations.projectsSubtitle,
+    toStr(translations.myProjects),
+    toStr(translations.projectsSubtitle),
     ...projects.map(p => `${p.title} ${p.description} ${p.tech.join(' ')}`),
     'portfolio', 'proyecto', 'project'
   ].join(' ');
 
   content.push({
     section: 'projects',
-    title: translations.projects,
+    title: toStr(translations.projects),
     content: projectsContent,
   });
 
@@ -212,8 +228,8 @@ export function generateSearchableContent(language: Language, translations: Reco
 
   // Skills - con habilidades reales
   const skillsContent = [
-    translations.technicalSkills,
-    translations.skillsSubtitle,
+    toStr(translations.technicalSkills),
+    toStr(translations.skillsSubtitle),
     ...skillCategories.map(cat => `${cat.title} ${cat.skills.map(s => s.name).join(' ')}`),
     ...additionalSkills,
     'habilidades', 'skills', 'tecnologías', 'technologies'
@@ -221,29 +237,29 @@ export function generateSearchableContent(language: Language, translations: Reco
 
   content.push({
     section: 'skills',
-    title: translations.skills,
+    title: toStr(translations.skills),
     content: skillsContent,
   });
 
   // Home
   content.push({
     section: 'home',
-    title: translations.home,
-    content: `${translations.welcomeTitle} ${translations.welcomeSubtitle} ${translations.yearsExperience} ${translations.projectsCompleted} ${translations.aboutDashboard} ${translations.dashboardDescription}`,
+    title: toStr(translations.home),
+    content: `${toStr(translations.welcomeTitle)} ${toStr(translations.welcomeSubtitle)} ${toStr(translations.yearsExperience)} ${toStr(translations.projectsCompleted)} ${toStr(translations.aboutDashboard)} ${toStr(translations.dashboardDescription)}`,
   });
 
   // Chat
   content.push({
     section: 'chat',
-    title: translations.chatbot,
-    content: `${translations.virtualAssistant} ${translations.chatDescription} ${translations.conversationalAI} chatbot asistente inteligencia artificial AI`,
+    title: toStr(translations.chatbot),
+    content: `${toStr(translations.virtualAssistant)} ${toStr(translations.chatDescription)} ${toStr(translations.conversationalAI)} chatbot asistente inteligencia artificial AI`,
   });
 
   // Contact
   content.push({
     section: 'contact',
-    title: translations.contact,
-    content: `${translations.contactTitle} ${translations.contactSubtitle} ${translations.email} ${translations.sendMessage} contacto mensaje contact`,
+    title: toStr(translations.contact),
+    content: `${toStr(translations.contactTitle)} ${toStr(translations.contactSubtitle)} ${toStr(translations.email)} ${toStr(translations.sendMessage)} contacto mensaje contact`,
   });
 
   return content;
