@@ -1,6 +1,6 @@
-import { useRef, useState, useMemo, useCallback, Suspense } from 'react';
+import { useRef, useState, useMemo, useCallback, Suspense, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Text, Stars, OrbitControls, Html } from '@react-three/drei';
+import { Text, Stars, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import type { ResolvedSkillCategory, Skill } from '../../data/skills';
 
@@ -196,22 +196,174 @@ function CategoryCluster({ category, centerPosition, color, onHover, onClick, se
   );
 }
 
-// Componente de cámara con animación inicial
-function CameraController() {
-  const { camera } = useThree();
+// Controles de nave espacial
+function SpaceshipControls() {
+  const { camera, gl } = useThree();
+  const velocity = useRef(new THREE.Vector3());
+  const rotation = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
+  const keys = useRef<Set<string>>(new Set());
+  const isPointerLocked = useRef(false);
   const initialized = useRef(false);
   
+  // Configuración de la nave
+  const SPEED = 0.15;
+  const BOOST_MULTIPLIER = 2.5;
+  const FRICTION = 0.92;
+  const MOUSE_SENSITIVITY = 0.002;
+  const ROLL_SPEED = 0.03;
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+    
+    // Inicializar rotación desde la cámara
+    rotation.current.setFromQuaternion(camera.quaternion);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      keys.current.add(e.code.toLowerCase());
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+      keys.current.delete(e.code.toLowerCase());
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isPointerLocked.current) return;
+      
+      // Rotación horizontal (yaw)
+      rotation.current.y -= e.movementX * MOUSE_SENSITIVITY;
+      // Rotación vertical (pitch) con límites
+      rotation.current.x -= e.movementY * MOUSE_SENSITIVITY;
+      rotation.current.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotation.current.x));
+    };
+
+    const handlePointerLockChange = () => {
+      isPointerLocked.current = document.pointerLockElement === canvas;
+    };
+
+    const handleClick = () => {
+      if (!isPointerLocked.current) {
+        canvas.requestPointerLock();
+      }
+    };
+
+    const handlePointerLockError = () => {
+      console.warn('Pointer lock failed');
+    };
+
+    // Event listeners
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('pointerlockchange', handlePointerLockChange);
+    document.addEventListener('pointerlockerror', handlePointerLockError);
+    canvas.addEventListener('click', handleClick);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('pointerlockchange', handlePointerLockChange);
+      document.removeEventListener('pointerlockerror', handlePointerLockError);
+      canvas.removeEventListener('click', handleClick);
+      
+      // Salir del pointer lock al desmontar
+      if (document.pointerLockElement === canvas) {
+        document.exitPointerLock();
+      }
+    };
+  }, [gl, camera]);
+
   useFrame(() => {
+    // Animación inicial de entrada
     if (!initialized.current) {
-      // Animación de entrada
-      camera.position.lerp(new THREE.Vector3(0, 5, 15), 0.02);
-      if (camera.position.distanceTo(new THREE.Vector3(0, 5, 15)) < 0.1) {
+      camera.position.lerp(new THREE.Vector3(0, 5, 20), 0.02);
+      camera.lookAt(0, 0, 0);
+      rotation.current.setFromQuaternion(camera.quaternion);
+      if (camera.position.distanceTo(new THREE.Vector3(0, 5, 20)) < 0.5) {
         initialized.current = true;
       }
+      return;
     }
+
+    const speed = keys.current.has('shiftleft') || keys.current.has('shiftright') 
+      ? SPEED * BOOST_MULTIPLIER 
+      : SPEED;
+
+    // Movimiento relativo a la dirección de la cámara
+    const direction = new THREE.Vector3();
+    
+    // W/S - Adelante/Atrás
+    if (keys.current.has('keyw') || keys.current.has('arrowup')) {
+      direction.z -= 1;
+    }
+    if (keys.current.has('keys') || keys.current.has('arrowdown')) {
+      direction.z += 1;
+    }
+    
+    // A/D - Izquierda/Derecha
+    if (keys.current.has('keya') || keys.current.has('arrowleft')) {
+      direction.x -= 1;
+    }
+    if (keys.current.has('keyd') || keys.current.has('arrowright')) {
+      direction.x += 1;
+    }
+    
+    // Q/E - Subir/Bajar
+    if (keys.current.has('keyq')) {
+      direction.y -= 1;
+    }
+    if (keys.current.has('keye') || keys.current.has('space')) {
+      direction.y += 1;
+    }
+
+    // Roll (Z/C o R/F)
+    if (keys.current.has('keyz') || keys.current.has('keyr')) {
+      rotation.current.z += ROLL_SPEED;
+    }
+    if (keys.current.has('keyc') || keys.current.has('keyf')) {
+      rotation.current.z -= ROLL_SPEED;
+    }
+    
+    // Normalizar y aplicar velocidad
+    if (direction.length() > 0) {
+      direction.normalize();
+      direction.multiplyScalar(speed);
+      
+      // Rotar la dirección según la orientación de la cámara
+      direction.applyEuler(rotation.current);
+      velocity.current.add(direction);
+    }
+    
+    // Aplicar fricción
+    velocity.current.multiplyScalar(FRICTION);
+    
+    // Aplicar velocidad a la posición
+    camera.position.add(velocity.current);
+    
+    // Límites del espacio (clonar para evitar modificación directa)
+    const clampedPos = new THREE.Vector3(
+      Math.max(-50, Math.min(50, camera.position.x)),
+      Math.max(-30, Math.min(30, camera.position.y)),
+      Math.max(-50, Math.min(50, camera.position.z))
+    );
+    camera.position.copy(clampedPos);
+    
+    // Aplicar rotación a la cámara
+    camera.quaternion.setFromEuler(rotation.current);
   });
 
   return null;
+}
+
+// HUD de la nave espacial
+function SpaceshipHUD() {
+  return (
+    <Html fullscreen>
+      <div className="spaceship-hud">
+        <div className="hud-crosshair">+</div>
+      </div>
+    </Html>
+  );
 }
 
 // Partículas de fondo flotantes con posiciones determinísticas
@@ -336,20 +488,9 @@ export default function SkillsGalaxy({ categories, onSkillSelect }: SkillsGalaxy
             />
           ))}
           
-          {/* Controles de órbita */}
-          <OrbitControls
-            enablePan={false}
-            enableZoom={true}
-            minDistance={8}
-            maxDistance={30}
-            autoRotate
-            autoRotateSpeed={0.3}
-            maxPolarAngle={Math.PI / 1.5}
-            minPolarAngle={Math.PI / 4}
-          />
-          
-          {/* Controlador de cámara */}
-          <CameraController />
+          {/* Controles de nave espacial */}
+          <SpaceshipControls />
+          <SpaceshipHUD />
         </Suspense>
       </Canvas>
 
@@ -376,11 +517,12 @@ export default function SkillsGalaxy({ categories, onSkillSelect }: SkillsGalaxy
         </div>
       )}
 
-      {/* Instrucciones */}
-      <div className="galaxy-instructions">
-        <span>🖱️ Arrastra para rotar</span>
-        <span>🔍 Scroll para zoom</span>
-        <span>👆 Click en una skill para más info</span>
+      {/* Instrucciones de nave */}
+      <div className="galaxy-instructions spaceship-controls">
+        <span>🖱️ Click para controlar nave</span>
+        <span>⌨️ WASD/Flechas mover</span>
+        <span>🚀 Q/E subir/bajar • Shift turbo</span>
+        <span>🔄 Z/C rotar • ESC salir</span>
       </div>
     </div>
   );

@@ -444,3 +444,69 @@
     display: none;
   }
 }
+
+/* ============================================
+   SPACESHIP HUD STYLES
+   ============================================ */
+
+.spaceship-hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.hud-crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  color: rgba(96, 165, 250, 0.8);
+  text-shadow: 
+    0 0 10px rgba(96, 165, 250, 0.5),
+    0 0 20px rgba(96, 165, 250, 0.3);
+  font-weight: 100;
+  font-family: monospace;
+}
+
+/* Estilos mejorados para instrucciones de nave */
+.spaceship-controls {
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.spaceship-controls span {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-left: 2px solid var(--primary-color);
+}
+
+/* Efecto de boost visible en la UI */
+.skills-galaxy-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 50%,
+    rgba(96, 165, 250, 0.05) 100%
+  );
+  z-index: 10;
+}
+
+/* Frame de cockpit sutil */
+.skills-galaxy-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 2px solid rgba(96, 165, 250, 0.1);
+  border-radius: 16px;
+  box-shadow: 
+    inset 0 0 80px rgba(0, 0, 0, 0.3),
+    inset 0 0 20px rgba(96, 165, 250, 0.05);
+  z-index: 5;
+}
