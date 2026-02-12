@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, memo, useCallback } from 'react';
-import { Home, User, MessageSquare, Briefcase, Code, Mail, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, User, MessageSquare, Briefcase, Rocket, Mail, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTranslations } from '../translations';
 import './Sidebar.css';
@@ -26,7 +26,7 @@ const Sidebar = memo(({ activeSection, onSectionChange }: SidebarProps) => {
     { id: 'home', label: t.home, icon: Home },
     { id: 'about', label: t.about, icon: User },
     { id: 'projects', label: t.projects, icon: Briefcase },
-    { id: 'skills', label: t.skills, icon: Code },
+    { id: 'space', label: t.space, icon: Rocket },
     { id: 'chat', label: t.chatbot, icon: MessageSquare },
     { id: 'contact', label: t.contact, icon: Mail },
   ], [t]);

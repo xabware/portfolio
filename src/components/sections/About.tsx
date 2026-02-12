@@ -3,6 +3,7 @@ import Card from '../Card';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
 import { getPersonalInfo, getExperiences, getEducation } from '../../data/about';
+import { getSkillCategories, getAdditionalSkills } from '../../data/skills';
 import './About.css';
 
 const About = memo(() => {
@@ -14,6 +15,10 @@ const About = memo(() => {
   const personalDescription = useMemo(() => getPersonalInfo(language), [language]);
   const experiences = useMemo(() => getExperiences(language), [language]);
   const educationItems = useMemo(() => getEducation(language), [language]);
+  
+  // Habilidades desde src/data/skills.ts
+  const skillCategories = useMemo(() => getSkillCategories(language), [language]);
+  const additionalSkills = useMemo(() => getAdditionalSkills(language), [language]);
   
   return (
     <div className="section-content">
@@ -60,6 +65,45 @@ const About = memo(() => {
           ))}
         </div>
       </Card>
+
+      {/* Sección de habilidades técnicas - al final */}
+      <div className="skills-section-about">
+        <h2 className="section-title">{t.technicalSkills}</h2>
+        <p className="section-subtitle">{t.skillsSubtitle}</p>
+        
+        <div className="skills-grid">
+          {skillCategories.map((category, idx) => (
+            <Card key={idx} title={category.title} className="skills-card">
+              <div className="skills-list">
+                {category.skills.map((skill, index) => (
+                  <div key={index} className="skill-item">
+                    <div className="skill-info">
+                      <span className="skill-name">{skill.name}</span>
+                      <span className="skill-level">{skill.level}%</span>
+                    </div>
+                    <div className="skill-bar">
+                      <div
+                        className="skill-progress"
+                        style={{ width: `${skill.level}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        <Card title={t.otherCompetencies} className="additional-skills">
+          <div className="tags-container">
+            {additionalSkills.map((skill, idx) => (
+              <span key={idx} className="skill-tag">
+                {skill}
+              </span>
+            ))}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 });

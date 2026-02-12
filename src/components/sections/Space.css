@@ -1,0 +1,376 @@
+/* ============================================
+   SPACE - PORTFOLIO SOLAR SYSTEM
+   ============================================ */
+
+.space-fullscreen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, 
+    rgba(5, 5, 20, 1) 0%, 
+    rgba(10, 10, 35, 1) 50%,
+    rgba(5, 5, 20, 1) 100%
+  );
+}
+
+.solar-system-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Loading */
+.space-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  background: linear-gradient(135deg, 
+    rgba(5, 5, 20, 1) 0%, 
+    rgba(10, 10, 35, 1) 100%
+  );
+}
+
+.space-loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 3px solid rgba(255, 215, 0, 0.2);
+  border-top-color: #ffd700;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Panel de información del planeta */
+.planet-info-panel {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  min-width: 280px;
+  max-width: 350px;
+  max-height: 60vh;
+  overflow-y: auto;
+  z-index: 100;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.planet-info-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.planet-info-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.planet-info-panel h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.planet-info-description {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.planet-info-items h4 {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+}
+
+.planet-info-items ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.planet-info-items li {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.planet-info-items li:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.planet-info-items li strong {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.item-subtitle {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+/* Popup de detalles del planeta (al acercarse) */
+.planet-details-popup {
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  min-width: 220px;
+  max-width: 280px;
+  color: #fff;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.planet-details-popup h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  color: #ffd700;
+}
+
+.planet-description {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.planet-items-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.planet-item-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.item-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.more-items {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+  margin: 0.25rem 0 0 0;
+}
+
+/* Tooltip de luna */
+.moon-tooltip {
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  color: #fff;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.moon-tooltip strong {
+  font-size: 0.85rem;
+}
+
+.moon-subtitle {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* HUD de la nave */
+.spaceship-hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.hud-crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  color: rgba(255, 215, 0, 0.6);
+  text-shadow: 
+    0 0 10px rgba(255, 215, 0, 0.4),
+    0 0 20px rgba(255, 215, 0, 0.2);
+  font-weight: 100;
+  font-family: monospace;
+}
+
+/* Instrucciones del espacio */
+.space-instructions {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: right;
+  pointer-events: none;
+}
+
+.space-instructions span {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  backdrop-filter: blur(5px);
+}
+
+/* ============================================
+   VIRTUAL JOYSTICKS (MOBILE)
+   ============================================ */
+
+.mobile-controls {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 200;
+}
+
+.virtual-joystick {
+  position: absolute;
+  bottom: 30px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255, 215, 0, 0.15);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.virtual-joystick.left {
+  left: 30px;
+}
+
+.virtual-joystick.right {
+  right: 30px;
+}
+
+.joystick-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.6) 0%,
+    rgba(255, 215, 0, 0.4) 100%
+  );
+  border: 2px solid rgba(255, 215, 0, 0.8);
+  box-shadow: 
+    0 0 15px rgba(255, 215, 0, 0.4),
+    inset 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+/* Ocultar instrucciones en movil */
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .planet-info-panel {
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    top: 20px;
+    transform: translateX(-50%);
+    max-width: calc(100% - 40px);
+    max-height: 40vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .virtual-joystick {
+    width: 100px;
+    height: 100px;
+    bottom: 20px;
+  }
+
+  .virtual-joystick.left {
+    left: 20px;
+  }
+
+  .virtual-joystick.right {
+    right: 20px;
+  }
+
+  .joystick-knob {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Ocultar joysticks en desktop */
+@media (min-width: 769px) {
+  .mobile-controls {
+    display: none;
+  }
+}

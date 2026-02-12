@@ -7,7 +7,7 @@ import './App.css';
 // Lazy load non-critical sections
 const About = lazy(() => import('./components/sections/About'));
 const Projects = lazy(() => import('./components/sections/Projects'));
-const Skills = lazy(() => import('./components/sections/Skills'));
+const Space = lazy(() => import('./components/sections/Space'));
 const Contact = lazy(() => import('./components/sections/Contact'));
 
 // Lazy load Chat AND WebLLMProvider together - solo se carga cuando se accede al chat
@@ -36,8 +36,8 @@ function App() {
         return <About />;
       case 'projects':
         return <Projects />;
-      case 'skills':
-        return <Skills />;
+      case 'space':
+        return <Space />;
       case 'contact':
         return <Contact />;
       default:
