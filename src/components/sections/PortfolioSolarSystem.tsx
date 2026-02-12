@@ -1,11 +1,11 @@
 import { useRef, useState, useMemo, useCallback, Suspense, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Text, Stars, Html } from '@react-three/drei';
+import { Text, Stars, Html, Line } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Language } from '../../contexts/LanguageContext';
-import { getProjects, type ResolvedProject } from '../../data/projects';
-import { getExperiences, getEducation, type ResolvedExperience, type ResolvedEducation } from '../../data/about';
-import { getSkillCategories, type ResolvedSkillCategory } from '../../data/skills';
+import { getProjects } from '../../data/projects';
+import { getExperiences, getEducation } from '../../data/about';
+import { getSkillCategories } from '../../data/skills';
 
 // Detectar dispositivo móvil
 function isMobileDevice(): boolean {
@@ -135,7 +135,7 @@ function Planet({ data, language, cameraPosition, onSelect, selectedPlanet }: Pl
     setShowDetails(distanceToCamera < 8);
   }, [distanceToCamera]);
   
-  useFrame((state) => {
+  useFrame(() => {
     // Órbita
     setAngle(prev => prev + data.orbitSpeed * 0.01);
     
@@ -291,26 +291,22 @@ function Moon({ item, index, total, parentSize, color }: MoonProps) {
 // Órbitas visuales
 function OrbitRing({ radius, color }: { radius: number; color: string }) {
   const points = useMemo(() => {
-    const pts: THREE.Vector3[] = [];
+    const pts: [number, number, number][] = [];
     for (let i = 0; i <= 64; i++) {
       const angle = (i / 64) * Math.PI * 2;
-      pts.push(new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius));
+      pts.push([Math.cos(angle) * radius, 0, Math.sin(angle) * radius]);
     }
     return pts;
   }, [radius]);
 
   return (
-    <line>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={points.length}
-          array={new Float32Array(points.flatMap(p => [p.x, p.y, p.z]))}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <lineBasicMaterial color={color} transparent opacity={0.2} />
-    </line>
+    <Line
+      points={points}
+      color={color}
+      transparent
+      opacity={0.2}
+      lineWidth={1}
+    />
   );
 }
 
