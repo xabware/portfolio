@@ -26,30 +26,13 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          // Separar vendor chunks por librería
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor';
-            }
-            if (id.includes('lucide-react')) {
-              return 'lucide';
-            }
-            if (id.includes('@mlc-ai/web-llm')) {
-              return 'webllm';
-            }
-            if (id.includes('@emailjs')) {
-              return 'emailjs';
-            }
-            // Otros node_modules en vendor común
-            return 'vendor';
-          }
-          
-          // Separar componentes por sección
-          if (id.includes('src/components/sections')) {
-            const section = id.split('/').pop()?.replace('.tsx', '');
-            return `section-${section}`;
-          }
+        manualChunks: {
+          // WebLLM separado (muy grande, carga diferida)
+          'webllm': ['@mlc-ai/web-llm'],
+          // EmailJS separado (solo usado en contact)
+          'emailjs': ['@emailjs/browser'],
+          // Three.js separado (solo usado en skills galaxy)
+          'three': ['three', '@react-three/fiber', '@react-three/drei'],
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
