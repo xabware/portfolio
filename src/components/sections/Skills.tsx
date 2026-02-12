@@ -2,64 +2,17 @@ import { memo, useMemo } from 'react';
 import Card from '../Card';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
+import { getSkillCategories, getAdditionalSkills } from '../../data/skills';
 import './Skills.css';
 
 const Skills = memo(() => {
   const { language } = useLanguage();
   const t = useTranslations(language);
   
-  const skillCategories = useMemo(() => [
-    {
-      title: t.frontend,
-      skills: [
-        { name: 'React', level: 95 },
-        { name: 'ASP', level: 90 },
-        { name: 'CSS', level: 70 },
-        { name: 'Angular.js', level: 90 },
-      ],
-    },
-    {
-      title: t.backend,
-      skills: [
-        { name: '.NET', level: 90 },
-        { name: 'Python', level: 85 },
-        { name: 'Java', level: 75 },
-        { name: 'PHP', level: 80 },
-      ],
-    },
-    {
-      title: t.databases,
-      skills: [
-        { name: 'Microsoft SQL Server', level: 95 },
-        { name: 'SQL', level: 95 },
-        { name: 'Entity Framework', level: 90 },
-        { name: 'T-SQL', level: 90 },
-      ],
-    },
-    {
-      title: t.devopsTools,
-      skills: [
-        { name: 'Git', level: 100 },
-        { name: 'Docker', level: 70 },
-        { name: 'Azure DevOps', level: 70 },
-        { name: 'AWS', level: 60 },
-        { name: 'CI/CD', level: 80 },
-      ],
-    },
-  ], [t]);
-
-  const additionalSkills = useMemo(() => [
-    t.skillAgileScrum,
-    t.skillRestApis,
-    t.skillMicroservices,
-    t.skillTesting,
-    t.skillUIUX,
-    t.skillResponsiveDesign,
-    t.skillPerformanceOptimization,
-    t.skillSecurityBestPractices,
-    t.skillTeamLeadership,
-    t.skillAutonomia,
-  ], [t]);
+  // Las habilidades ahora se cargan desde src/data/skills.ts
+  // Edita ese archivo para añadir, modificar o eliminar habilidades
+  const skillCategories = useMemo(() => getSkillCategories(language), [language]);
+  const additionalSkills = useMemo(() => getAdditionalSkills(language), [language]);
 
   return (
     <div className="section-content">
@@ -93,7 +46,7 @@ const Skills = memo(() => {
       <Card title={t.otherCompetencies} className="additional-skills">
         <div className="tags-container">
           {additionalSkills.map((skill, idx) => (
-            <span key={`skill-${idx}`} className="skill-tag">
+            <span key={idx} className="skill-tag">
               {skill}
             </span>
           ))}

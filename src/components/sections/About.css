@@ -52,6 +52,13 @@
   font-size: 0.9rem;
 }
 
+.timeline-period {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-style: italic;
+  margin-bottom: 0.5rem;
+}
+
 .timeline-content p {
   line-height: 1.6;
 }

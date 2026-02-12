@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
 import { Search, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTranslations } from '../translations';
+import { generateSearchableContent } from '../data/contextGenerator';
 import './SearchBar.css';
 
 interface SearchResult {
@@ -9,6 +10,7 @@ interface SearchResult {
   title: string;
   content: string;
   relevance: number;
+  projectId?: number;
 }
 
 interface SearchBarProps {
@@ -23,45 +25,12 @@ const SearchBar = memo(({ onNavigate }: SearchBarProps) => {
   const { language } = useLanguage();
   const t = useTranslations(language);
 
-  // Contenido indexado de todas las secciones (memoizado)
-  const searchableContent = useMemo(() => [
-    // Home
-    {
-      section: 'home',
-      title: t.home,
-      content: `${t.welcomeTitle} ${t.welcomeSubtitle} ${t.yearsExperience} ${t.projectsCompleted} ${t.aboutDashboard} ${t.dashboardDescription} ${t.features} ${t.modernDesign} ${t.darkModeSupport} ${t.aiChatbot} ${t.responsiveDesign} ${t.viteOptimized}`,
-    },
-    // About
-    {
-      section: 'about',
-      title: t.about,
-      content: `${t.aboutMe} ${t.aboutDescription1} ${t.aboutDescription2} ${t.professionalExperience} ${t.seniorFullStack} ${t.fullStackDeveloper} ${t.juniorDeveloper} ${t.education} desarrollador full-stack react node.js backend frontend`,
-    },
-    // Projects
-    {
-      section: 'projects',
-      title: t.projects,
-      content: `${t.myProjects} ${t.projectsSubtitle} portfolio dashboard React TypeScript Vite WebLLM proyectos`,
-    },
-    // Skills
-    {
-      section: 'skills',
-      title: t.skills,
-      content: `${t.technicalSkills} ${t.frontend} ${t.backend} ${t.databases} ${t.devopsTools} React TypeScript JavaScript HTML CSS Node.js Express Python MongoDB PostgreSQL Docker Git AWS`,
-    },
-    // Chat
-    {
-      section: 'chat',
-      title: t.chatbot,
-      content: `${t.virtualAssistant} ${t.chatDescription} ${t.conversationalAI} RAG chatbot asistente inteligencia artificial`,
-    },
-    // Contact
-    {
-      section: 'contact',
-      title: t.contact,
-      content: `${t.contactTitle} ${t.contactSubtitle} ${t.email} ${t.sendMessage} ${t.contactInfo} contacto mensaje`,
-    },
-  ], [t]);
+  // Contenido indexado de todas las secciones (generado dinámicamente desde la carpeta data)
+  // Este contenido ahora se actualiza automáticamente cuando editas los archivos en src/data/
+  const searchableContent = useMemo(() => 
+    generateSearchableContent(language, t), 
+    [language, t]
+  );
 
   // Función de búsqueda memoizada
   const performSearch = useCallback(() => {

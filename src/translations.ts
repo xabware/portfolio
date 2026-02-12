@@ -32,31 +32,8 @@ export const translations = {
     
     // About
     aboutMe: 'Sobre mí',
-    aboutDescription1: 'Soy una persona curiosa e implicada. Elegí como carrera la ingeniería de software porque estaba dudando entre demasiadas carreras, física, biología, matemáticas... Y sentí que la ingeniería de software, por su caracter transversal, me permitiría explorar muchas áreas y llegar a encontrar qué era lo que más me apasionaba en la vida.',
-    aboutDescription2: 'A día de hoy, soy consciente de que lo que me llamó de la informática, es su capacidad para transformar cada área del mundo de una forma distinta, y de impactar en tantas vidas de una forma positiva. Me gusta estar al día con los últimos avances tecnológicos, y encontrar formas de las que pueden mejorar la calidad de vida de las personas.',
     professionalExperience: 'Experiencia Profesional',
-    seniorFullStack: 'Full-Stack Developer',
-    techCompany: 'Tracasa instrumental | 2021 - Presente',
-    seniorDescription: 'Desarrollo de aplicaciones gubernamentales utilizando principalmente .NET, angular, react y T-SQL. Implementación de arquitectura y planificación de proyectos, integración de sistemas de inteligencia artificial.',
-    fullStackDeveloper: 'Prácticas extracurriculares',
-    startupTech: 'Veridas | 2020',
-    fullStackDescription: 'Preparación de conjuntos de datos para entrenar modelos de reconocimiento facial. Diseño de aplicaciones móviles con android studio y java.',
-    juniorDeveloper: 'Prácticas extracurriculares',
-    softwareAgency: 'Veridas | 2019',
-    juniorDescription: 'Preparación de conjuntos de datos para entrenar modelos de reconocimiento facial.',
     education: 'Educación',
-    educationItems: [
-      {
-        degree: 'Master en Ingeniería informática',
-        institution: 'Universidad pública de Navarra | 2021-2024',
-        description: 'Master generalista que cubre los contenidos que se quedan fuera del grado.'
-      },
-      {
-        degree: 'Ingeniería informática',
-        institution: 'Universidad pública de Navarra | 2017-2021',
-        description: 'Especialización en Computación y sistemas inteligentes y en Tecnologías de la información.'
-      }
-    ],
     
     // Projects
     myProjects: 'Mis Proyectos',
@@ -77,10 +54,6 @@ export const translations = {
     // Skills
     technicalSkills: 'Habilidades Técnicas',
     skillsSubtitle: 'Tecnologías y herramientas que domino',
-    frontend: 'Frontend',
-    backend: 'Backend',
-    databases: 'Bases de Datos',
-    devopsTools: 'DevOps & Tools',
     otherCompetencies: 'Otras Competencias',
     
     // Chat
@@ -149,18 +122,6 @@ export const translations = {
     // Sidebar
     sidebarExpandLabel: 'Expandir sidebar',
     sidebarCollapseLabel: 'Colapsar sidebar',
-    
-    // Skills - Additional Competencies
-    skillAgileScrum: 'Agile/Scrum',
-    skillRestApis: 'REST APIs',
-    skillMicroservices: 'Microservicios',
-    skillTesting: 'Testing',
-    skillUIUX: 'UI/UX Design',
-    skillResponsiveDesign: 'Responsive Design',
-    skillPerformanceOptimization: 'Performance Optimization',
-    skillSecurityBestPractices: 'Security Best Practices',
-    skillTeamLeadership: 'Liderazgo',
-    skillAutonomia: 'Autonomía',
   },
   en: {
     // Header
@@ -194,31 +155,8 @@ export const translations = {
     
     // About
     aboutMe: 'About Me',
-    aboutDescription1: 'I am a curious and engaged person. I chose software engineering as a career because I was torn between too many fields—physics, biology, mathematics... And I felt that software engineering, due to its cross-cutting nature, would allow me to explore many areas and eventually discover what I was most passionate about in life.',
-    aboutDescription2: 'My approach focuses on writing clean, maintainable, and scalable code, always seeking best practices and the latest trends in software development.',
     professionalExperience: 'Professional Experience',
-    seniorFullStack: 'Full-Stack Developer',
-    techCompany: 'Tracasa Instrumental | 2021 - Present',
-    seniorDescription: 'Development of government applications using mainly .NET, Angular, React and T-SQL. Architecture implementation and project planning, integration of artificial intelligence systems.',
-    fullStackDeveloper: 'Extracurricular Internship',
-    startupTech: 'Veridas | 2020',
-    fullStackDescription: 'Preparation of datasets to train facial recognition models. Design of mobile applications with Android Studio and Java.',
-    juniorDeveloper: 'Extracurricular Internship',
-    softwareAgency: 'Veridas | 2019',
-    juniorDescription: 'Preparation of datasets to train facial recognition models.',
     education: 'Education',
-    educationItems: [
-      {
-        degree: 'Master in Computer Engineering',
-        institution: 'Public University of Navarre | 2021-2024',
-        description: 'Generalist master covering contents that are outside the undergraduate degree.'
-      },
-      {
-        degree: 'Computer Engineering',
-        institution: 'Public University of Navarre | 2017-2021',
-        description: 'Specialization in Computing and intelligent systems and in Information Technology.'
-      }
-    ],
     
     // Projects
     myProjects: 'My Projects',
@@ -239,10 +177,6 @@ export const translations = {
     // Skills
     technicalSkills: 'Technical Skills',
     skillsSubtitle: 'Technologies and tools I master',
-    frontend: 'Frontend',
-    backend: 'Backend',
-    databases: 'Databases',
-    devopsTools: 'DevOps & Tools',
     otherCompetencies: 'Other Competencies',
     
     // Chat
@@ -311,18 +245,6 @@ export const translations = {
     // Sidebar
     sidebarExpandLabel: 'Expand sidebar',
     sidebarCollapseLabel: 'Collapse sidebar',
-    
-    // Skills - Additional Competencies
-    skillAgileScrum: 'Agile/Scrum',
-    skillRestApis: 'REST APIs',
-    skillMicroservices: 'Microservices',
-    skillTesting: 'Testing (Jest, Pytest)',
-    skillUIUX: 'UI/UX Design',
-    skillResponsiveDesign: 'Responsive Design',
-    skillPerformanceOptimization: 'Performance Optimization',
-    skillSecurityBestPractices: 'Security Best Practices',
-    skillTeamLeadership: 'Team Leadership',
-    skillAutonomia: 'Autonomy',
   },
 } as const;
 

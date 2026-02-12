@@ -1,43 +1,152 @@
-# Portfolio Dashboard con Chatbot RAG
+# 🎯 Portfolio Dashboard
 
-Un portfolio moderno con estética de dashboard, soporte para temas claro/oscuro y un chatbot inteligente con RAG (Retrieval-Augmented Generation).
+Portfolio moderno y profesional con diseño tipo dashboard, temas claro/oscuro y chatbot con IA ejecutándose localmente en el navegador.
 
-## 🚀 Características
+## ✨ Características Principales
 
-- ✨ **Diseño Dashboard Moderno**: Interfaz limpia y profesional tipo dashboard
-- 🌓 **Temas Claro/Oscuro**: Cambia entre temas con persistencia en localStorage
-- 🤖 **Chatbot con IA**: Sistema de chat inteligente listo para integrar RAG
-- 📱 **Responsive**: Diseño adaptable a diferentes dispositivos
-- ⚡ **Optimizado con Vite**: Desarrollo rápido y builds optimizados
-- 🎨 **Componentes Modulares**: Arquitectura de componentes reutilizables
+- 🎨 **Data-Driven**: Todo el contenido (proyectos, habilidades, experiencia) se gestiona desde archivos centralizados
+- 🤖 **Chatbot con IA Local**: WebLLM ejecutándose completamente en tu navegador (sin backend)
+- 🌓 **Temas Claro/Oscuro**: Sistema de colores personalizable con persistencia
+- 🔍 **Búsqueda Inteligente**: Busca en todo el portfolio, actualizado automáticamente con tus datos
+- 📱 **Responsive**: Optimizado para todo tipo de dispositivos
+- ⚡ **Alto Rendimiento**: Vite, React 19, código splitting y lazy loading
+- 🌍 **Multilingüe**: Soporte completo español/inglés
 
-## 📦 Tecnologías Utilizadas
+## 🛠️ Stack Tecnológico
 
-- **React 19** - Biblioteca UI
-- **TypeScript** - Tipado estático
-- **Vite** - Build tool y dev server
-- **Lucide React** - Iconos modernos
-- **CSS Variables** - Sistema de temas personalizable
+- **React 19** + **TypeScript** - UI moderna y type-safe
+- **Vite** - Build ultrarrápido con HMR
+- **WebLLM** - IA ejecutándose en el navegador (WebGPU)
+- **EmailJS** - Envío de mensajes sin backend
+- **CSS Variables** - Sistema de temas flexible
 
-## 🛠️ Instalación
+## � Inicio Rápido
 
-1. Clona el repositorio:
+### Instalación
+
 ```bash
-git clone <tu-repo>
+# Clonar repositorio
+git clone https://github.com/xabware/portfolio.git
 cd portfolio
-```
 
-2. Instala las dependencias:
-```bash
+# Instalar dependencias
 npm install
-```
 
-3. Inicia el servidor de desarrollo:
-```bash
+# Iniciar desarrollo
 npm run dev
 ```
 
-4. Abre tu navegador en `http://localhost:5173`
+Abre `http://localhost:5173` en tu navegador.
+
+### Scripts Disponibles
+
+```bash
+npm run dev      # Servidor de desarrollo
+npm run build    # Build de producción
+npm run preview  # Preview del build
+npm run lint     # Ejecutar ESLint
+```
+
+## 📝 Personalización
+
+### 1. Actualizar Tus Datos
+
+Todos tus datos están centralizados en `src/data/`:
+
+**`projects.ts`** - Añade/edita tus proyectos
+```typescript
+{
+  id: 1,
+  title: { es: 'Mi Proyecto', en: 'My Project' },
+  description: { es: '...', en: '...' },
+  tech: ['React', 'TypeScript'],
+  github: 'https://github.com/...',
+  demo: 'https://...',
+  details: { /* información detallada */ }
+}
+```
+
+**`skills.ts`** - Gestiona tus habilidades
+```typescript
+{
+  title: { es: 'Frontend', en: 'Frontend' },
+  skills: [
+    { name: 'React', level: 95 },
+    { name: 'TypeScript', level: 90 }
+  ]
+}
+```
+
+**`about.ts`** - Tu experiencia y educación
+```typescript
+// Información personal
+personalInfo: { description: { es: [...], en: [...] } }
+
+// Experiencia laboral
+experiences: [{ title, company, description, period }]
+
+// Educación
+education: [{ degree, institution, description, period }]
+```
+
+> 💡 **Ventaja**: Al actualizar estos archivos, el chatbot y la búsqueda se actualizan automáticamente
+
+### 2. Configurar EmailJS (Contacto)
+
+1. Crea cuenta en [EmailJS](https://www.emailjs.com/)
+2. Configura un servicio de email
+3. Crea una plantilla de email
+4. Copia tus credenciales a `src/components/sections/Contact.tsx`:
+
+```typescript
+const serviceId = 'TU_SERVICE_ID';
+const templateId = 'TU_TEMPLATE_ID';
+const publicKey = 'TU_PUBLIC_KEY';
+```
+
+### 3. Personalizar Colores
+
+Edita `src/index.css`:
+
+```css
+[data-theme='light'] {
+  --primary-color: #3b82f6;      /* Color principal */
+  --primary-hover: #2563eb;      /* Hover principal */
+  --bg-primary: #ffffff;         /* Fondo principal */
+  --text-primary: #1e293b;       /* Texto principal */
+}
+
+[data-theme='dark'] {
+  --primary-color: #60a5fa;
+  --bg-primary: #0f172a;
+  --text-primary: #f1f5f9;
+}
+```
+
+## 🤖 Chatbot con IA
+
+El chatbot usa **WebLLM** y se ejecuta completamente en el navegador:
+
+- ✅ **Sin backend** - Todo corre en el cliente
+- ✅ **Privacidad** - Tus datos no salen del navegador
+- ✅ **Sin costos** - No necesitas API keys
+- ⚠️ **Requiere WebGPU** - Navegadores modernos (Chrome 113+, Edge 113+)
+
+### Modelos Disponibles
+
+- **Qwen 2.5 0.5B** - Ultra ligero (~350MB)
+- **Phi 3.5 Mini** - Recomendado (~2.2GB)
+- **Qwen 2.5 1.5B** - Ligero (~900MB)
+- **Llama 3.2 3B** - Requiere GPU dedicada (~1.8GB)
+
+### Cómo Funciona
+
+El chatbot obtiene tu información automáticamente desde `src/data/`:
+- Lee tus proyectos
+- Indexa tus habilidades
+- Conoce tu experiencia
+
+Para modificar el comportamiento, edita `src/data/contextGenerator.ts`.
 
 ## 📁 Estructura del Proyecto
 
@@ -45,197 +154,110 @@ npm run dev
 portfolio/
 ├── src/
 │   ├── components/
-│   │   ├── sections/        # Secciones del portfolio
-│   │   │   ├── Home.tsx
-│   │   │   ├── About.tsx
-│   │   │   ├── Projects.tsx
-│   │   │   ├── Skills.tsx
-│   │   │   ├── Chat.tsx
-│   │   │   └── Contact.tsx
-│   │   ├── Sidebar.tsx      # Navegación lateral
-│   │   ├── Header.tsx       # Cabecera con toggle de tema
-│   │   ├── Card.tsx         # Componente de tarjeta
-│   │   └── Chatbot.tsx      # Componente del chatbot
+│   │   ├── sections/          # Secciones del portfolio
+│   │   │   ├── Home.tsx       # Página de inicio
+│   │   │   ├── About.tsx      # Sobre mí (usa data/about.ts)
+│   │   │   ├── Projects.tsx   # Proyectos (usa data/projects.ts)
+│   │   │   ├── Skills.tsx     # Habilidades (usa data/skills.ts)
+│   │   │   ├── Chat.tsx       # Interfaz del chatbot
+│   │   │   └── Contact.tsx    # Formulario de contacto
+│   │   ├── Sidebar.tsx        # Navegación lateral
+│   │   ├── Header.tsx         # Barra superior
+│   │   ├── SearchBar.tsx      # Búsqueda global
+│   │   └── Chatbot.tsx        # Lógica del chatbot
 │   ├── contexts/
-│   │   └── ThemeContext.tsx # Contexto para manejo de temas
-│   ├── App.tsx              # Componente principal
-│   ├── main.tsx             # Punto de entrada
-│   └── index.css            # Estilos globales y variables CSS
+│   │   ├── ThemeContext.tsx   # Gestión de temas claro/oscuro
+│   │   ├── LanguageContext.tsx # Sistema multilingüe
+│   │   └── WebLLMContext.tsx  # Estado del chatbot IA
+│   ├── data/                  # ⭐ Datos centralizados
+│   │   ├── projects.ts        # Tus proyectos
+│   │   ├── skills.ts          # Tus habilidades
+│   │   ├── about.ts           # Tu información personal
+│   │   ├── contextGenerator.ts # Generador dinámico
+│   │   └── README.md          # Guía de uso de datos
+│   ├── config/
+│   │   └── chatbotConfig.ts   # Configuración de modelos IA
+│   ├── translations.ts        # Traducciones ES/EN
+│   └── App.tsx                # Componente raíz
 └── package.json
 ```
 
-## 🤖 Integración del Chatbot con RAG
+## 🚀 Despliegue
 
-El chatbot está preparado para conectarse con un backend RAG. Aquí te explico cómo integrarlo:
+### GitHub Pages
 
-### Backend Recomendado
-
-Puedes usar Python con FastAPI para crear el backend RAG:
-
-```python
-# backend/main.py
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-
-app = FastAPI()
-
-# Configurar CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-class ChatMessage(BaseModel):
-    message: str
-
-@app.post("/chat")
-async def chat(message: ChatMessage):
-    # Aquí integras tu lógica RAG
-    # 1. Convertir el mensaje a embeddings
-    # 2. Buscar en tu base de datos vectorial (Pinecone, Weaviate, etc.)
-    # 3. Usar el contexto recuperado con un LLM (OpenAI, Anthropic, etc.)
-    
-    response = generate_rag_response(message.message)
-    return {"response": response}
-```
-
-### Frontend - Actualizar el Chatbot
-
-En `src/components/Chatbot.tsx`, actualiza la función `sendToRAG`:
-
+1. Actualiza `vite.config.ts`:
 ```typescript
-const sendToRAG = async (userMessage: string): Promise<string> => {
-  try {
-    const response = await fetch('http://localhost:8000/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: userMessage })
-    });
-    
-    const data = await response.json();
-    return data.response;
-  } catch (error) {
-    console.error('Error al comunicarse con el backend:', error);
-    throw error;
-  }
-};
+export default defineConfig({
+  base: '/portfolio/', // nombre de tu repo
+  // ...
+})
 ```
 
-### Ejemplo de Stack RAG Completo
-
-**Opción 1: OpenAI + Pinecone**
+2. Build y deploy:
 ```bash
-pip install openai pinecone-client fastapi uvicorn
+npm run build
+# Sube la carpeta dist/ a gh-pages branch
 ```
-
-**Opción 2: LangChain + ChromaDB**
-```bash
-pip install langchain chromadb openai fastapi uvicorn
-```
-
-**Opción 3: Anthropic + Weaviate**
-```bash
-pip install anthropic weaviate-client fastapi uvicorn
-```
-
-### Estructura Sugerida del Backend
-
-```
-backend/
-├── main.py              # FastAPI app
-├── vectorstore.py       # Conexión a DB vectorial
-├── embeddings.py        # Generación de embeddings
-├── rag_chain.py         # Lógica RAG
-├── data/
-│   └── portfolio_data/  # Tus datos para indexar
-└── requirements.txt
-```
-
-## 🎨 Personalización
-
-### Cambiar Colores del Tema
-
-Edita `src/index.css` y modifica las variables CSS:
-
-```css
-[data-theme='light'] {
-  --primary-color: #3b82f6;  /* Cambia este color */
-  --primary-hover: #2563eb;
-  /* ... más variables */
-}
-```
-
-### Agregar Nuevas Secciones
-
-1. Crea un nuevo componente en `src/components/sections/`
-2. Importa y agrega la ruta en `src/App.tsx`
-3. Añade el item al menú en `src/components/Sidebar.tsx`
-
-### Modificar Contenido
-
-- **Sobre mí**: Edita `src/components/sections/About.tsx`
-- **Proyectos**: Actualiza el array `projects` en `src/components/sections/Projects.tsx`
-- **Habilidades**: Modifica `skillCategories` en `src/components/sections/Skills.tsx`
-- **Contacto**: Actualiza los enlaces en `src/components/sections/Contact.tsx`
-
-## 📝 Scripts Disponibles
-
-```bash
-npm run dev      # Inicia servidor de desarrollo
-npm run build    # Crea build de producción
-npm run preview  # Preview del build de producción
-npm run lint     # Ejecuta ESLint
-```
-
-## 🚀 Deploy
 
 ### Vercel
+
 ```bash
 npm install -g vercel
 vercel
 ```
 
 ### Netlify
-```bash
-npm run build
-# Sube la carpeta dist/
-```
 
-### GitHub Pages
-```bash
-# Configura base en vite.config.ts
-npm run build
-# Sube dist/ a gh-pages branch
-```
+1. Conecta tu repo en Netlify
+2. Build command: `npm run build`
+3. Publish directory: `dist`
 
-## 📚 Próximos Pasos
+## 🎯 Características Avanzadas
 
-1. **Implementar Backend RAG**: Sigue la guía de integración arriba
-2. **Conectar con Base de Datos Vectorial**: Pinecone, Weaviate, ChromaDB, etc.
-3. **Indexar tu Contenido**: CV, proyectos, experiencia en formato vectorial
-4. **Configurar LLM**: OpenAI, Anthropic, o modelos locales
-5. **Agregar Autenticación**: Si deseas funciones protegidas
-6. **Analytics**: Google Analytics, Plausible, etc.
+### Sistema Data-Driven
 
-## 🤝 Contribuciones
+Todo el contenido es gestionado desde la carpeta `data/`. Beneficios:
 
-Las contribuciones son bienvenidas. Por favor:
+- ✅ **Single Source of Truth**: Datos en un solo lugar
+- ✅ **Auto-actualización**: Chatbot y búsqueda se actualizan automáticamente
+- ✅ **Fácil mantenimiento**: Editas una vez, se actualiza todo
+- ✅ **Type-safe**: TypeScript previene errores
+
+### Búsqueda Inteligente
+
+La búsqueda indexa automáticamente:
+- Todos tus proyectos con sus tecnologías
+- Todas tus habilidades y competencias
+- Tu experiencia laboral y educación
+
+### i18n (Internacionalización)
+
+Soporta español e inglés de forma nativa:
+- UI completamente traducida
+- Todos los datos tienen versión ES/EN
+- Cambio de idioma instantáneo con persistencia
+
+## 📚 Documentación Adicional
+
+- **Guía de Datos**: `src/data/README.md` - Cómo actualizar tus datos
+- **Ejemplo Backend**: `backend-example/` - Backend RAG con Python/FastAPI (opcional)
+
+## 🤝 Contribuir
 
 1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
+2. Crea una feature branch (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit tus cambios (`git commit -m 'Añadir nueva funcionalidad'`)
+4. Push a la branch (`git push origin feature/nueva-funcionalidad`)
 5. Abre un Pull Request
 
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT.
+MIT License - Usa libremente para tu portfolio personal.
 
 ---
 
-⭐ Si te gustó este proyecto, no olvides darle una estrella!
+**⭐ ¿Te gustó? Dale una estrella en GitHub!**
+
+Portfolio desarrollado con ❤️ por [Xabier Cía](https://github.com/xabware)
 
