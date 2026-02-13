@@ -620,20 +620,6 @@ function Planet({ data, language, cameraPosition, onSelect, selectedPlanet, onPo
           </div>
         </div>
       </Html>
-      
-      {/* Indicador de aproximación cuando estás cerca */}
-      {showDetails && (
-        <Html
-          center
-          distanceFactor={12}
-          position={[0, -data.size - 2, 0]}
-          style={{ pointerEvents: 'none' }}
-        >
-          <div className="planet-approach-label">
-            {language === 'es' ? 'Acércate más...' : 'Get closer...'}
-          </div>
-        </Html>
-      )}
     </group>
   );
 }
@@ -695,54 +681,6 @@ function PlanetSatellites({ planetSize, planetSeed, color }: { planetSize: numbe
 }
 
 // Componente de Luna (item individual)
-interface MoonProps {
-  item: PlanetItem;
-  index: number;
-  total: number;
-  parentSize: number;
-  color: string;
-}
-
-function Moon({ item, index, total, parentSize, color }: MoonProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [hovered, setHovered] = useState(false);
-  const angle = useRef((index / total) * Math.PI * 2);
-  const moonOrbitRadius = parentSize * 1.5 + 3;
-  const moonSize = Math.max(0.5, parentSize * 0.08);
-  
-  useFrame(() => {
-    angle.current += 0.002; // Mucho más lento
-    if (meshRef.current) {
-      meshRef.current.position.x = Math.cos(angle.current) * moonOrbitRadius;
-      meshRef.current.position.z = Math.sin(angle.current) * moonOrbitRadius;
-      meshRef.current.position.y = Math.sin(angle.current * 2) * (parentSize * 0.2);
-    }
-  });
-
-  return (
-    <mesh
-      ref={meshRef}
-      onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
-      onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
-    >
-      <sphereGeometry args={[moonSize, 16, 16]} />
-      <meshStandardMaterial
-        color={color}
-        emissive={color}
-        emissiveIntensity={hovered ? 0.8 : 0.3}
-      />
-      {hovered && (
-        <Html center distanceFactor={10}>
-          <div className="moon-tooltip">
-            <strong>{item.title}</strong>
-            {item.subtitle && <span className="moon-subtitle">{item.subtitle}</span>}
-          </div>
-        </Html>
-      )}
-    </mesh>
-  );
-}
-
 // ============================================
 // SISTEMA DE EXPLORACIÓN PLANETARIA
 // ============================================
@@ -762,6 +700,7 @@ interface SurfaceConfig {
   hasWater: boolean;
   waterLevel: number;
   waterColor: string;
+  hasAtmosphere: boolean;
 }
 
 function getSurfaceConfig(planetType: PlanetType): SurfaceConfig {
@@ -780,7 +719,8 @@ function getSurfaceConfig(planetType: PlanetType): SurfaceConfig {
         noiseScale: 0.03,
         hasWater: true,
         waterLevel: 0.35,
-        waterColor: '#1a5276'
+        waterColor: '#1a5276',
+        hasAtmosphere: true
       };
     case 'gas_giant':
       return {
@@ -796,7 +736,8 @@ function getSurfaceConfig(planetType: PlanetType): SurfaceConfig {
         noiseScale: 0.01,
         hasWater: false,
         waterLevel: 0,
-        waterColor: ''
+        waterColor: '',
+        hasAtmosphere: true
       };
     case 'ice':
       return {
@@ -804,15 +745,16 @@ function getSurfaceConfig(planetType: PlanetType): SurfaceConfig {
         groundColor1: '#e8f4f8',
         groundColor2: '#b0c4de',
         detailColor: '#add8e6',
-        fogColor: '#f0f8ff',
-        fogDensity: 0.01,
-        skyColor: '#4682b4',
-        horizonColor: '#e6e6fa',
+        fogColor: '#000000',
+        fogDensity: 0.001,
+        skyColor: '#000008',
+        horizonColor: '#101020',
         heightScale: 6,
         noiseScale: 0.025,
         hasWater: true,
         waterLevel: 0.2,
-        waterColor: '#5f9ea0'
+        waterColor: '#5f9ea0',
+        hasAtmosphere: false
       };
     case 'volcanic':
       return {
@@ -828,7 +770,8 @@ function getSurfaceConfig(planetType: PlanetType): SurfaceConfig {
         noiseScale: 0.04,
         hasWater: true, // Lava
         waterLevel: 0.25,
-        waterColor: '#ff2200'
+        waterColor: '#ff2200',
+        hasAtmosphere: true
       };
     default:
       return getSurfaceConfig('terrestrial');
@@ -1011,11 +954,89 @@ interface PlanetarySkyProps {
 
 function PlanetarySky({ config, radius }: PlanetarySkyProps) {
   const skyRef = useRef<THREE.Mesh>(null);
+  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
   
-  // Crear gradiente de cielo procedural
+  // Crear gradiente de cielo procedural o cielo estrellado
   const skyMaterial = useMemo(() => {
     const skyColor = new THREE.Color(config.skyColor);
     const horizonColor = new THREE.Color(config.horizonColor);
+    
+    if (!config.hasAtmosphere) {
+      // Cielo estrellado para planetas sin atmósfera
+      return new THREE.ShaderMaterial({
+        uniforms: {
+          topColor: { value: skyColor },
+          bottomColor: { value: horizonColor },
+          time: { value: 0 },
+        },
+        vertexShader: `
+          varying vec3 vWorldPosition;
+          varying vec3 vNormal;
+          void main() {
+            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+            vWorldPosition = worldPosition.xyz;
+            vNormal = normalize(position);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 topColor;
+          uniform vec3 bottomColor;
+          uniform float time;
+          varying vec3 vWorldPosition;
+          varying vec3 vNormal;
+          
+          // Función de hash mejorada para estrellas
+          float hash(vec2 p) {
+            return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+          }
+          
+          float hash3(vec3 p) {
+            return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
+          }
+          
+          void main() {
+            float h = normalize(vWorldPosition).y;
+            float t = max(pow(max(h + 0.4, 0.0), 0.6), 0.0);
+            vec3 baseColor = mix(bottomColor, topColor, t);
+            
+            // Usar coordenadas esféricas para mejor distribución
+            vec3 dir = normalize(vNormal);
+            
+            // Múltiples capas de estrellas con diferentes densidades
+            vec3 starColor = vec3(0.0);
+            
+            // Capa 1: Estrellas muy pequeñas y numerosas (la mayoría)
+            vec2 starUv1 = dir.xy * 800.0 + dir.z * 400.0;
+            float star1 = hash(floor(starUv1));
+            float starBright1 = step(0.9992, star1) * 0.15;
+            
+            // Capa 2: Estrellas pequeñas
+            vec2 starUv2 = dir.xz * 600.0 + dir.y * 300.0;
+            float star2 = hash(floor(starUv2));
+            float starBright2 = step(0.9994, star2) * 0.2;
+            
+            // Capa 3: Estrellas medianas (pocas)
+            vec2 starUv3 = dir.yz * 400.0 + dir.x * 200.0;
+            float star3 = hash(floor(starUv3));
+            float starBright3 = step(0.9997, star3) * 0.35;
+            
+            // Capa 4: Estrellas brillantes (muy pocas)
+            vec2 starUv4 = dir.xy * 150.0;
+            float star4 = hash(floor(starUv4));
+            float starBright4 = step(0.9998, star4) * 0.6;
+            
+            // Parpadeo muy sutil solo en estrellas más brillantes
+            float twinkle = 0.9 + 0.1 * sin(time * 0.5 + star4 * 50.0);
+            
+            starColor = vec3(starBright1 + starBright2 + starBright3 + starBright4 * twinkle);
+            
+            gl_FragColor = vec4(baseColor + starColor, 1.0);
+          }
+        `,
+        side: THREE.BackSide,
+      });
+    }
     
     return new THREE.ShaderMaterial({
       uniforms: {
@@ -1046,7 +1067,19 @@ function PlanetarySky({ config, radius }: PlanetarySkyProps) {
       `,
       side: THREE.BackSide,
     });
-  }, [config.skyColor, config.horizonColor]);
+  }, [config.skyColor, config.horizonColor, config.hasAtmosphere]);
+  
+  // Guardar referencia al material
+  useEffect(() => {
+    materialRef.current = skyMaterial;
+  }, [skyMaterial]);
+  
+  // Animar estrellas si no hay atmósfera
+  useFrame(({ clock }) => {
+    if (!config.hasAtmosphere && materialRef.current?.uniforms.time) {
+      materialRef.current.uniforms.time.value = clock.elapsedTime;
+    }
+  });
   
   return (
     <mesh ref={skyRef}>
@@ -1066,6 +1099,167 @@ function AtmosphericFog({ config }: AtmosphericFogProps) {
   
   return (
     <fogExp2 attach="fog" args={[fogColor, config.fogDensity]} />
+  );
+}
+
+// Nubes atmosféricas por encima del límite de altura de la nave
+interface AtmosphericCloudsProps {
+  radius: number;
+  seed: number;
+  config: SurfaceConfig;
+}
+
+function AtmosphericClouds({ radius, seed, config }: AtmosphericCloudsProps) {
+  const cloudsRef = useRef<THREE.Group>(null);
+  
+  // Altura de las nubes (por encima del límite de vuelo de la nave que es radius + 25)
+  const cloudAltitude = radius + 35;
+  
+  // Generar posiciones y formas de nubes
+  const clouds = useMemo(() => {
+    if (!config.hasAtmosphere) return [];
+    
+    const random = seededRandom(seed + 8000);
+    const cloudCount = config.planetType === 'gas_giant' ? 60 : 40;
+    const positions: { 
+      pos: THREE.Vector3; 
+      scaleX: number; 
+      scaleY: number; 
+      scaleZ: number; 
+      opacity: number;
+      rotY: number;
+    }[] = [];
+    
+    for (let i = 0; i < cloudCount; i++) {
+      // Distribución esférica
+      const phi = Math.acos(1 - 2 * random());
+      const theta = random() * Math.PI * 2;
+      
+      const x = Math.sin(phi) * Math.cos(theta);
+      const y = Math.cos(phi);
+      const z = Math.sin(phi) * Math.sin(theta);
+      
+      // Altura variable de las nubes
+      const altVariation = cloudAltitude + random() * 15;
+      
+      // Formas variadas: algunas alargadas, otras redondeadas
+      const baseScale = 3 + random() * 6;
+      const shapeType = random();
+      let scaleX, scaleY, scaleZ;
+      
+      if (shapeType < 0.3) {
+        // Nube alargada horizontal
+        scaleX = baseScale * (1.5 + random() * 1.5);
+        scaleY = baseScale * 0.4;
+        scaleZ = baseScale * (0.8 + random() * 0.4);
+      } else if (shapeType < 0.6) {
+        // Nube redondeada (cúmulo)
+        scaleX = baseScale * (0.9 + random() * 0.3);
+        scaleY = baseScale * (0.7 + random() * 0.5);
+        scaleZ = baseScale * (0.9 + random() * 0.3);
+      } else {
+        // Nube alargada irregular
+        scaleX = baseScale * (1.2 + random());
+        scaleY = baseScale * (0.3 + random() * 0.3);
+        scaleZ = baseScale * (0.6 + random() * 0.8);
+      }
+      
+      positions.push({
+        pos: new THREE.Vector3(x * altVariation, y * altVariation, z * altVariation),
+        scaleX,
+        scaleY,
+        scaleZ,
+        opacity: 0.25 + random() * 0.35,
+        rotY: random() * Math.PI * 2
+      });
+    }
+    return positions;
+  }, [seed, cloudAltitude, config.planetType, config.hasAtmosphere]);
+  
+  // Colores de nubes según tipo de planeta
+  const cloudColor = useMemo(() => {
+    switch (config.planetType) {
+      case 'volcanic': return '#3d2817';
+      case 'gas_giant': return '#c9a86c';
+      default: return '#ffffff';
+    }
+  }, [config.planetType]);
+  
+  // Animación de movimiento lento
+  useFrame(({ clock }) => {
+    if (cloudsRef.current) {
+      cloudsRef.current.rotation.y = clock.elapsedTime * 0.002;
+    }
+  });
+  
+  // No renderizar si no hay atmósfera
+  if (!config.hasAtmosphere || clouds.length === 0) return null;
+  
+  return (
+    <group ref={cloudsRef}>
+      {clouds.map((cloud, i) => {
+        const normal = cloud.pos.clone().normalize();
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+        
+        // Añadir rotación local para variedad
+        const localRot = new THREE.Quaternion();
+        localRot.setFromAxisAngle(new THREE.Vector3(0, 1, 0), cloud.rotY);
+        quaternion.multiply(localRot);
+        
+        return (
+          <mesh key={i} position={cloud.pos} quaternion={quaternion} scale={[cloud.scaleX, cloud.scaleY, cloud.scaleZ]}>
+            <sphereGeometry args={[1, 8, 6]} />
+            <meshStandardMaterial
+              color={cloudColor}
+              transparent
+              opacity={cloud.opacity}
+              roughness={1}
+              depthWrite={false}
+            />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+// Agua planetaria para planetas terrestres y de hielo
+interface PlanetaryWaterProps {
+  radius: number;
+  config: SurfaceConfig;
+}
+
+function PlanetaryWater({ radius, config }: PlanetaryWaterProps) {
+  const waterRef = useRef<THREE.Mesh>(null);
+  
+  // El nivel del agua está basado en el heightScale del terreno
+  // waterLevel es un valor entre 0-1 que indica la proporción
+  const waterHeight = radius + (config.waterLevel - 0.4) * config.heightScale * 2;
+  
+  useFrame(({ clock }) => {
+    if (waterRef.current && waterRef.current.material instanceof THREE.MeshStandardMaterial) {
+      // Ondulación sutil del agua
+      waterRef.current.material.emissiveIntensity = 0.15 + Math.sin(clock.elapsedTime * 0.5) * 0.05;
+    }
+  });
+  
+  const waterColor = useMemo(() => new THREE.Color(config.waterColor), [config.waterColor]);
+  
+  return (
+    <mesh ref={waterRef}>
+      <sphereGeometry args={[waterHeight, 96, 96]} />
+      <meshStandardMaterial
+        color={waterColor}
+        transparent
+        opacity={0.85}
+        roughness={0.1}
+        metalness={0.3}
+        emissive={waterColor}
+        emissiveIntensity={0.15}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
   );
 }
 
@@ -1291,16 +1485,16 @@ function PlanetarySun({ config, radius, orbitRadius }: PlanetarySunProps) {
     // Distancias orbitales en el sistema: Proyectos=50, Experiencia=85, Educación=125, Habilidades=160
     const minOrbit = 50; // Planeta más cercano
     
-    // El sol desde el planeta más cercano se ve grande (tamaño base 12)
-    // El sol desde el planeta más lejano se ve mucho más pequeño (tamaño ~2.5)
-    const baseSunSize = 12;
+    // El sol desde el planeta más cercano se ve grande (tamaño base 6)
+    // El sol desde el planeta más lejano se ve mucho más pequeño
+    const baseSunSize = 6;
     
     // Usar ley del cuadrado inverso para mayor realismo
     const distanceRatio = minOrbit / orbitRadius;
     const apparentSize = baseSunSize * Math.pow(distanceRatio, 0.8); // Exponente < 1 para no ser tan extremo
     
     // Clamp para que no sea ni demasiado grande ni demasiado pequeño
-    return Math.max(2, Math.min(15, apparentSize));
+    return Math.max(1.5, Math.min(8, apparentSize));
   }, [orbitRadius]);
   
   // Intensidad de la luz también varía con la distancia
@@ -1321,6 +1515,9 @@ function PlanetarySun({ config, radius, orbitRadius }: PlanetarySunProps) {
     
     if (sunRef.current) {
       sunRef.current.position.set(sunX, sunY, sunZ);
+      // Apuntar la luz hacia el centro del planeta
+      sunRef.current.target.position.set(0, 0, 0);
+      sunRef.current.target.updateMatrixWorld();
     }
     
     if (sunMeshRef.current) {
@@ -1373,7 +1570,9 @@ function PlanetarySun({ config, radius, orbitRadius }: PlanetarySunProps) {
         castShadow
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
-      />
+      >
+        <primitive object={new THREE.Object3D()} attach="target" />
+      </directionalLight>
       <ambientLight color={config.fogColor} intensity={0.3 + (sunIntensity * 0.1)} />
       <hemisphereLight
         color={config.skyColor}
@@ -1478,11 +1677,25 @@ function generateSurfacePositions(
   return positions;
 }
 
-// Árboles para planetas terrestres
+// Árboles para planetas terrestres organizados en bosques
 function SurfaceTrees({ radius, seed, config }: { radius: number; seed: number; config: SurfaceConfig }) {
   const trees = useMemo(() => {
-    const positions = generateSurfacePositions(200, radius, seed + 1000, seed, 0.4, config);
-    return positions.slice(0, 80);
+    // Generar muchas más posiciones candidatas
+    const allPositions = generateSurfacePositions(600, radius, seed + 1000, seed, 0.4, config);
+    
+    // Filtrar usando ruido para crear zonas de bosques
+    const forestPositions = allPositions.filter(pos => {
+      const nx = pos.x / radius;
+      const ny = pos.y / radius;
+      const nz = pos.z / radius;
+      
+      // Ruido de baja frecuencia para definir zonas de bosque
+      const forestNoise = fbm(nx * 3, ny * 3, nz * 3, 2, seed + 500);
+      // Umbral alto = bosques más densos en algunas zonas, ausentes en otras
+      return forestNoise > 0.45;
+    });
+    
+    return forestPositions.slice(0, 150);
   }, [radius, seed, config]);
   
   return (
@@ -1832,20 +2045,29 @@ function PlanetarySurface({ planetData, allPlanets, onExitSurface }: PlanetarySu
     return createDetailedSurfaceGeometry(surfaceRadius, 128, planetSeed, config);
   }, [surfaceRadius, planetSeed, config]);
   
-  // Textura procedural adicional para detalle
+  // Textura procedural más homogénea (sin patrones repetitivos)
   const groundTexture = useMemo(() => {
-    const size = 512;
+    const size = 256;
     const data = new Uint8Array(size * size * 4);
     const random = seededRandom(planetSeed + 1000);
     
+    // Crear textura de ruido suave usando múltiples octavas simuladas
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
         const i = (y * size + x) * 4;
         
-        // Generar patrón de textura
-        const noise1 = random() * 0.3;
-        const noise2 = Math.sin(x * 0.1) * Math.cos(y * 0.1) * 0.1;
-        const combined = 0.7 + noise1 + noise2;
+        // Ruido suave usando interpolación
+        const fx = x / size;
+        const fy = y / size;
+        
+        // Combinar varias frecuencias de ruido para textura orgánica
+        let noise = 0;
+        noise += Math.sin(fx * 3.7 + random() * 0.1) * 0.1;
+        noise += Math.cos(fy * 4.3 + random() * 0.1) * 0.1;
+        noise += (random() * 0.5 + random() * 0.5) * 0.15; // Suavizar el ruido
+        
+        // Valor base más alto para que sea sutil
+        const combined = 0.85 + noise * 0.15;
         
         data[i] = combined * 255;
         data[i + 1] = combined * 255;
@@ -1857,7 +2079,7 @@ function PlanetarySurface({ planetData, allPlanets, onExitSurface }: PlanetarySu
     const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(50, 50);
+    texture.repeat.set(8, 8); // Menos repeticiones para evitar patrones visibles
     texture.needsUpdate = true;
     
     return texture;
@@ -1879,6 +2101,9 @@ function PlanetarySurface({ planetData, allPlanets, onExitSurface }: PlanetarySu
       {/* Niebla atmosférica */}
       <AtmosphericFog config={config} />
       
+      {/* Nubes atmosféricas (por encima del límite de vuelo) */}
+      <AtmosphericClouds radius={surfaceRadius} seed={planetSeed} config={config} />
+      
       {/* Iluminación con sol de tamaño variable */}
       <PlanetarySun config={config} radius={surfaceRadius} orbitRadius={planetData.orbitRadius} />
       
@@ -1892,6 +2117,11 @@ function PlanetarySurface({ planetData, allPlanets, onExitSurface }: PlanetarySu
           flatShading
         />
       </mesh>
+      
+      {/* Agua para planetas terrestres */}
+      {config.hasWater && (
+        <PlanetaryWater radius={surfaceRadius} config={config} />
+      )}
       
       {/* Elementos decorativos según tipo de planeta */}
       {planetData.planetType === 'terrestrial' && (
@@ -1932,6 +2162,79 @@ function PlanetarySurface({ planetData, allPlanets, onExitSurface }: PlanetarySu
       
       {/* Nave en modo superficie */}
       <SurfaceSpaceshipModel />
+      
+      {/* Etiquetas flotantes para items del planeta sobre la superficie */}
+      <SurfaceFloatingLabels 
+        items={planetData.items}
+        radius={surfaceRadius}
+        seed={planetSeed}
+        color={planetData.color}
+        config={config}
+      />
+    </group>
+  );
+}
+
+// Etiquetas flotantes sobre la superficie del planeta
+interface SurfaceFloatingLabelsProps {
+  items: PlanetItem[];
+  radius: number;
+  seed: number;
+  color: string;
+  config: SurfaceConfig;
+}
+
+function SurfaceFloatingLabels({ items, radius, seed, color, config }: SurfaceFloatingLabelsProps) {
+  // Generar posiciones aleatorias sobre la superficie
+  const labelPositions = useMemo(() => {
+    const random = seededRandom(seed + 8888);
+    const positions: THREE.Vector3[] = [];
+    
+    items.forEach((_, i) => {
+      // Distribuir en puntos aleatorios de la esfera
+      const phi = Math.acos(1 - 2 * ((i + random() * 0.5) / (items.length + 1)));
+      const theta = random() * Math.PI * 2;
+      
+      const nx = Math.sin(phi) * Math.cos(theta);
+      const ny = Math.cos(phi);
+      const nz = Math.sin(phi) * Math.sin(theta);
+      
+      // Calcular altura del terreno y añadir offset para flotar
+      const terrainHeight = getTerrainHeight(nx, ny, nz, radius, seed, config);
+      const floatHeight = terrainHeight + 8 + random() * 5; // Flotar entre 8-13 unidades sobre el terreno
+      
+      positions.push(new THREE.Vector3(
+        nx * floatHeight,
+        ny * floatHeight,
+        nz * floatHeight
+      ));
+    });
+    
+    return positions;
+  }, [items, radius, seed, config]);
+  
+  return (
+    <group>
+      {items.map((item, i) => {
+        const pos = labelPositions[i];
+        if (!pos) return null;
+        
+        return (
+          <Html
+            key={item.id}
+            center
+            distanceFactor={15}
+            position={[pos.x, pos.y, pos.z]}
+            style={{ pointerEvents: 'none' }}
+          >
+            <div className="floating-item-label" style={{ borderColor: color }}>
+              <span className="item-dot-small" style={{ background: color }}></span>
+              <span className="item-title">{item.title}</span>
+              {item.subtitle && <span className="item-subtitle">{item.subtitle}</span>}
+            </div>
+          </Html>
+        );
+      })}
     </group>
   );
 }
