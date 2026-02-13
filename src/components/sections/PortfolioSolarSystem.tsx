@@ -328,6 +328,10 @@ function SpaceshipControls() {
   const SPEED = 0.03;
   const FRICTION = 0.92;
   const LOOK_SPEED = 0.025;
+  
+  // Sensibilidad reducida para joysticks móviles
+  const MOBILE_MOVE_SENSITIVITY = 0.5;
+  const MOBILE_LOOK_SENSITIVITY = 0.4;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -391,17 +395,17 @@ function SpaceshipControls() {
 
     if (isMobile.current) {
       if (Math.abs(joystickState.left.x) > 0.1 || Math.abs(joystickState.left.y) > 0.1) {
-        movement.add(forward.clone().multiplyScalar(joystickState.left.y));
-        movement.add(right.clone().multiplyScalar(joystickState.left.x));
+        movement.add(forward.clone().multiplyScalar(joystickState.left.y * MOBILE_MOVE_SENSITIVITY));
+        movement.add(right.clone().multiplyScalar(joystickState.left.x * MOBILE_MOVE_SENSITIVITY));
       }
       if (Math.abs(joystickState.right.x) > 0.1 || Math.abs(joystickState.right.y) > 0.1) {
-        rotation.current.y -= joystickState.right.x * LOOK_SPEED;
-        rotation.current.x += joystickState.right.y * LOOK_SPEED;
+        rotation.current.y -= joystickState.right.x * LOOK_SPEED * MOBILE_LOOK_SENSITIVITY;
+        rotation.current.x += joystickState.right.y * LOOK_SPEED * MOBILE_LOOK_SENSITIVITY;
         rotation.current.x = Math.max(-Math.PI / 2.5, Math.min(Math.PI / 2.5, rotation.current.x));
       }
       // Movimiento vertical con botones
       if (joystickState.verticalMovement !== 0) {
-        movement.add(up.clone().multiplyScalar(joystickState.verticalMovement));
+        movement.add(up.clone().multiplyScalar(joystickState.verticalMovement * MOBILE_MOVE_SENSITIVITY));
       }
     }
     
