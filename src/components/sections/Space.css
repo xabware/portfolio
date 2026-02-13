@@ -11,12 +11,20 @@
     rgba(10, 10, 35, 1) 50%,
     rgba(5, 5, 20, 1) 100%
   );
+  /* Evitar scroll en dispositivos táctiles */
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .solar-system-container {
   width: 100%;
   height: 100%;
   position: relative;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  overflow: hidden;
 }
 
 /* Loading */
@@ -282,7 +290,7 @@
 }
 
 /* ============================================
-   VIRTUAL JOYSTICKS (MOBILE)
+   VIRTUAL JOYSTICKS (MOBILE/TOUCH)
    ============================================ */
 
 .mobile-controls {
@@ -290,11 +298,16 @@
   inset: 0;
   pointer-events: none;
   z-index: 200;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 20px;
+  box-sizing: border-box;
+  touch-action: none;
 }
 
 .virtual-joystick {
-  position: absolute;
-  bottom: 30px;
+  position: relative;
   width: 120px;
   height: 120px;
   border-radius: 50%;
@@ -302,14 +315,10 @@
   border: 2px solid rgba(255, 215, 0, 0.3);
   pointer-events: auto;
   touch-action: none;
-}
-
-.virtual-joystick.left {
-  left: 30px;
-}
-
-.virtual-joystick.right {
-  right: 30px;
+  flex-shrink: 0;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .joystick-knob {
@@ -328,6 +337,50 @@
   box-shadow: 
     0 0 15px rgba(255, 215, 0, 0.4),
     inset 0 0 10px rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+
+/* Botones de movimiento vertical */
+.vertical-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+  flex-shrink: 0;
+}
+
+.vertical-button {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(100, 200, 255, 0.2);
+  border: 2px solid rgba(100, 200, 255, 0.4);
+  color: rgba(100, 200, 255, 0.9);
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.vertical-button:active {
+  background: rgba(100, 200, 255, 0.5);
+  border-color: rgba(100, 200, 255, 0.8);
+  transform: scale(0.95);
+}
+
+.vertical-button.vertical-up {
+  box-shadow: 0 0 15px rgba(100, 200, 255, 0.3);
+}
+
+.vertical-button.vertical-down {
+  box-shadow: 0 0 15px rgba(100, 200, 255, 0.3);
 }
 
 /* Ocultar instrucciones en movil */
@@ -347,29 +400,67 @@
   }
 }
 
+/* Ajustes para pantallas pequeñas */
 @media (max-width: 480px) {
+  .mobile-controls {
+    padding: 15px;
+  }
+  
   .virtual-joystick {
-    width: 100px;
-    height: 100px;
-    bottom: 20px;
-  }
-
-  .virtual-joystick.left {
-    left: 20px;
-  }
-
-  .virtual-joystick.right {
-    right: 20px;
+    width: 90px;
+    height: 90px;
   }
 
   .joystick-knob {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
+  }
+  
+  .vertical-buttons {
+    gap: 8px;
+  }
+  
+  .vertical-button {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
   }
 }
 
-/* Ocultar joysticks en desktop */
-@media (min-width: 769px) {
+/* Modo horizontal (landscape) - mantener mismos controles */
+@media (orientation: landscape) and (max-height: 500px) {
+  .mobile-controls {
+    padding: 10px 20px;
+  }
+  
+  .virtual-joystick {
+    width: 80px;
+    height: 80px;
+  }
+
+  .joystick-knob {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .vertical-buttons {
+    gap: 6px;
+  }
+  
+  .vertical-button {
+    width: 45px;
+    height: 45px;
+    font-size: 1rem;
+  }
+  
+  .planet-info-panel {
+    max-height: 60vh;
+    top: 10px;
+  }
+}
+
+/* Ocultar controles móviles en desktop */
+@media (min-width: 769px) and (hover: hover) {
   .mobile-controls {
     display: none;
   }

@@ -21,15 +21,17 @@ function isMobileDevice(): boolean {
     (window.innerWidth <= 768 && 'ontouchstart' in window);
 }
 
-// Estado global para joysticks virtuales
+// Estado global para joysticks virtuales y botones
 interface JoystickState {
   left: { x: number; y: number };
   right: { x: number; y: number };
+  verticalMovement: number; // -1 = bajar, 0 = nada, 1 = subir
 }
 
 const joystickState: JoystickState = {
   left: { x: 0, y: 0 },
-  right: { x: 0, y: 0 }
+  right: { x: 0, y: 0 },
+  verticalMovement: 0
 };
 
 // Datos de los planetas del sistema solar del portfolio
@@ -395,6 +397,10 @@ function SpaceshipControls() {
         rotation.current.x += joystickState.right.y * LOOK_SPEED;
         rotation.current.x = Math.max(-Math.PI / 2.5, Math.min(Math.PI / 2.5, rotation.current.x));
       }
+      // Movimiento vertical con botones
+      if (joystickState.verticalMovement !== 0) {
+        movement.add(up.clone().multiplyScalar(joystickState.verticalMovement));
+      }
     }
     
     if (movement.length() > 0) {
@@ -431,17 +437,18 @@ function SpaceshipHUD() {
 
 // Componente de Joystick virtual
 interface VirtualJoystickProps {
-  side: 'left' | 'right';
   onMove: (x: number, y: number) => void;
 }
 
-function VirtualJoystick({ side, onMove }: VirtualJoystickProps) {
+function VirtualJoystick({ onMove }: VirtualJoystickProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const knobRef = useRef<HTMLDivElement>(null);
   const activeTouch = useRef<number | null>(null);
   const centerPos = useRef({ x: 0, y: 0 });
 
   const handleStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (activeTouch.current !== null) return;
     const touch = e.changedTouches[0];
     activeTouch.current = touch.identifier;
@@ -452,6 +459,8 @@ function VirtualJoystick({ side, onMove }: VirtualJoystickProps) {
   }, []);
 
   const handleMove = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (activeTouch.current === null) return;
     const touch = Array.from(e.changedTouches).find(t => t.identifier === activeTouch.current);
     if (!touch || !knobRef.current || !containerRef.current) return;
@@ -470,6 +479,8 @@ function VirtualJoystick({ side, onMove }: VirtualJoystickProps) {
   }, [onMove]);
 
   const handleEnd = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     const touch = Array.from(e.changedTouches).find(t => t.identifier === activeTouch.current);
     if (!touch) return;
     activeTouch.current = null;
@@ -480,14 +491,47 @@ function VirtualJoystick({ side, onMove }: VirtualJoystickProps) {
   return (
     <div 
       ref={containerRef}
-      className={`virtual-joystick ${side}`}
+      className="virtual-joystick"
       onTouchStart={handleStart}
       onTouchMove={handleMove}
       onTouchEnd={handleEnd}
       onTouchCancel={handleEnd}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <div ref={knobRef} className="joystick-knob" />
     </div>
+  );
+}
+
+// Botón de movimiento vertical
+interface VerticalButtonProps {
+  direction: 'up' | 'down';
+  label: string;
+}
+
+function VerticalButton({ direction, label }: VerticalButtonProps) {
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    joystickState.verticalMovement = direction === 'up' ? 1 : -1;
+  }, [direction]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    joystickState.verticalMovement = 0;
+  }, []);
+
+  return (
+    <button
+      className={`vertical-button vertical-${direction}`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      {label}
+    </button>
   );
 }
 
@@ -516,8 +560,12 @@ function MobileControls() {
 
   return (
     <div className="mobile-controls">
-      <VirtualJoystick side="left" onMove={handleLeftMove} />
-      <VirtualJoystick side="right" onMove={handleRightMove} />
+      <VirtualJoystick onMove={handleLeftMove} />
+      <div className="vertical-buttons">
+        <VerticalButton direction="up" label="▲" />
+        <VerticalButton direction="down" label="▼" />
+      </div>
+      <VirtualJoystick onMove={handleRightMove} />
     </div>
   );
 }

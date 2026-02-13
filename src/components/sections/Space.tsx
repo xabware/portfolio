@@ -3,7 +3,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import './Space.css';
 
 // Lazy load del componente 3D para mejor rendimiento inicial
-const PortfolioSolarSystem = lazy(() => import('./PortfolioSolarSystem'));
+const PortfolioSolarSystem = lazy(() => import('./PortfolioSolarSystem.tsx'));
 
 const Space = memo(() => {
   const { language } = useLanguage();
