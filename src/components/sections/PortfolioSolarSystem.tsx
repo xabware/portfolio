@@ -87,6 +87,25 @@ const joystickState: JoystickState = {
   verticalMovement: 0
 };
 
+// Estado global para teclas presionadas (compartido entre controles y nave)
+interface ThrusterState {
+  forward: boolean;
+  backward: boolean;
+  left: boolean;
+  right: boolean;
+  up: boolean;
+  down: boolean;
+}
+
+const thrusterState: ThrusterState = {
+  forward: false,
+  backward: false,
+  left: false,
+  right: false,
+  up: false,
+  down: false
+};
+
 // Datos de los planetas del sistema solar del portfolio
 type PlanetType = 'terrestrial' | 'gas_giant' | 'ice' | 'volcanic';
 
@@ -652,6 +671,145 @@ function OrbitRing({ radius, color }: { radius: number; color: string }) {
   );
 }
 
+// Componente de propulsor individual
+function Thruster({ position, rotation, active, color = '#ff6600' }: {
+  position: [number, number, number];
+  rotation: [number, number, number];
+  active: boolean;
+  color?: string;
+}) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const scale = useRef(0);
+  
+  useFrame((_, delta) => {
+    if (!meshRef.current) return;
+    
+    // Animación suave de encendido/apagado
+    const targetScale = active ? 1 : 0;
+    scale.current += (targetScale - scale.current) * Math.min(delta * 4, 1);
+    
+    meshRef.current.scale.setScalar(scale.current);
+    
+    // Efecto de parpadeo cuando está activo
+    if (active && meshRef.current.material) {
+      const flickerIntensity = 0.7 + Math.random() * 0.3;
+      (meshRef.current.material as THREE.MeshBasicMaterial).opacity = flickerIntensity;
+    }
+  });
+  
+  return (
+    <mesh ref={meshRef} position={position} rotation={rotation} scale={0}>
+      <coneGeometry args={[0.08, 0.25, 8]} />
+      <meshBasicMaterial color={color} transparent opacity={0.9} />
+    </mesh>
+  );
+}
+
+// Modelo de nave espacial visible
+function SpaceshipModel() {
+  const { camera } = useThree();
+  const shipRef = useRef<THREE.Group>(null);
+  const [thrusters, setThrusters] = useState({ ...thrusterState });
+  
+  useFrame(() => {
+    if (!shipRef.current) return;
+    
+    // Actualizar estado de propulsores para renderizado
+    setThrusters({ ...thrusterState });
+    
+    // Posicionar la nave delante de la cámara
+    const offset = new THREE.Vector3(0, -0.3, -1.5);
+    offset.applyQuaternion(camera.quaternion);
+    shipRef.current.position.copy(camera.position).add(offset);
+    
+    // Rotar la nave para que mire en la dirección de la cámara
+    shipRef.current.quaternion.copy(camera.quaternion);
+  });
+  
+  return (
+    <group ref={shipRef}>
+      {/* Cuerpo principal de la nave */}
+      <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.15, 0.6, 6]} />
+        <meshStandardMaterial color="#4a5568" metalness={0.8} roughness={0.3} />
+      </mesh>
+      
+      {/* Cabina */}
+      <mesh position={[0, 0.05, -0.1]}>
+        <sphereGeometry args={[0.08, 8, 6]} />
+        <meshStandardMaterial color="#63b3ed" metalness={0.5} roughness={0.2} transparent opacity={0.7} />
+      </mesh>
+      
+      {/* Ala izquierda */}
+      <mesh position={[-0.25, 0, 0.1]} rotation={[0, 0, -Math.PI / 6]}>
+        <boxGeometry args={[0.3, 0.02, 0.2]} />
+        <meshStandardMaterial color="#2d3748" metalness={0.7} roughness={0.4} />
+      </mesh>
+      
+      {/* Ala derecha */}
+      <mesh position={[0.25, 0, 0.1]} rotation={[0, 0, Math.PI / 6]}>
+        <boxGeometry args={[0.3, 0.02, 0.2]} />
+        <meshStandardMaterial color="#2d3748" metalness={0.7} roughness={0.4} />
+      </mesh>
+      
+      {/* Motor trasero */}
+      <mesh position={[0, 0, 0.35]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.08, 0.1, 0.1, 8]} />
+        <meshStandardMaterial color="#1a202c" metalness={0.9} roughness={0.2} />
+      </mesh>
+      
+      {/* === PROPULSORES === */}
+      {/* Propulsor trasero (cuando avanza hacia adelante) */}
+      <Thruster 
+        position={[0, 0, 0.45]} 
+        rotation={[Math.PI / 2, 0, 0]} 
+        active={thrusters.forward}
+        color="#ff4400"
+      />
+      
+      {/* Propulsor delantero (cuando retrocede) */}
+      <Thruster 
+        position={[0, 0, -0.35]} 
+        rotation={[-Math.PI / 2, 0, 0]} 
+        active={thrusters.backward}
+        color="#ff6600"
+      />
+      
+      {/* Propulsor derecho (cuando gira izquierda) */}
+      <Thruster 
+        position={[0.3, 0, 0.1]} 
+        rotation={[0, 0, -Math.PI / 2]} 
+        active={thrusters.left}
+        color="#ff6600"
+      />
+      
+      {/* Propulsor izquierdo (cuando gira derecha) */}
+      <Thruster 
+        position={[-0.3, 0, 0.1]} 
+        rotation={[0, 0, Math.PI / 2]} 
+        active={thrusters.right}
+        color="#ff6600"
+      />
+      
+      {/* Propulsor inferior (cuando sube) */}
+      <Thruster 
+        position={[0, -0.15, 0.1]} 
+        rotation={[0, 0, Math.PI]} 
+        active={thrusters.up}
+        color="#00aaff"
+      />
+      
+      {/* Propulsor superior (cuando baja) */}
+      <Thruster 
+        position={[0, 0.15, 0.1]} 
+        rotation={[0, 0, 0]} 
+        active={thrusters.down}
+        color="#00aaff"
+      />
+    </group>
+  );
+}
+
 // Controles de nave espacial
 function SpaceshipControls() {
   const { camera } = useThree();
@@ -661,13 +819,13 @@ function SpaceshipControls() {
   const initialized = useRef(false);
   const isMobile = useRef(isTouchDevice());
   
-  const SPEED = 0.15;
+  const SPEED = 0.04;
   const FRICTION = 0.92;
-  const LOOK_SPEED = 0.025;
+  const LOOK_SPEED = 0.015;
   
   // Sensibilidad reducida para joysticks móviles
-  const MOBILE_MOVE_SENSITIVITY = 0.5;
-  const MOBILE_LOOK_SENSITIVITY = 0.4;
+  const MOBILE_MOVE_SENSITIVITY = 0.15;
+  const MOBILE_LOOK_SENSITIVITY = 0.25;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -711,12 +869,20 @@ function SpaceshipControls() {
     
     const movement = new THREE.Vector3();
     
-    if (keys.current.has('keyw')) movement.add(forward);
-    if (keys.current.has('keys')) movement.sub(forward);
-    if (keys.current.has('keya')) movement.sub(right);
-    if (keys.current.has('keyd')) movement.add(right);
-    if (keys.current.has('space')) movement.add(up);
-    if (keys.current.has('shiftleft') || keys.current.has('shiftright')) movement.sub(up);
+    // Actualizar estado de propulsores para teclado
+    thrusterState.forward = keys.current.has('keyw');
+    thrusterState.backward = keys.current.has('keys');
+    thrusterState.left = keys.current.has('keya');
+    thrusterState.right = keys.current.has('keyd');
+    thrusterState.up = keys.current.has('space');
+    thrusterState.down = keys.current.has('shiftleft') || keys.current.has('shiftright');
+    
+    if (thrusterState.forward) movement.add(forward);
+    if (thrusterState.backward) movement.sub(forward);
+    if (thrusterState.left) movement.sub(right);
+    if (thrusterState.right) movement.add(right);
+    if (thrusterState.up) movement.add(up);
+    if (thrusterState.down) movement.sub(up);
 
     if (keys.current.has('arrowleft')) rotation.current.y += LOOK_SPEED;
     if (keys.current.has('arrowright')) rotation.current.y -= LOOK_SPEED;
@@ -733,6 +899,17 @@ function SpaceshipControls() {
       if (Math.abs(joystickState.left.x) > 0.1 || Math.abs(joystickState.left.y) > 0.1) {
         movement.add(forward.clone().multiplyScalar(joystickState.left.y * MOBILE_MOVE_SENSITIVITY));
         movement.add(right.clone().multiplyScalar(joystickState.left.x * MOBILE_MOVE_SENSITIVITY));
+        // Actualizar propulsores para joystick móvil
+        thrusterState.forward = joystickState.left.y > 0.1;
+        thrusterState.backward = joystickState.left.y < -0.1;
+        thrusterState.left = joystickState.left.x < -0.1;
+        thrusterState.right = joystickState.left.x > 0.1;
+      } else if (isMobile.current) {
+        // Resetear propulsores horizontales si no hay input móvil
+        if (!keys.current.has('keyw')) thrusterState.forward = false;
+        if (!keys.current.has('keys')) thrusterState.backward = false;
+        if (!keys.current.has('keya')) thrusterState.left = false;
+        if (!keys.current.has('keyd')) thrusterState.right = false;
       }
       if (Math.abs(joystickState.right.x) > 0.1 || Math.abs(joystickState.right.y) > 0.1) {
         rotation.current.y -= joystickState.right.x * LOOK_SPEED * MOBILE_LOOK_SENSITIVITY;
@@ -742,6 +919,11 @@ function SpaceshipControls() {
       // Movimiento vertical con botones
       if (joystickState.verticalMovement !== 0) {
         movement.add(up.clone().multiplyScalar(joystickState.verticalMovement * MOBILE_MOVE_SENSITIVITY));
+        thrusterState.up = joystickState.verticalMovement > 0;
+        thrusterState.down = joystickState.verticalMovement < 0;
+      } else if (isMobile.current) {
+        if (!keys.current.has('space')) thrusterState.up = false;
+        if (!keys.current.has('shiftleft') && !keys.current.has('shiftright')) thrusterState.down = false;
       }
     }
     
@@ -983,6 +1165,7 @@ function SolarSystemScene({ planets, language, selectedPlanet, onSelectPlanet }:
         </group>
       ))}
       
+      <SpaceshipModel />
       <SpaceshipControls />
     </>
   );
