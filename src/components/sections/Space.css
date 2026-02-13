@@ -11,20 +11,22 @@
     rgba(10, 10, 35, 1) 50%,
     rgba(5, 5, 20, 1) 100%
   );
-  /* Evitar scroll en dispositivos táctiles */
-  touch-action: none;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
+  /* NO usar touch-action: none aquí - bloquea la navegación */
 }
 
 .solar-system-container {
   width: 100%;
   height: 100%;
   position: relative;
+  overflow: hidden;
+}
+
+/* Aplicar touch-action solo al canvas de Three.js */
+.solar-system-container canvas {
   touch-action: none;
   -webkit-touch-callout: none;
-  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Loading */
@@ -295,15 +297,18 @@
 
 .mobile-controls {
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
+  bottom: 0; /* Ahora bottom:0 porque .space-fullscreen ya tiene margen inferior en móvil */
+  top: auto;
+  height: auto;
   pointer-events: none;
-  z-index: 200;
+  z-index: 300;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   padding: 20px;
   box-sizing: border-box;
-  touch-action: none;
 }
 
 .virtual-joystick {
@@ -385,6 +390,11 @@
 
 /* Ocultar instrucciones en movil */
 @media (max-width: 768px) {
+  .space-fullscreen {
+    bottom: 60px; /* Dejar espacio para la barra de navegación */
+    inset: 0 0 60px 0;
+  }
+  
   .desktop-only {
     display: none !important;
   }
