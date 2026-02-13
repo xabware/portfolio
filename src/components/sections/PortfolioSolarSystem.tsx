@@ -74,6 +74,15 @@ function isTouchDevice(): boolean {
     window.matchMedia('(pointer: coarse)').matches;
 }
 
+// Ajustar brillo de un color hexadecimal
+function adjustColor(hex: string, amount: number): string {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = Math.min(255, Math.max(0, (num >> 16) + amount));
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount));
+  const b = Math.min(255, Math.max(0, (num & 0x0000FF) + amount));
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+}
+
 // Estado global para joysticks virtuales y botones
 interface JoystickState {
   left: { x: number; y: number };
@@ -85,6 +94,32 @@ const joystickState: JoystickState = {
   left: { x: 0, y: 0 },
   right: { x: 0, y: 0 },
   verticalMovement: 0
+};
+
+// Estado del modo de vuelo: espacio o superficie de planeta
+interface FlightMode {
+  mode: 'space' | 'surface';
+  planetData: PlanetData | null;
+  planetPosition: THREE.Vector3;
+  surfaceRadius: number; // Radio de la superficie donde vuela la nave
+  altitude: number; // Altura actual sobre la superficie
+  entryPosition: THREE.Vector3; // Posición donde entró al planeta
+}
+
+const flightModeState: FlightMode = {
+  mode: 'space',
+  planetData: null,
+  planetPosition: new THREE.Vector3(),
+  surfaceRadius: 100,
+  altitude: 50,
+  entryPosition: new THREE.Vector3()
+};
+
+// Eventos para comunicar cambios de modo
+type FlightModeListener = (mode: FlightMode) => void;
+const flightModeListeners: FlightModeListener[] = [];
+const notifyFlightModeChange = () => {
+  flightModeListeners.forEach(l => l({ ...flightModeState }));
 };
 
 // Estado global para teclas presionadas (compartido entre controles y nave)
@@ -135,6 +170,7 @@ interface PlanetProps {
   cameraPosition: THREE.Vector3;
   onSelect: (planet: PlanetData | null) => void;
   selectedPlanet: PlanetData | null;
+  onPositionUpdate?: (position: THREE.Vector3) => void;
 }
 
 // Componente del Sol central
@@ -183,6 +219,26 @@ function Sun() {
   );
 }
 
+// Ruido ridged multifractal para montañas más realistas
+function ridgedNoise(x: number, y: number, z: number, octaves: number, seed: number): number {
+  let sum = 0;
+  let amplitude = 1;
+  let frequency = 1;
+  let weight = 1;
+  
+  for (let i = 0; i < octaves; i++) {
+    let n = noise3D(x * frequency, y * frequency, z * frequency, seed + i * 31);
+    n = 1 - Math.abs(n); // Ridged
+    n = n * n; // Sharpen ridges
+    n *= weight;
+    weight = Math.min(1, Math.max(0, n * 2));
+    sum += n * amplitude;
+    amplitude *= 0.5;
+    frequency *= 2;
+  }
+  return sum;
+}
+
 // Geometría de planeta con terreno procedural según tipo
 function createPlanetGeometry(
   radius: number, 
@@ -191,7 +247,9 @@ function createPlanetGeometry(
   heightScale: number,
   planetType: PlanetType
 ): THREE.BufferGeometry {
-  const geometry = new THREE.IcosahedronGeometry(radius, detail);
+  // Mayor detalle para terreno más realista
+  const actualDetail = Math.max(detail, 5);
+  const geometry = new THREE.IcosahedronGeometry(radius, actualDetail);
   const positions = geometry.attributes.position;
   
   // Crear nuevos arrays para las posiciones modificadas
@@ -209,26 +267,38 @@ function createPlanetGeometry(
     const ny = y / length;
     const nz = z / length;
     
-    // Generar altura con ruido - varía según tipo
+    // Generar altura con ruido multicapa - varía según tipo
     let noiseValue: number;
     let height: number;
     
     if (planetType === 'gas_giant') {
       // Gigante gaseoso: sin terreno real, superficie lisa con bandas
       noiseValue = fbm(nx * 0.5, ny * 8, nz * 0.5, 2, seed);
-      height = radius + (noiseValue - 0.5) * heightScale * 0.1; // Casi plano
+      height = radius + (noiseValue - 0.5) * heightScale * 0.1;
     } else if (planetType === 'ice') {
-      // Planeta helado: suave con algunos cráteres
-      noiseValue = fbm(nx * 3, ny * 3, nz * 3, 3, seed);
-      height = radius + (noiseValue - 0.5) * heightScale * 0.5;
+      // Planeta helado: suave con algunos cráteres y grietas
+      const base = fbm(nx * 2, ny * 2, nz * 2, 4, seed);
+      const cracks = ridgedNoise(nx * 6, ny * 6, nz * 6, 3, seed + 50) * 0.3;
+      const detail = fbm(nx * 8, ny * 8, nz * 8, 2, seed + 100) * 0.15;
+      noiseValue = base + cracks - detail;
+      height = radius + (noiseValue - 0.5) * heightScale * 0.6;
     } else if (planetType === 'volcanic') {
-      // Volcánico: muy irregular con picos
-      noiseValue = fbm(nx * 4, ny * 4, nz * 4, 4, seed);
-      height = radius + (noiseValue - 0.5) * heightScale * 1.2;
+      // Volcánico: picos dramáticos con lava en bajos
+      const mountains = ridgedNoise(nx * 3, ny * 3, nz * 3, 5, seed);
+      const base = fbm(nx * 4, ny * 4, nz * 4, 3, seed + 50);
+      const lavaChannels = 1 - ridgedNoise(nx * 5, ny * 5, nz * 5, 2, seed + 100) * 0.4;
+      noiseValue = mountains * 0.6 + base * 0.3 + lavaChannels * 0.1;
+      height = radius + (noiseValue - 0.4) * heightScale * 1.5;
     } else {
-      // Terrestre: océanos, vegetación, montañas
-      noiseValue = fbm(nx * 2, ny * 2, nz * 2, 3, seed);
-      height = radius + (noiseValue - 0.5) * heightScale;
+      // Terrestre: continentes, océanos, montañas realistas
+      const continents = fbm(nx * 1.5, ny * 1.5, nz * 1.5, 2, seed); // Forma de continentes
+      const mountains = ridgedNoise(nx * 4, ny * 4, nz * 4, 4, seed + 50); // Cadenas montañosas
+      const detail = fbm(nx * 8, ny * 8, nz * 8, 3, seed + 100); // Detalle fino
+      
+      // Combinar: montañas solo en tierra alta
+      const landMask = Math.max(0, (continents - 0.4) * 2.5);
+      noiseValue = continents + mountains * landMask * 0.4 + detail * 0.1;
+      height = radius + (noiseValue - 0.5) * heightScale * 1.2;
     }
     
     newPositions[i * 3] = nx * height;
@@ -431,21 +501,18 @@ function getInitialAngle(id: string): number {
 }
 
 // Componente del Planeta con LOD (Level of Detail)
-function Planet({ data, language, cameraPosition, onSelect, selectedPlanet }: PlanetProps) {
+function Planet({ data, language, cameraPosition, onSelect, selectedPlanet, onPositionUpdate }: PlanetProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const [angle, setAngle] = useState(() => getInitialAngle(data.id));
   const [showDetails, setShowDetails] = useState(false);
-  const [showTerrain, setShowTerrain] = useState(false);
   
   // Seed único para cada planeta basado en su id
   const planetSeed = useMemo(() => {
     return data.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   }, [data.id]);
   
-  // Umbral de distancia para mostrar terreno (proporcional al tamaño)
-  const terrainThreshold = data.size * 4;
+  // Umbral de distancia para mostrar detalles (tarjeta expandida)
   const detailsThreshold = data.size * 6;
   
   useFrame(() => {
@@ -456,19 +523,14 @@ function Planet({ data, language, cameraPosition, onSelect, selectedPlanet }: Pl
       groupRef.current.position.x = Math.cos(angle) * data.orbitRadius;
       groupRef.current.position.z = Math.sin(angle) * data.orbitRadius;
       
+      // Notificar posición actualizada
+      if (onPositionUpdate) {
+        onPositionUpdate(groupRef.current.position.clone());
+      }
+      
       // Calcular distancia a la cámara
       const dist = cameraPosition.distanceTo(groupRef.current.position);
       setShowDetails(dist < detailsThreshold);
-      setShowTerrain(dist < terrainThreshold);
-    }
-    
-    if (meshRef.current && !showTerrain) {
-      // Rotación propia del planeta (solo cuando es esfera simple)
-      meshRef.current.rotation.y += 0.005;
-      
-      // Escala al hover
-      const targetScale = hovered ? 1.1 : 1;
-      meshRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
     }
   });
 
@@ -489,30 +551,17 @@ function Planet({ data, language, cameraPosition, onSelect, selectedPlanet }: Pl
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
       
-      {/* Planeta simple (lejos) o con terreno (cerca) */}
-      {showTerrain ? (
-        <group>
-          <PlanetTerrain 
-            size={data.size} 
-            color={data.color} 
-            seed={planetSeed}
-            hovered={hovered}
-            planetType={data.planetType}
-          />
-          <PlanetAtmosphere size={data.size} color={data.color} />
-        </group>
-      ) : (
-        <mesh ref={meshRef}>
-          <sphereGeometry args={[data.size, 24, 24]} />
-          <meshStandardMaterial
-            color={data.color}
-            emissive={data.color}
-            emissiveIntensity={hovered ? 0.5 : 0.2}
-            metalness={0.4}
-            roughness={0.6}
-          />
-        </mesh>
-      )}
+      {/* Planeta siempre con terreno detallado */}
+      <group>
+        <PlanetTerrain 
+          size={data.size} 
+          color={data.color} 
+          seed={planetSeed}
+          hovered={hovered}
+          planetType={data.planetType}
+        />
+        <PlanetAtmosphere size={data.size} color={data.color} />
+      </group>
       
       {/* Anillos para planetas con anillos (gigante gaseoso) */}
       {data.planetType === 'gas_giant' && (
@@ -545,8 +594,35 @@ function Planet({ data, language, cameraPosition, onSelect, selectedPlanet }: Pl
       {/* Luz del planeta */}
       <pointLight color={data.color} intensity={hovered ? 3 : 1} distance={data.size * 10} />
       
-      {/* Indicador de distancia cuando estás cerca */}
-      {showDetails && !showTerrain && (
+      {/* Satélites decorativos (siempre visibles) */}
+      <PlanetSatellites planetSize={data.size} planetSeed={planetSeed} color={data.color} />
+      
+      {/* Tarjeta flotante con información (siempre visible) */}
+      <Html
+        center
+        distanceFactor={8}
+        position={[data.size + 6, data.size * 0.3, 0]}
+        style={{ pointerEvents: 'none' }}
+      >
+        <div className={`planet-details-popup planet-floating-card ${showDetails ? 'expanded' : ''}`}>
+          <h3>{data.name[language]}</h3>
+          <p className="planet-description">{data.description[language]}</p>
+          <div className="planet-items-preview">
+            {data.items.slice(0, showDetails ? 5 : 3).map((item, idx) => (
+              <div key={idx} className="planet-item-mini">
+                <span className="item-dot" style={{ background: data.color }}></span>
+                <span>{item.title}</span>
+              </div>
+            ))}
+            {data.items.length > (showDetails ? 5 : 3) && (
+              <p className="more-items">+{data.items.length - (showDetails ? 5 : 3)} {language === 'es' ? 'más' : 'more'}</p>
+            )}
+          </div>
+        </div>
+      </Html>
+      
+      {/* Indicador de aproximación cuando estás cerca */}
+      {showDetails && (
         <Html
           center
           distanceFactor={12}
@@ -558,43 +634,61 @@ function Planet({ data, language, cameraPosition, onSelect, selectedPlanet }: Pl
           </div>
         </Html>
       )}
+    </group>
+  );
+}
+
+// Satélites decorativos que orbitan el planeta
+function PlanetSatellites({ planetSize, planetSeed, color }: { planetSize: number; planetSeed: number; color: string }) {
+  const groupRef = useRef<THREE.Group>(null);
+  
+  // Generar satélites basados en la seed
+  const satellites = useMemo(() => {
+    const random = seededRandom(planetSeed + 5000);
+    const count = 2 + Math.floor(random() * 3); // 2-4 satélites
+    const sats = [];
+    
+    for (let i = 0; i < count; i++) {
+      const orbitRadius = planetSize * 1.4 + random() * planetSize * 0.8;
+      const size = planetSize * 0.08 + random() * planetSize * 0.06;
+      const speed = 0.003 + random() * 0.004;
+      const inclination = (random() - 0.5) * 0.5;
+      const startAngle = random() * Math.PI * 2;
       
-      {/* Información detallada al acercarse */}
-      {showTerrain && (
-        <Html
-          center
-          distanceFactor={12}
-          position={[data.size + 8, 0, 0]}
-          style={{ pointerEvents: 'none' }}
-        >
-          <div className="planet-details-popup planet-details-large">
-            <h3>{data.name[language]}</h3>
-            <p className="planet-description">{data.description[language]}</p>
-            <div className="planet-items-preview">
-              {data.items.slice(0, 5).map((item, idx) => (
-                <div key={idx} className="planet-item-mini">
-                  <span className="item-dot" style={{ background: data.color }}></span>
-                  <span>{item.title}</span>
-                </div>
-              ))}
-              {data.items.length > 5 && (
-                <p className="more-items">+{data.items.length - 5} {language === 'es' ? 'más' : 'more'}</p>
-              )}
-            </div>
-          </div>
-        </Html>
-      )}
-      
-      {/* Lunas (items) orbitando cuando estás muy cerca */}
-      {showTerrain && data.items.slice(0, 8).map((item, idx) => (
-        <Moon 
-          key={item.id} 
-          item={item} 
-          index={idx} 
-          total={Math.min(data.items.length, 8)}
-          parentSize={data.size}
-          color={data.color}
-        />
+      sats.push({ orbitRadius, size, speed, inclination, startAngle });
+    }
+    return sats;
+  }, [planetSize, planetSeed]);
+  
+  const angles = useRef(satellites.map(s => s.startAngle));
+  
+  useFrame(() => {
+    satellites.forEach((sat, i) => {
+      angles.current[i] += sat.speed;
+    });
+    if (groupRef.current) {
+      groupRef.current.children.forEach((child, i) => {
+        if (i < satellites.length) {
+          const sat = satellites[i];
+          child.position.x = Math.cos(angles.current[i]) * sat.orbitRadius;
+          child.position.z = Math.sin(angles.current[i]) * sat.orbitRadius;
+          child.position.y = Math.sin(angles.current[i] * 2) * sat.orbitRadius * sat.inclination;
+        }
+      });
+    }
+  });
+  
+  return (
+    <group ref={groupRef}>
+      {satellites.map((sat, i) => (
+        <mesh key={i}>
+          <sphereGeometry args={[sat.size, 12, 12]} />
+          <meshStandardMaterial
+            color={adjustColor(color, -30 + i * 15)}
+            roughness={0.7}
+            metalness={0.3}
+          />
+        </mesh>
       ))}
     </group>
   );
@@ -648,6 +742,1483 @@ function Moon({ item, index, total, parentSize, color }: MoonProps) {
     </mesh>
   );
 }
+
+// ============================================
+// SISTEMA DE EXPLORACIÓN PLANETARIA
+// ============================================
+
+// Configuración por tipo de planeta para su superficie
+interface SurfaceConfig {
+  planetType: PlanetType;
+  groundColor1: string;
+  groundColor2: string;
+  detailColor: string;
+  fogColor: string;
+  fogDensity: number;
+  skyColor: string;
+  horizonColor: string;
+  heightScale: number;
+  noiseScale: number;
+  hasWater: boolean;
+  waterLevel: number;
+  waterColor: string;
+}
+
+function getSurfaceConfig(planetType: PlanetType): SurfaceConfig {
+  switch (planetType) {
+    case 'terrestrial':
+      return {
+        planetType: 'terrestrial',
+        groundColor1: '#2d5a27',
+        groundColor2: '#8b7355',
+        detailColor: '#4a7c44',
+        fogColor: '#87ceeb',
+        fogDensity: 0.008,
+        skyColor: '#1e90ff',
+        horizonColor: '#ffb347',
+        heightScale: 8,
+        noiseScale: 0.03,
+        hasWater: true,
+        waterLevel: 0.35,
+        waterColor: '#1a5276'
+      };
+    case 'gas_giant':
+      return {
+        planetType: 'gas_giant',
+        groundColor1: '#c9a86c',
+        groundColor2: '#8b5a2b',
+        detailColor: '#e8a850',
+        fogColor: '#d4a574',
+        fogDensity: 0.015,
+        skyColor: '#b5651d',
+        horizonColor: '#ff6347',
+        heightScale: 2,
+        noiseScale: 0.01,
+        hasWater: false,
+        waterLevel: 0,
+        waterColor: ''
+      };
+    case 'ice':
+      return {
+        planetType: 'ice',
+        groundColor1: '#e8f4f8',
+        groundColor2: '#b0c4de',
+        detailColor: '#add8e6',
+        fogColor: '#f0f8ff',
+        fogDensity: 0.01,
+        skyColor: '#4682b4',
+        horizonColor: '#e6e6fa',
+        heightScale: 6,
+        noiseScale: 0.025,
+        hasWater: true,
+        waterLevel: 0.2,
+        waterColor: '#5f9ea0'
+      };
+    case 'volcanic':
+      return {
+        planetType: 'volcanic',
+        groundColor1: '#1a1a1a',
+        groundColor2: '#4a3728',
+        detailColor: '#ff4500',
+        fogColor: '#2f1810',
+        fogDensity: 0.012,
+        skyColor: '#8b0000',
+        horizonColor: '#ff6600',
+        heightScale: 10,
+        noiseScale: 0.04,
+        hasWater: true, // Lava
+        waterLevel: 0.25,
+        waterColor: '#ff2200'
+      };
+    default:
+      return getSurfaceConfig('terrestrial');
+  }
+}
+
+// Crear geometría de terreno esférico detallado con texturas y relieve realista
+function createDetailedSurfaceGeometry(
+  radius: number,
+  segments: number,
+  seed: number,
+  config: SurfaceConfig
+): { geometry: THREE.BufferGeometry; colors: Float32Array; heightData: Float32Array } {
+  const geometry = new THREE.SphereGeometry(radius, segments, segments);
+  const positions = geometry.attributes.position;
+  
+  const newPositions = new Float32Array(positions.count * 3);
+  const colors = new Float32Array(positions.count * 3);
+  const uvs = new Float32Array(positions.count * 2);
+  const heightData = new Float32Array(positions.count);
+  
+  for (let i = 0; i < positions.count; i++) {
+    const x = positions.getX(i);
+    const y = positions.getY(i);
+    const z = positions.getZ(i);
+    
+    // Normalizar
+    const length = Math.sqrt(x * x + y * y + z * z);
+    const nx = x / length;
+    const ny = y / length;
+    const nz = z / length;
+    
+    // Generar ruido multicapa para terreno realista
+    let combinedNoise: number;
+    let height: number;
+    
+    if (config.planetType === 'terrestrial') {
+      // Terrestre: continentes, montañas, valles
+      const continents = fbm(nx * 2, ny * 2, nz * 2, 3, seed);
+      const mountains = ridgedNoise(nx * 8, ny * 8, nz * 8, 5, seed + 50);
+      const valleys = fbm(nx * 4, ny * 4, nz * 4, 4, seed + 100);
+      const fineDetail = fbm(nx * 20, ny * 20, nz * 20, 2, seed + 200);
+      
+      const landMask = Math.max(0, (continents - 0.35) * 2.5);
+      combinedNoise = continents * 0.5 + mountains * landMask * 0.35 + valleys * 0.1 + fineDetail * 0.05;
+      height = radius + (combinedNoise - 0.4) * config.heightScale * 2;
+    } else if (config.planetType === 'volcanic') {
+      // Volcánico: picos dramáticos, calderas, ríos de lava
+      const volcanoes = ridgedNoise(nx * 3, ny * 3, nz * 3, 4, seed);
+      const craters = 1 - Math.pow(fbm(nx * 6, ny * 6, nz * 6, 3, seed + 50), 2);
+      const lavaChannels = ridgedNoise(nx * 10, ny * 10, nz * 10, 2, seed + 100);
+      const roughness = fbm(nx * 15, ny * 15, nz * 15, 3, seed + 200);
+      
+      combinedNoise = volcanoes * 0.5 + craters * 0.25 + lavaChannels * 0.15 + roughness * 0.1;
+      height = radius + (combinedNoise - 0.3) * config.heightScale * 2.5;
+    } else if (config.planetType === 'ice') {
+      // Helado: glaciares, grietas, formaciones de hielo
+      const glaciers = fbm(nx * 2, ny * 2, nz * 2, 4, seed);
+      const cracks = ridgedNoise(nx * 12, ny * 12, nz * 12, 3, seed + 50) * 0.4;
+      const iceFormations = ridgedNoise(nx * 5, ny * 5, nz * 5, 4, seed + 100);
+      const snowDrifts = fbm(nx * 8, ny * 8, nz * 8, 2, seed + 200);
+      
+      combinedNoise = glaciers * 0.4 + iceFormations * 0.35 - cracks * 0.15 + snowDrifts * 0.1;
+      height = radius + (combinedNoise - 0.4) * config.heightScale * 1.8;
+    } else {
+      // Gigante gaseoso: capas de nubes ondulantes
+      const bands = Math.sin(ny * 20 + fbm(nx * 3, ny * 3, nz * 3, 2, seed) * 5);
+      const storms = fbm(nx * 4, ny * 4, nz * 4, 3, seed + 50);
+      const turbulence = fbm(nx * 10, ny * 10, nz * 10, 2, seed + 100);
+      
+      combinedNoise = 0.5 + bands * 0.3 + storms * 0.15 + turbulence * 0.05;
+      height = radius + (combinedNoise - 0.5) * config.heightScale * 0.8;
+    }
+    
+    heightData[i] = (height - radius) / config.heightScale;
+    
+    newPositions[i * 3] = nx * height;
+    newPositions[i * 3 + 1] = ny * height;
+    newPositions[i * 3 + 2] = nz * height;
+    
+    // Calcular UVs esféricos
+    uvs[i * 2] = 0.5 + Math.atan2(nz, nx) / (2 * Math.PI);
+    uvs[i * 2 + 1] = 0.5 - Math.asin(ny) / Math.PI;
+    
+    // Colorear basado en altura y tipo de planeta
+    const heightNorm = heightData[i];
+    const finalColor = new THREE.Color();
+    const fineNoise = fbm(nx * 30, ny * 30, nz * 30, 2, seed + 300);
+    
+    if (config.planetType === 'terrestrial') {
+      if (config.hasWater && heightNorm < config.waterLevel - 0.1) {
+        // Océano profundo
+        finalColor.set('#0a3d62');
+        finalColor.offsetHSL(0, 0, fineNoise * 0.1);
+      } else if (config.hasWater && heightNorm < config.waterLevel) {
+        // Agua costera
+        finalColor.lerpColors(new THREE.Color('#1a5276'), new THREE.Color('#2e86ab'), fineNoise);
+      } else if (heightNorm < config.waterLevel + 0.08) {
+        // Playa/arena
+        finalColor.set('#c9b896');
+        finalColor.offsetHSL(fineNoise * 0.05, 0, fineNoise * 0.1);
+      } else if (heightNorm < 0.5) {
+        // Llanuras verdes/bosques
+        finalColor.lerpColors(new THREE.Color('#2d5a27'), new THREE.Color('#4a7c44'), fineNoise);
+      } else if (heightNorm < 0.7) {
+        // Montañas rocosas
+        finalColor.lerpColors(new THREE.Color('#6b5b4f'), new THREE.Color('#8b7355'), fineNoise);
+      } else {
+        // Picos nevados
+        finalColor.lerpColors(new THREE.Color('#e8e8e8'), new THREE.Color('#ffffff'), fineNoise);
+      }
+    } else if (config.planetType === 'volcanic') {
+      if (heightNorm < config.waterLevel) {
+        // Lava brillante
+        finalColor.set('#ff3300');
+        finalColor.offsetHSL(fineNoise * 0.05, 0, fineNoise * 0.2);
+      } else if (heightNorm < 0.35) {
+        // Lava enfriándose
+        finalColor.lerpColors(new THREE.Color('#cc2200'), new THREE.Color('#661100'), fineNoise);
+      } else if (heightNorm < 0.5) {
+        // Roca caliente
+        finalColor.lerpColors(new THREE.Color('#3d2817'), new THREE.Color('#2a1a0f'), fineNoise);
+      } else if (heightNorm < 0.75) {
+        // Roca volcánica oscura
+        finalColor.lerpColors(new THREE.Color('#1a1410'), new THREE.Color('#2a2420'), fineNoise);
+      } else {
+        // Ceniza y humo solidificado
+        finalColor.lerpColors(new THREE.Color('#3a3530'), new THREE.Color('#4a4540'), fineNoise);
+      }
+    } else if (config.planetType === 'ice') {
+      if (config.hasWater && heightNorm < config.waterLevel) {
+        // Agua helada
+        finalColor.set('#4a90a4');
+        finalColor.offsetHSL(0, fineNoise * 0.1, fineNoise * 0.1);
+      } else if (heightNorm < 0.4) {
+        // Hielo azulado
+        finalColor.lerpColors(new THREE.Color('#a8d8ea'), new THREE.Color('#c8e8f8'), fineNoise);
+      } else if (heightNorm < 0.6) {
+        // Nieve compacta
+        finalColor.lerpColors(new THREE.Color('#e8f0f5'), new THREE.Color('#f5faff'), fineNoise);
+      } else if (heightNorm < 0.8) {
+        // Formaciones de hielo
+        finalColor.lerpColors(new THREE.Color('#b0d4e8'), new THREE.Color('#d0e8f8'), fineNoise);
+      } else {
+        // Picos de hielo cristalino
+        finalColor.lerpColors(new THREE.Color('#e0f0ff'), new THREE.Color('#ffffff'), fineNoise);
+      }
+    } else {
+      // Gigante gaseoso - bandas de colores
+      const bandVal = Math.sin(ny * 20 + fineNoise * 3);
+      if (bandVal < -0.5) {
+        finalColor.lerpColors(new THREE.Color('#8b5a2b'), new THREE.Color('#6b4423'), fineNoise);
+      } else if (bandVal < 0) {
+        finalColor.lerpColors(new THREE.Color('#d4a574'), new THREE.Color('#c9986c'), fineNoise);
+      } else if (bandVal < 0.5) {
+        finalColor.lerpColors(new THREE.Color('#e8c896'), new THREE.Color('#f0d8a8'), fineNoise);
+      } else {
+        finalColor.lerpColors(new THREE.Color('#b86b4b'), new THREE.Color('#a85a3b'), fineNoise);
+      }
+    }
+    
+    colors[i * 3] = finalColor.r;
+    colors[i * 3 + 1] = finalColor.g;
+    colors[i * 3 + 2] = finalColor.b;
+  }
+  
+  geometry.setAttribute('position', new THREE.BufferAttribute(newPositions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  geometry.computeVertexNormals();
+  
+  return { geometry, colors, heightData };
+}
+
+// Componente del cielo esférico del planeta
+interface PlanetarySkyProps {
+  config: SurfaceConfig;
+  radius: number;
+}
+
+function PlanetarySky({ config, radius }: PlanetarySkyProps) {
+  const skyRef = useRef<THREE.Mesh>(null);
+  
+  // Crear gradiente de cielo procedural
+  const skyMaterial = useMemo(() => {
+    const skyColor = new THREE.Color(config.skyColor);
+    const horizonColor = new THREE.Color(config.horizonColor);
+    
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        topColor: { value: skyColor },
+        bottomColor: { value: horizonColor },
+        offset: { value: 0.4 },
+        exponent: { value: 0.6 },
+      },
+      vertexShader: `
+        varying vec3 vWorldPosition;
+        void main() {
+          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+          vWorldPosition = worldPosition.xyz;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 topColor;
+        uniform vec3 bottomColor;
+        uniform float offset;
+        uniform float exponent;
+        varying vec3 vWorldPosition;
+        void main() {
+          float h = normalize(vWorldPosition).y;
+          float t = max(pow(max(h + offset, 0.0), exponent), 0.0);
+          gl_FragColor = vec4(mix(bottomColor, topColor, t), 1.0);
+        }
+      `,
+      side: THREE.BackSide,
+    });
+  }, [config.skyColor, config.horizonColor]);
+  
+  return (
+    <mesh ref={skyRef}>
+      <sphereGeometry args={[radius * 2, 32, 32]} />
+      <primitive object={skyMaterial} attach="material" />
+    </mesh>
+  );
+}
+
+// Componente de niebla atmosférica
+interface AtmosphericFogProps {
+  config: SurfaceConfig;
+}
+
+function AtmosphericFog({ config }: AtmosphericFogProps) {
+  const fogColor = useMemo(() => new THREE.Color(config.fogColor), [config.fogColor]);
+  
+  return (
+    <fogExp2 attach="fog" args={[fogColor, config.fogDensity]} />
+  );
+}
+
+// ============================================
+// PLANETAS VISIBLES EN EL CIELO
+// ============================================
+
+// Datos de planetas para el cielo (distancias orbitales relativas al sistema solar real)
+interface SkyPlanetData {
+  id: string;
+  name: string;
+  color: string;
+  orbitRadius: number; // Distancia al sol en el sistema
+  size: number; // Tamaño visual del planeta
+  moons?: { name: string; color: string; orbitRadius: number }[];
+}
+
+interface SkyPlanetsProps {
+  currentPlanetOrbitRadius: number;
+  skyRadius: number;
+  allPlanets: SkyPlanetData[];
+  currentPlanetId: string;
+}
+
+// Componente individual para un planeta en el cielo - estilo 2D lejano
+interface SkyPlanetProps {
+  planet: SkyPlanetData;
+  index: number;
+  totalPlanets: number;
+  currentPlanetOrbitRadius: number;
+  skyRadius: number;
+}
+
+function SkyPlanet({ planet, index, totalPlanets, currentPlanetOrbitRadius, skyRadius }: SkyPlanetProps) {
+  const groupRef = useRef<THREE.Group>(null);
+  const spriteRef = useRef<THREE.Sprite>(null);
+  
+  // Ángulo inicial determinístico basado en el id del planeta
+  const initialAngle = useMemo(() => {
+    return planet.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) * 0.1;
+  }, [planet.id]);
+  const timeRef = useRef(initialAngle);
+  
+  // Calcular distancia relativa desde el planeta actual (en unidades del sistema solar)
+  const distanceFromCurrent = Math.abs(planet.orbitRadius - currentPlanetOrbitRadius);
+  
+  // El tamaño aparente se calcula con la ley del cuadrado inverso
+  // Los planetas lejanos se ven como puntos de luz pequeños
+  const minDistance = 30; // Umbral mínimo de distancia
+  const distanceFactor = minDistance / Math.max(distanceFromCurrent, minDistance);
+  
+  // Tamaño aparente: el tamaño real del planeta afecta proporcionalmente
+  // Planetas más grandes se ven proporcionalmente más grandes incluso a distancia
+  const baseSize = planet.size * 0.15; // Escala base muy reducida
+  const apparentSize = Math.max(0.15, Math.min(1.5, baseSize * distanceFactor));
+  
+  // Brillo del planeta - más brillante si está más cerca
+  const brightness = Math.min(1, 0.4 + distanceFactor * 0.6);
+  
+  // Posicionar muy lejos en el cielo (casi en el límite del skybox)
+  const skyDistance = skyRadius * 1.95; // Casi al borde del cielo
+  const isCloserToSun = planet.orbitRadius < currentPlanetOrbitRadius;
+  
+  useFrame((_, delta) => {
+    timeRef.current += delta * 0.008; // Movimiento muy lento
+    
+    if (groupRef.current) {
+      // Distribuir planetas en diferentes posiciones del cielo
+      const horizontalAngle = (index / totalPlanets) * Math.PI * 2 + timeRef.current * 0.02;
+      
+      // Planetas más cercanos al sol: más bajo en el cielo (hacia el horizonte donde estaría el sol)
+      // Planetas más lejanos: más alto en el cielo (opuestos al sol)
+      const verticalAngle = isCloserToSun 
+        ? Math.PI * 0.15 + Math.sin(timeRef.current * 0.5 + index) * 0.05
+        : Math.PI * 0.4 + Math.cos(timeRef.current * 0.3 + index) * 0.08;
+      
+      const x = Math.cos(horizontalAngle) * Math.sin(verticalAngle) * skyDistance;
+      const y = Math.cos(verticalAngle) * skyDistance;
+      const z = Math.sin(horizontalAngle) * Math.sin(verticalAngle) * skyDistance;
+      
+      groupRef.current.position.set(x, y, z);
+    }
+    
+    // El sprite siempre mira a la cámara automáticamente
+  });
+  
+  // Color del planeta brillante para verse en el cielo
+  const glowColor = useMemo(() => {
+    const color = new THREE.Color(planet.color);
+    // Aumentar la luminosidad para que se vea como un punto de luz
+    color.offsetHSL(0, -0.1, brightness * 0.3);
+    return color;
+  }, [planet.color, brightness]);
+  
+  // Datos de las lunas para renderizar
+  const moonData = useMemo(() => {
+    if (!planet.moons) return [];
+    return planet.moons.slice(0, 2).map((moon, idx) => ({
+      name: moon.name,
+      color: moon.color,
+      offset: (idx + 1) * apparentSize * 1.5,
+      size: apparentSize * 0.25,
+      speedMultiplier: idx + 1
+    }));
+  }, [planet.moons, apparentSize]);
+  
+  return (
+    <group ref={groupRef}>
+      {/* Punto de luz principal del planeta - usando sprite para efecto 2D */}
+      <sprite ref={spriteRef} scale={[apparentSize * 2, apparentSize * 2, 1]}>
+        <spriteMaterial 
+          color={glowColor}
+          transparent
+          opacity={brightness}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </sprite>
+      
+      {/* Núcleo más brillante */}
+      <sprite scale={[apparentSize * 0.8, apparentSize * 0.8, 1]}>
+        <spriteMaterial 
+          color={planet.color}
+          transparent
+          opacity={Math.min(1, brightness * 1.2)}
+          depthWrite={false}
+        />
+      </sprite>
+      
+      {/* Lunas como puntos diminutos cerca del planeta */}
+      {moonData.map((moon, idx) => (
+        <SkyMoon 
+          key={moon.name}
+          color={moon.color}
+          offset={moon.offset}
+          size={moon.size}
+          index={idx}
+          brightness={brightness}
+        />
+      ))}
+    </group>
+  );
+}
+
+// Componente separado para cada luna en el cielo
+interface SkyMoonProps {
+  color: string;
+  offset: number;
+  size: number;
+  index: number;
+  brightness: number;
+}
+
+function SkyMoon({ color, offset, size, index, brightness }: SkyMoonProps) {
+  const spriteRef = useRef<THREE.Sprite>(null);
+  const timeRef = useRef(index * Math.PI);
+  
+  useFrame((_, delta) => {
+    timeRef.current += delta * 0.5;
+    
+    if (spriteRef.current) {
+      const moonAngle = timeRef.current * 2 + index * Math.PI;
+      spriteRef.current.position.set(
+        Math.cos(moonAngle) * offset,
+        Math.sin(moonAngle) * offset * 0.3,
+        0
+      );
+    }
+  });
+  
+  return (
+    <sprite ref={spriteRef} scale={[size, size, 1]}>
+      <spriteMaterial 
+        color={color}
+        transparent
+        opacity={brightness * 0.7}
+        depthWrite={false}
+      />
+    </sprite>
+  );
+}
+
+function SkyPlanets({ currentPlanetOrbitRadius, skyRadius, allPlanets, currentPlanetId }: SkyPlanetsProps) {
+  // Filtrar planetas (excluir el actual)
+  const visiblePlanets = useMemo(() => {
+    return allPlanets.filter(p => p.id !== currentPlanetId);
+  }, [allPlanets, currentPlanetId]);
+  
+  return (
+    <group>
+      {visiblePlanets.map((planet, index) => (
+        <SkyPlanet
+          key={planet.id}
+          planet={planet}
+          index={index}
+          totalPlanets={visiblePlanets.length}
+          currentPlanetOrbitRadius={currentPlanetOrbitRadius}
+          skyRadius={skyRadius}
+        />
+      ))}
+    </group>
+  );
+}
+
+// Sol/Luz del planeta en superficie
+interface PlanetarySunProps {
+  config: SurfaceConfig;
+  radius: number;
+  orbitRadius: number; // Distancia del planeta al sol
+}
+
+function PlanetarySun({ config, radius, orbitRadius }: PlanetarySunProps) {
+  const sunRef = useRef<THREE.DirectionalLight>(null);
+  const sunMeshRef = useRef<THREE.Mesh>(null);
+  const coronaRef = useRef<THREE.Mesh>(null);
+  const timeRef = useRef(0);
+  
+  // Tamaño aparente del sol basado en la distancia real
+  // El sol real tiene ~1.4 millones de km de diámetro
+  // La distancia del sol a la Tierra es ~150 millones de km
+  // El tamaño aparente del sol disminuye con el cuadrado de la distancia
+  const sunApparentSize = useMemo(() => {
+    // Distancias orbitales en el sistema: Proyectos=50, Experiencia=85, Educación=125, Habilidades=160
+    const minOrbit = 50; // Planeta más cercano
+    
+    // El sol desde el planeta más cercano se ve grande (tamaño base 12)
+    // El sol desde el planeta más lejano se ve mucho más pequeño (tamaño ~2.5)
+    const baseSunSize = 12;
+    
+    // Usar ley del cuadrado inverso para mayor realismo
+    const distanceRatio = minOrbit / orbitRadius;
+    const apparentSize = baseSunSize * Math.pow(distanceRatio, 0.8); // Exponente < 1 para no ser tan extremo
+    
+    // Clamp para que no sea ni demasiado grande ni demasiado pequeño
+    return Math.max(2, Math.min(15, apparentSize));
+  }, [orbitRadius]);
+  
+  // Intensidad de la luz también varía con la distancia
+  const sunIntensity = useMemo(() => {
+    const minOrbit = 50;
+    const distanceRatio = minOrbit / orbitRadius;
+    return Math.max(0.8, Math.min(2.5, 1.5 * Math.pow(distanceRatio, 0.6)));
+  }, [orbitRadius]);
+  
+  useFrame((_, delta) => {
+    timeRef.current += delta * 0.05;
+    const sunAngle = timeRef.current;
+    const sunDistance = radius * 2;
+    
+    const sunX = Math.cos(sunAngle) * sunDistance;
+    const sunY = Math.sin(sunAngle) * radius * 0.5 + radius * 0.8;
+    const sunZ = Math.sin(sunAngle) * sunDistance * 0.5;
+    
+    if (sunRef.current) {
+      sunRef.current.position.set(sunX, sunY, sunZ);
+    }
+    
+    if (sunMeshRef.current) {
+      sunMeshRef.current.position.set(sunX, sunY, sunZ);
+    }
+    
+    if (coronaRef.current) {
+      coronaRef.current.position.set(sunX, sunY, sunZ);
+      // Animar ligeramente la corona
+      const coronaScale = 1 + Math.sin(timeRef.current * 2) * 0.05;
+      coronaRef.current.scale.setScalar(coronaScale);
+    }
+  });
+  
+  const sunColor = config.planetType === 'volcanic' ? '#ff4400' : '#fffaf0';
+  const sunEmissive = config.planetType === 'volcanic' ? '#ff2200' : '#ffdd88';
+  
+  return (
+    <>
+      {/* Esfera visual del sol */}
+      <mesh ref={sunMeshRef} position={[radius * 2, radius * 0.8, 0]}>
+        <sphereGeometry args={[sunApparentSize, 24, 20]} />
+        <meshBasicMaterial color={sunColor} />
+      </mesh>
+      
+      {/* Corona/brillo del sol - más prominente para planetas cercanos */}
+      <mesh ref={coronaRef} position={[radius * 2, radius * 0.8, 0]}>
+        <sphereGeometry args={[sunApparentSize * 1.4, 20, 16]} />
+        <meshBasicMaterial 
+          color={sunEmissive} 
+          transparent 
+          opacity={0.25 + (sunApparentSize / 30)} // Mayor brillo para soles más grandes
+        />
+      </mesh>
+      
+      {/* Segunda corona más tenue */}
+      <mesh position={[radius * 2, radius * 0.8, 0]}>
+        <sphereGeometry args={[sunApparentSize * 1.8, 16, 12]} />
+        <meshBasicMaterial 
+          color={sunEmissive} 
+          transparent 
+          opacity={0.1 + (sunApparentSize / 60)}
+        />
+      </mesh>
+      
+      <directionalLight
+        ref={sunRef}
+        color={sunColor}
+        intensity={sunIntensity}
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+      />
+      <ambientLight color={config.fogColor} intensity={0.3 + (sunIntensity * 0.1)} />
+      <hemisphereLight
+        color={config.skyColor}
+        groundColor={config.groundColor1}
+        intensity={0.2 + (sunIntensity * 0.1)}
+      />
+    </>
+  );
+}
+
+// ============================================
+// ELEMENTOS DECORATIVOS DE SUPERFICIE
+// ============================================
+
+// Función para calcular la altura del terreno en un punto normalizado
+function getTerrainHeight(
+  nx: number, 
+  ny: number, 
+  nz: number, 
+  radius: number, 
+  seed: number, 
+  config: SurfaceConfig
+): number {
+  let height: number;
+  
+  if (config.planetType === 'terrestrial') {
+    const continents = fbm(nx * 2, ny * 2, nz * 2, 3, seed);
+    const mountains = ridgedNoise(nx * 8, ny * 8, nz * 8, 5, seed + 50);
+    const valleys = fbm(nx * 4, ny * 4, nz * 4, 4, seed + 100);
+    const fineDetail = fbm(nx * 20, ny * 20, nz * 20, 2, seed + 200);
+    
+    const landMask = Math.max(0, (continents - 0.35) * 2.5);
+    const combinedNoise = continents * 0.5 + mountains * landMask * 0.35 + valleys * 0.1 + fineDetail * 0.05;
+    height = radius + (combinedNoise - 0.4) * config.heightScale * 2;
+  } else if (config.planetType === 'volcanic') {
+    const volcanoes = ridgedNoise(nx * 3, ny * 3, nz * 3, 4, seed);
+    const craters = 1 - Math.pow(fbm(nx * 6, ny * 6, nz * 6, 3, seed + 50), 2);
+    const lavaChannels = ridgedNoise(nx * 10, ny * 10, nz * 10, 2, seed + 100);
+    const roughness = fbm(nx * 15, ny * 15, nz * 15, 3, seed + 200);
+    
+    const combinedNoise = volcanoes * 0.5 + craters * 0.25 + lavaChannels * 0.15 + roughness * 0.1;
+    height = radius + (combinedNoise - 0.3) * config.heightScale * 2.5;
+  } else if (config.planetType === 'ice') {
+    const glaciers = fbm(nx * 2, ny * 2, nz * 2, 4, seed);
+    const cracks = ridgedNoise(nx * 12, ny * 12, nz * 12, 3, seed + 50) * 0.4;
+    const iceFormations = ridgedNoise(nx * 5, ny * 5, nz * 5, 4, seed + 100);
+    const snowDrifts = fbm(nx * 8, ny * 8, nz * 8, 2, seed + 200);
+    
+    const combinedNoise = glaciers * 0.4 + iceFormations * 0.35 - cracks * 0.15 + snowDrifts * 0.1;
+    height = radius + (combinedNoise - 0.4) * config.heightScale * 1.8;
+  } else {
+    // Gigante gaseoso
+    const bands = Math.sin(ny * 20 + fbm(nx * 3, ny * 3, nz * 3, 2, seed) * 5);
+    const storms = fbm(nx * 4, ny * 4, nz * 4, 3, seed + 50);
+    const turbulence = fbm(nx * 10, ny * 10, nz * 10, 2, seed + 100);
+    
+    const combinedNoise = 0.5 + bands * 0.3 + storms * 0.15 + turbulence * 0.05;
+    height = radius + (combinedNoise - 0.5) * config.heightScale * 0.8;
+  }
+  
+  return height;
+}
+
+// Generar posiciones en la superficie de una esfera con altura de terreno real
+function generateSurfacePositions(
+  count: number, 
+  radius: number, 
+  distributionSeed: number, 
+  terrainSeed: number,
+  minHeight: number = 0,
+  config?: SurfaceConfig,
+  surfaceOffset: number = 0.1
+): THREE.Vector3[] {
+  const positions: THREE.Vector3[] = [];
+  const random = seededRandom(distributionSeed);
+  
+  for (let i = 0; i < count; i++) {
+    // Distribución uniforme en esfera usando muestreo de Fibonacci
+    const phi = Math.acos(1 - 2 * (i + 0.5) / count);
+    const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+    
+    // Añadir algo de variación aleatoria
+    const phiVar = phi + (random() - 0.5) * 0.3;
+    const thetaVar = theta + (random() - 0.5) * 0.5;
+    
+    const nx = Math.sin(phiVar) * Math.cos(thetaVar);
+    const ny = Math.cos(phiVar);
+    const nz = Math.sin(phiVar) * Math.sin(thetaVar);
+    
+    // Calcular altura del terreno en este punto usando la seed del terreno
+    const noiseVal = fbm(nx * 2, ny * 2, nz * 2, 3, terrainSeed);
+    if (noiseVal > minHeight) {
+      // Si tenemos config, calcular la altura real del terreno
+      let actualRadius = radius;
+      if (config) {
+        // Usar terrainSeed para que coincida con el terreno generado
+        actualRadius = getTerrainHeight(nx, ny, nz, radius, terrainSeed, config) + surfaceOffset;
+      }
+      positions.push(new THREE.Vector3(nx * actualRadius, ny * actualRadius, nz * actualRadius));
+    }
+  }
+  return positions;
+}
+
+// Árboles para planetas terrestres
+function SurfaceTrees({ radius, seed, config }: { radius: number; seed: number; config: SurfaceConfig }) {
+  const trees = useMemo(() => {
+    const positions = generateSurfacePositions(200, radius, seed + 1000, seed, 0.4, config);
+    return positions.slice(0, 80);
+  }, [radius, seed, config]);
+  
+  return (
+    <group>
+      {trees.map((pos, i) => {
+        const random = seededRandom(seed + i);
+        const scale = 0.3 + random() * 0.5;
+        const treeType = random() > 0.5;
+        
+        const normal = pos.clone().normalize();
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+        
+        return (
+          <group key={i} position={pos} quaternion={quaternion}>
+            <mesh position={[0, scale * 0.5, 0]}>
+              <cylinderGeometry args={[scale * 0.1, scale * 0.15, scale, 6]} />
+              <meshStandardMaterial color="#5d4037" roughness={0.9} />
+            </mesh>
+            {treeType ? (
+              <mesh position={[0, scale * 1.2, 0]}>
+                <coneGeometry args={[scale * 0.6, scale * 1.5, 6]} />
+                <meshStandardMaterial color="#2e7d32" roughness={0.8} />
+              </mesh>
+            ) : (
+              <mesh position={[0, scale * 1.3, 0]}>
+                <dodecahedronGeometry args={[scale * 0.7, 1]} />
+                <meshStandardMaterial color="#388e3c" roughness={0.7} />
+              </mesh>
+            )}
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
+// Rocas decorativas
+function SurfaceRocks({ radius, seed, color = '#6b5b4f', config }: { radius: number; seed: number; color?: string; config: SurfaceConfig }) {
+  const rocks = useMemo(() => {
+    const positions = generateSurfacePositions(150, radius, seed + 2000, seed, 0.3, config);
+    return positions.slice(0, 50);
+  }, [radius, seed, config]);
+  
+  return (
+    <group>
+      {rocks.map((pos, i) => {
+        const random = seededRandom(seed + i + 5000);
+        const scale = 0.2 + random() * 0.4;
+        
+        const normal = pos.clone().normalize();
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+        
+        return (
+          <mesh key={i} position={pos} quaternion={quaternion}>
+            <dodecahedronGeometry args={[scale, 0]} />
+            <meshStandardMaterial color={color} roughness={0.95} metalness={0.1} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+// Volcanes para planetas volcánicos
+function SurfaceVolcanoes({ radius, seed, config }: { radius: number; seed: number; config: SurfaceConfig }) {
+  const volcanoes = useMemo(() => {
+    const positions = generateSurfacePositions(30, radius, seed + 3000, seed, 0.5, config);
+    return positions.slice(0, 12);
+  }, [radius, seed, config]);
+  
+  return (
+    <group>
+      {volcanoes.map((pos, i) => {
+        const random = seededRandom(seed + i + 6000);
+        const scale = 1.5 + random() * 2;
+        const isActive = random() > 0.4;
+        
+        const normal = pos.clone().normalize();
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+        
+        return (
+          <group key={i} position={pos} quaternion={quaternion}>
+            <mesh position={[0, scale * 0.4, 0]}>
+              <coneGeometry args={[scale * 1.2, scale * 1.5, 8]} />
+              <meshStandardMaterial color="#2a1a0f" roughness={0.9} />
+            </mesh>
+            <mesh position={[0, scale * 1.1, 0]} rotation={[Math.PI, 0, 0]}>
+              <coneGeometry args={[scale * 0.4, scale * 0.3, 8]} />
+              <meshStandardMaterial color="#1a0f08" roughness={0.8} />
+            </mesh>
+            {isActive && (
+              <>
+                <mesh position={[0, scale * 0.95, 0]}>
+                  <cylinderGeometry args={[scale * 0.35, scale * 0.35, scale * 0.1, 8]} />
+                  <meshStandardMaterial color="#ff4400" emissive="#ff2200" emissiveIntensity={0.8} roughness={0.3} />
+                </mesh>
+                <mesh position={[0, scale * 1.5, 0]}>
+                  <sphereGeometry args={[scale * 0.5, 8, 8]} />
+                  <meshStandardMaterial color="#444444" transparent opacity={0.4} roughness={1} />
+                </mesh>
+              </>
+            )}
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
+// Ríos de lava animados
+function LavaRivers({ radius, seed, config }: { radius: number; seed: number; config: SurfaceConfig }) {
+  const lavaRef = useRef<THREE.Group>(null);
+  
+  useFrame(({ clock }) => {
+    if (lavaRef.current) {
+      lavaRef.current.children.forEach((child, i) => {
+        if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+          child.material.emissiveIntensity = 0.6 + Math.sin(clock.elapsedTime * 2 + i) * 0.3;
+        }
+      });
+    }
+  });
+  
+  const rivers = useMemo(() => {
+    const positions = generateSurfacePositions(80, radius, seed + 4000, seed, 0, config, -0.15);
+    return positions.filter((_, i) => {
+      const random = seededRandom(seed + i + 7000);
+      return random() > 0.7;
+    }).slice(0, 25);
+  }, [radius, seed, config]);
+  
+  return (
+    <group ref={lavaRef}>
+      {rivers.map((pos, i) => {
+        const random = seededRandom(seed + i + 8000);
+        const scale = 0.5 + random() * 1;
+        
+        const normal = pos.clone().normalize();
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+        
+        return (
+          <mesh key={i} position={pos} quaternion={quaternion}>
+            <boxGeometry args={[scale * 0.3, 0.05, scale * 2]} />
+            <meshStandardMaterial color="#ff3300" emissive="#ff2200" emissiveIntensity={0.7} roughness={0.2} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+// Cristales de hielo
+function IceCrystals({ radius, seed, config }: { radius: number; seed: number; config: SurfaceConfig }) {
+  const crystals = useMemo(() => {
+    const positions = generateSurfacePositions(120, radius, seed + 5000, seed, 0.35, config);
+    return positions.slice(0, 40);
+  }, [radius, seed, config]);
+  
+  return (
+    <group>
+      {crystals.map((pos, i) => {
+        const random = seededRandom(seed + i + 9000);
+        const scale = 0.4 + random() * 0.8;
+        const rotY = random() * Math.PI * 2;
+        
+        const normal = pos.clone().normalize();
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+        
+        return (
+          <group key={i} position={pos} quaternion={quaternion}>
+            <mesh position={[0, scale * 0.5, 0]} rotation={[0, rotY, 0]}>
+              <octahedronGeometry args={[scale * 0.3, 0]} />
+              <meshStandardMaterial 
+                color="#a8e4ef" 
+                transparent 
+                opacity={0.7} 
+                roughness={0.1} 
+                metalness={0.3}
+                emissive="#88ccdd"
+                emissiveIntensity={0.1}
+              />
+            </mesh>
+            {random() > 0.5 && (
+              <mesh position={[scale * 0.2, scale * 0.3, scale * 0.1]} rotation={[0.2, rotY + 0.5, 0.1]}>
+                <octahedronGeometry args={[scale * 0.2, 0]} />
+                <meshStandardMaterial color="#c8f4ff" transparent opacity={0.6} roughness={0.05} metalness={0.4} />
+              </mesh>
+            )}
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
+// Grietas de hielo
+function IceCracks({ radius, seed, config }: { radius: number; seed: number; config: SurfaceConfig }) {
+  const cracks = useMemo(() => {
+    const positions = generateSurfacePositions(60, radius, seed + 6000, seed, 0.2, config, -0.1);
+    return positions.slice(0, 20);
+  }, [radius, seed, config]);
+  
+  return (
+    <group>
+      {cracks.map((pos, i) => {
+        const random = seededRandom(seed + i + 11000);
+        const scale = 0.8 + random() * 1.5;
+        const rotY = random() * Math.PI;
+        
+        const normal = pos.clone().normalize();
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+        
+        return (
+          <mesh key={i} position={pos} quaternion={quaternion} rotation={[0, rotY, 0]}>
+            <boxGeometry args={[scale * 0.1, 0.3, scale * 3]} />
+            <meshStandardMaterial color="#1a5f7a" roughness={0.2} metalness={0.5} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+// Formaciones de nubes para gigantes gaseosos
+function GasCloudFormations({ radius, seed }: { radius: number; seed: number }) {
+  const cloudsRef = useRef<THREE.Group>(null);
+  
+  useFrame(({ clock }) => {
+    if (cloudsRef.current) {
+      cloudsRef.current.rotation.y = clock.elapsedTime * 0.01;
+    }
+  });
+  
+  const clouds = useMemo(() => {
+    const positions: { pos: THREE.Vector3; scale: number; color: string }[] = [];
+    const random = seededRandom(seed + 7000);
+    const colors = ['#d4a574', '#c9986c', '#b86b4b', '#e8c896'];
+    
+    for (let i = 0; i < 30; i++) {
+      const lat = (random() - 0.5) * Math.PI * 0.8;
+      const lon = random() * Math.PI * 2;
+      
+      const x = Math.cos(lat) * Math.cos(lon) * radius * 1.01;
+      const y = Math.sin(lat) * radius * 1.01;
+      const z = Math.cos(lat) * Math.sin(lon) * radius * 1.01;
+      
+      positions.push({
+        pos: new THREE.Vector3(x, y, z),
+        scale: 2 + random() * 4,
+        color: colors[Math.floor(random() * colors.length)]
+      });
+    }
+    return positions;
+  }, [radius, seed]);
+  
+  return (
+    <group ref={cloudsRef}>
+      {clouds.map((cloud, i) => {
+        const normal = cloud.pos.clone().normalize();
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+        
+        return (
+          <mesh key={i} position={cloud.pos} quaternion={quaternion}>
+            <sphereGeometry args={[cloud.scale, 8, 6]} />
+            <meshStandardMaterial color={cloud.color} transparent opacity={0.6} roughness={1} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+// Gran tormenta (como la Gran Mancha Roja)
+function GiantStorm({ radius, seed }: { radius: number; seed: number }) {
+  const stormRef = useRef<THREE.Mesh>(null);
+  
+  useFrame(({ clock }) => {
+    if (stormRef.current) {
+      stormRef.current.rotation.z = clock.elapsedTime * 0.5;
+    }
+  });
+  
+  const random = seededRandom(seed + 8000);
+  const lat = (random() - 0.5) * 0.6;
+  const lon = random() * Math.PI * 2;
+  
+  const x = Math.cos(lat) * Math.cos(lon) * radius * 1.015;
+  const y = Math.sin(lat) * radius * 1.015;
+  const z = Math.cos(lat) * Math.sin(lon) * radius * 1.015;
+  
+  const pos = new THREE.Vector3(x, y, z);
+  const normal = pos.clone().normalize();
+  const quaternion = new THREE.Quaternion();
+  quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+  
+  return (
+    <mesh ref={stormRef} position={pos} quaternion={quaternion}>
+      <torusGeometry args={[5, 2, 8, 16]} />
+      <meshStandardMaterial color="#a33a1d" roughness={0.8} />
+    </mesh>
+  );
+}
+
+// Componente principal de la superficie del planeta
+interface PlanetarySurfaceProps {
+  planetData: PlanetData;
+  allPlanets: PlanetData[];
+  onExitSurface: () => void;
+  language: Language;
+}
+
+function PlanetarySurface({ planetData, allPlanets, onExitSurface }: PlanetarySurfaceProps) {
+  const config = useMemo(() => getSurfaceConfig(planetData.planetType), [planetData.planetType]);
+  const planetSeed = useMemo(() => {
+    return planetData.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  }, [planetData.id]);
+  
+  // Radio de la esfera de superficie (más pequeño para ver mejor el relieve)
+  const surfaceRadius = 120;
+  
+  // Convertir planetas a formato SkyPlanetData con lunas
+  const skyPlanets = useMemo(() => {
+    return allPlanets.map(p => ({
+      id: p.id,
+      name: p.name.es, // Usar nombre en español por defecto
+      color: p.color,
+      orbitRadius: p.orbitRadius,
+      size: p.size,
+      // Convertir los primeros items en "lunas" visuales
+      moons: p.items.slice(0, 3).map((item, idx) => ({
+        name: item.title,
+        color: adjustColor(p.color, -20 + idx * 10), // Colores ligeramente diferentes
+        orbitRadius: p.size * 0.3 * (idx + 1)
+      }))
+    }));
+  }, [allPlanets]);
+  
+  // Crear geometría del terreno
+  const { geometry } = useMemo(() => {
+    return createDetailedSurfaceGeometry(surfaceRadius, 128, planetSeed, config);
+  }, [surfaceRadius, planetSeed, config]);
+  
+  // Textura procedural adicional para detalle
+  const groundTexture = useMemo(() => {
+    const size = 512;
+    const data = new Uint8Array(size * size * 4);
+    const random = seededRandom(planetSeed + 1000);
+    
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const i = (y * size + x) * 4;
+        
+        // Generar patrón de textura
+        const noise1 = random() * 0.3;
+        const noise2 = Math.sin(x * 0.1) * Math.cos(y * 0.1) * 0.1;
+        const combined = 0.7 + noise1 + noise2;
+        
+        data[i] = combined * 255;
+        data[i + 1] = combined * 255;
+        data[i + 2] = combined * 255;
+        data[i + 3] = 255;
+      }
+    }
+    
+    const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(50, 50);
+    texture.needsUpdate = true;
+    
+    return texture;
+  }, [planetSeed]);
+  
+  return (
+    <group>
+      {/* Cielo esférico */}
+      <PlanetarySky config={config} radius={surfaceRadius} />
+      
+      {/* Planetas visibles en el cielo */}
+      <SkyPlanets 
+        currentPlanetOrbitRadius={planetData.orbitRadius}
+        skyRadius={surfaceRadius}
+        allPlanets={skyPlanets}
+        currentPlanetId={planetData.id}
+      />
+      
+      {/* Niebla atmosférica */}
+      <AtmosphericFog config={config} />
+      
+      {/* Iluminación con sol de tamaño variable */}
+      <PlanetarySun config={config} radius={surfaceRadius} orbitRadius={planetData.orbitRadius} />
+      
+      {/* Terreno esférico con textura */}
+      <mesh geometry={geometry}>
+        <meshStandardMaterial
+          vertexColors
+          map={groundTexture}
+          roughness={0.9}
+          metalness={0.1}
+          flatShading
+        />
+      </mesh>
+      
+      {/* Elementos decorativos según tipo de planeta */}
+      {planetData.planetType === 'terrestrial' && (
+        <>
+          <SurfaceTrees radius={surfaceRadius} seed={planetSeed} config={config} />
+          <SurfaceRocks radius={surfaceRadius} seed={planetSeed} color="#6b5b4f" config={config} />
+        </>
+      )}
+      
+      {planetData.planetType === 'volcanic' && (
+        <>
+          <SurfaceVolcanoes radius={surfaceRadius} seed={planetSeed} config={config} />
+          <LavaRivers radius={surfaceRadius} seed={planetSeed} config={config} />
+          <SurfaceRocks radius={surfaceRadius} seed={planetSeed} color="#2a1a0f" config={config} />
+        </>
+      )}
+      
+      {planetData.planetType === 'ice' && (
+        <>
+          <IceCrystals radius={surfaceRadius} seed={planetSeed} config={config} />
+          <IceCracks radius={surfaceRadius} seed={planetSeed} config={config} />
+          <SurfaceRocks radius={surfaceRadius} seed={planetSeed} color="#8fa8b8" config={config} />
+        </>
+      )}
+      
+      {planetData.planetType === 'gas_giant' && (
+        <>
+          <GasCloudFormations radius={surfaceRadius} seed={planetSeed} />
+          <GiantStorm radius={surfaceRadius} seed={planetSeed} />
+        </>
+      )}
+      
+      {/* Controles de vuelo atmosférico */}
+      <AtmosphericFlightControls 
+        surfaceRadius={surfaceRadius}
+        onExitSurface={onExitSurface}
+      />
+      
+      {/* Nave en modo superficie */}
+      <SurfaceSpaceshipModel />
+    </group>
+  );
+}
+
+// Controles de vuelo atmosférico (sin singularidades en los polos)
+interface AtmosphericFlightControlsProps {
+  surfaceRadius: number;
+  onExitSurface: () => void;
+}
+
+function AtmosphericFlightControls({ surfaceRadius, onExitSurface }: AtmosphericFlightControlsProps) {
+  const { camera } = useThree();
+  
+  // Sistema basado en vectores para evitar singularidades en los polos
+  // surfaceNormal: dirección desde el centro del planeta (define "arriba")
+  // forwardDir: dirección hacia donde mira la nave (tangente a la superficie)
+  const surfaceNormal = useRef(new THREE.Vector3(0, 0, 1)); // Empezamos mirando desde el "ecuador"
+  const forwardDir = useRef(new THREE.Vector3(0, 1, 0).normalize()); // Mirando hacia el "norte"
+  const velocity = useRef(new THREE.Vector3());
+  const pitch = useRef(0);
+  const altitude = useRef(surfaceRadius + 10);
+  const keys = useRef<Set<string>>(new Set());
+  const initialized = useRef(false);
+  const isMobile = useRef(isTouchDevice());
+  
+  const SPEED = 0.08;
+  const FRICTION = 0.92;
+  const LOOK_SPEED = 0.02;
+  const ALTITUDE_SPEED = 0.3               ;
+  const MIN_ALTITUDE = surfaceRadius + 5;
+  const MAX_ALTITUDE = surfaceRadius + 80;
+  
+  const MOBILE_MOVE_SENSITIVITY = 0.15;
+  const MOBILE_LOOK_SENSITIVITY = 0.25;
+  
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      keys.current.add(e.code.toLowerCase());
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'space', 'shiftleft', 'shiftright'].includes(e.code.toLowerCase())) {
+        e.preventDefault();
+      }
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+      keys.current.delete(e.code.toLowerCase());
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+  
+  useFrame(() => {
+    // Inicialización
+    if (!initialized.current) {
+      surfaceNormal.current.set(0, 0, 1).normalize();
+      forwardDir.current.set(0, 1, 0).normalize();
+      altitude.current = surfaceRadius + 10;
+      pitch.current = 0;
+      initialized.current = true;
+    }
+    
+    // Vectores actuales
+    const up = surfaceNormal.current.clone().normalize();
+    const forward = forwardDir.current.clone().normalize();
+    const right = new THREE.Vector3().crossVectors(forward, up).normalize();
+    
+    // Asegurar que forward es perpendicular a up (tangente a la superficie)
+    forward.crossVectors(up, right).normalize();
+    forwardDir.current.copy(forward);
+    
+    // Actualizar estado de propulsores
+    thrusterState.forward = keys.current.has('keyw');
+    thrusterState.backward = keys.current.has('keys');
+    thrusterState.left = keys.current.has('keya');
+    thrusterState.right = keys.current.has('keyd');
+    thrusterState.up = keys.current.has('space');
+    thrusterState.down = keys.current.has('shiftleft') || keys.current.has('shiftright');
+    
+    // Calcular movimiento tangente a la superficie
+    const movement = new THREE.Vector3();
+    
+    if (thrusterState.forward) movement.add(forward);
+    if (thrusterState.backward) movement.sub(forward);
+    if (thrusterState.left) movement.sub(right);
+    if (thrusterState.right) movement.add(right);
+    
+    // Ascender/descender
+    if (thrusterState.up) altitude.current += ALTITUDE_SPEED;
+    if (thrusterState.down) altitude.current -= ALTITUDE_SPEED;
+    
+    // Girar la vista (yaw) - rota el vector forward alrededor del vector up
+    let yawDelta = 0;
+    if (keys.current.has('arrowleft')) yawDelta += LOOK_SPEED;
+    if (keys.current.has('arrowright')) yawDelta -= LOOK_SPEED;
+    
+    // Pitch para mirar arriba/abajo
+    if (keys.current.has('arrowup')) {
+      pitch.current += LOOK_SPEED;
+      pitch.current = Math.min(pitch.current, Math.PI / 3);
+    }
+    if (keys.current.has('arrowdown')) {
+      pitch.current -= LOOK_SPEED;
+      pitch.current = Math.max(pitch.current, -Math.PI / 4);
+    }
+    
+    // Controles móviles
+    if (isMobile.current) {
+      if (Math.abs(joystickState.left.x) > 0.1 || Math.abs(joystickState.left.y) > 0.1) {
+        movement.addScaledVector(forward, joystickState.left.y * MOBILE_MOVE_SENSITIVITY);
+        movement.addScaledVector(right, joystickState.left.x * MOBILE_MOVE_SENSITIVITY);
+        thrusterState.forward = joystickState.left.y > 0.1;
+        thrusterState.backward = joystickState.left.y < -0.1;
+        thrusterState.left = joystickState.left.x < -0.1;
+        thrusterState.right = joystickState.left.x > 0.1;
+      }
+      if (Math.abs(joystickState.right.x) > 0.1 || Math.abs(joystickState.right.y) > 0.1) {
+        yawDelta -= joystickState.right.x * LOOK_SPEED * MOBILE_LOOK_SENSITIVITY;
+        pitch.current += joystickState.right.y * LOOK_SPEED * MOBILE_LOOK_SENSITIVITY;
+        pitch.current = Math.max(-Math.PI / 4, Math.min(Math.PI / 3, pitch.current));
+      }
+      if (joystickState.verticalMovement !== 0) {
+        altitude.current += joystickState.verticalMovement * ALTITUDE_SPEED;
+        thrusterState.up = joystickState.verticalMovement > 0;
+        thrusterState.down = joystickState.verticalMovement < 0;
+      }
+    }
+    
+    // Aplicar rotación yaw al vector forward (girar alrededor del eje up)
+    if (Math.abs(yawDelta) > 0.0001) {
+      const yawQuat = new THREE.Quaternion().setFromAxisAngle(up, yawDelta);
+      forwardDir.current.applyQuaternion(yawQuat).normalize();
+    }
+    
+    // Aplicar movimiento con física
+    if (movement.length() > 0) {
+      movement.normalize().multiplyScalar(SPEED);
+      velocity.current.add(movement);
+    }
+    
+    velocity.current.multiplyScalar(FRICTION);
+    
+    // Mover la posición en la esfera rotando el vector surfaceNormal
+    if (velocity.current.length() > 0.001) {
+      // Calcular el eje de rotación (perpendicular a la velocidad y al up)
+      const moveDir = velocity.current.clone().normalize();
+      const rotationAxis = new THREE.Vector3().crossVectors(up, moveDir).normalize();
+      
+      // Ángulo de rotación basado en velocidad y altitud
+      const angularSpeed = velocity.current.length() / altitude.current;
+      
+      // Crear quaternion de rotación
+      const moveQuat = new THREE.Quaternion().setFromAxisAngle(rotationAxis, angularSpeed);
+      
+      // Rotar la normal de la superficie (nuestra posición)
+      surfaceNormal.current.applyQuaternion(moveQuat).normalize();
+      
+      // También rotar el vector forward para mantener la orientación relativa
+      forwardDir.current.applyQuaternion(moveQuat);
+      
+      // Re-ortogonalizar forward para que sea tangente a la nueva superficie
+      const newUp = surfaceNormal.current.clone();
+      const newRight = new THREE.Vector3().crossVectors(forwardDir.current, newUp).normalize();
+      forwardDir.current.crossVectors(newUp, newRight).normalize();
+    }
+    
+    // Clamping de altitud
+    altitude.current = Math.max(MIN_ALTITUDE, Math.min(MAX_ALTITUDE + 20, altitude.current));
+    
+    // Verificar salida al espacio
+    if (altitude.current >= MAX_ALTITUDE) {
+      onExitSurface();
+      return;
+    }
+    
+    // Calcular posición de la cámara
+    camera.position.copy(surfaceNormal.current).multiplyScalar(altitude.current);
+    
+    // Calcular orientación de la cámara
+    const currentUp = surfaceNormal.current.clone().normalize();
+    const currentForward = forwardDir.current.clone().normalize();
+    
+    // Aplicar pitch a la dirección de mirada
+    const pitchedForward = new THREE.Vector3()
+      .addScaledVector(currentForward, Math.cos(pitch.current))
+      .addScaledVector(currentUp, Math.sin(pitch.current))
+      .normalize();
+    
+    // Orientar cámara
+    const lookTarget = camera.position.clone().add(pitchedForward);
+    camera.up.copy(currentUp);
+    camera.lookAt(lookTarget);
+    
+    // Actualizar estado
+    flightModeState.altitude = altitude.current - surfaceRadius;
+  });
+  
+  return null;
+}
+
+// Modelo de nave para modo superficie (siempre nivelada)
+function SurfaceSpaceshipModel() {
+  const { camera } = useThree();
+  const shipRef = useRef<THREE.Group>(null);
+  const [thrusters, setThrusters] = useState({ ...thrusterState });
+  
+  useFrame(() => {
+    if (!shipRef.current) return;
+    
+    setThrusters({ ...thrusterState });
+    
+    // Posicionar la nave delante de la cámara pero siempre nivelada con la superficie
+    const forward = new THREE.Vector3();
+    camera.getWorldDirection(forward);
+    
+    const offset = new THREE.Vector3(0, -0.25, -1.5);
+    offset.applyQuaternion(camera.quaternion);
+    shipRef.current.position.copy(camera.position).add(offset);
+    
+    // La nave copia la orientación de la cámara (que ya está nivelada)
+    shipRef.current.quaternion.copy(camera.quaternion);
+  });
+  
+  return (
+    <group ref={shipRef} scale={0.5}>
+      {/* Cuerpo principal de la nave - Naranja vibrante */}
+      <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.15, 0.6, 6]} />
+        <meshStandardMaterial color="#ff6b35" metalness={0.7} roughness={0.2} />
+      </mesh>
+      
+      {/* Franja decorativa central */}
+      <mesh position={[0, 0.03, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.08, 0.4, 6]} />
+        <meshStandardMaterial color="#00d4ff" metalness={0.9} roughness={0.1} emissive="#00d4ff" emissiveIntensity={0.3} />
+      </mesh>
+      
+      {/* Cabina - Cyan brillante */}
+      <mesh position={[0, 0.08, -0.1]}>
+        <sphereGeometry args={[0.1, 12, 8]} />
+        <meshStandardMaterial color="#00ffff" metalness={0.3} roughness={0.1} transparent opacity={0.8} emissive="#00ffff" emissiveIntensity={0.2} />
+      </mesh>
+      
+      {/* Ala izquierda - Blanco con borde cian */}
+      <mesh position={[-0.25, 0, 0.1]} rotation={[0, 0, -Math.PI / 6]}>
+        <boxGeometry args={[0.3, 0.02, 0.2]} />
+        <meshStandardMaterial color="#f0f0f0" metalness={0.8} roughness={0.2} />
+      </mesh>
+      <mesh position={[-0.35, 0, 0.1]} rotation={[0, 0, -Math.PI / 6]}>
+        <boxGeometry args={[0.08, 0.025, 0.22]} />
+        <meshStandardMaterial color="#00d4ff" metalness={0.9} roughness={0.1} emissive="#00d4ff" emissiveIntensity={0.5} />
+      </mesh>
+      
+      {/* Ala derecha - Blanco con borde cian */}
+      <mesh position={[0.25, 0, 0.1]} rotation={[0, 0, Math.PI / 6]}>
+        <boxGeometry args={[0.3, 0.02, 0.2]} />
+        <meshStandardMaterial color="#f0f0f0" metalness={0.8} roughness={0.2} />
+      </mesh>
+      <mesh position={[0.35, 0, 0.1]} rotation={[0, 0, Math.PI / 6]}>
+        <boxGeometry args={[0.08, 0.025, 0.22]} />
+        <meshStandardMaterial color="#00d4ff" metalness={0.9} roughness={0.1} emissive="#00d4ff" emissiveIntensity={0.5} />
+      </mesh>
+      
+      {/* Motor trasero - Dorado metálico */}
+      <mesh position={[0, 0, 0.35]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.08, 0.1, 0.1, 8]} />
+        <meshStandardMaterial color="#ffd700" metalness={0.95} roughness={0.15} />
+      </mesh>
+      
+      {/* Propulsores */}
+      <Thruster position={[0, 0, 0.45]} rotation={[Math.PI / 2, 0, 0]} active={thrusters.forward} color="#ff4400" />
+      <Thruster position={[0, 0, -0.35]} rotation={[-Math.PI / 2, 0, 0]} active={thrusters.backward} color="#ff6600" />
+      <Thruster position={[0.3, 0, 0.1]} rotation={[0, 0, -Math.PI / 2]} active={thrusters.left} color="#ff6600" />
+      <Thruster position={[-0.3, 0, 0.1]} rotation={[0, 0, Math.PI / 2]} active={thrusters.right} color="#ff6600" />
+      <Thruster position={[0, -0.15, 0.1]} rotation={[0, 0, Math.PI]} active={thrusters.up} color="#00aaff" />
+      <Thruster position={[0, 0.15, 0.1]} rotation={[0, 0, 0]} active={thrusters.down} color="#00aaff" />
+    </group>
+  );
+}
+
+// ============================================
+// FIN SISTEMA DE EXPLORACIÓN PLANETARIA
+// ============================================
 
 // Órbitas visuales
 function OrbitRing({ radius, color }: { radius: number; color: string }) {
@@ -718,7 +2289,7 @@ function SpaceshipModel() {
     setThrusters({ ...thrusterState });
     
     // Posicionar la nave delante de la cámara
-    const offset = new THREE.Vector3(0, -0.3, -1.5);
+    const offset = new THREE.Vector3(0, -0.2, -1.3);
     offset.applyQuaternion(camera.quaternion);
     shipRef.current.position.copy(camera.position).add(offset);
     
@@ -727,35 +2298,49 @@ function SpaceshipModel() {
   });
   
   return (
-    <group ref={shipRef}>
-      {/* Cuerpo principal de la nave */}
+    <group ref={shipRef} scale={0.5}>
+      {/* Cuerpo principal de la nave - Naranja vibrante */}
       <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <coneGeometry args={[0.15, 0.6, 6]} />
-        <meshStandardMaterial color="#4a5568" metalness={0.8} roughness={0.3} />
+        <meshStandardMaterial color="#ff6b35" metalness={0.7} roughness={0.2} />
       </mesh>
       
-      {/* Cabina */}
-      <mesh position={[0, 0.05, -0.1]}>
-        <sphereGeometry args={[0.08, 8, 6]} />
-        <meshStandardMaterial color="#63b3ed" metalness={0.5} roughness={0.2} transparent opacity={0.7} />
+      {/* Franja decorativa central */}
+      <mesh position={[0, 0.03, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.08, 0.4, 6]} />
+        <meshStandardMaterial color="#00d4ff" metalness={0.9} roughness={0.1} emissive="#00d4ff" emissiveIntensity={0.3} />
       </mesh>
       
-      {/* Ala izquierda */}
+      {/* Cabina - Cyan brillante */}
+      <mesh position={[0, 0.08, -0.1]}>
+        <sphereGeometry args={[0.1, 12, 8]} />
+        <meshStandardMaterial color="#00ffff" metalness={0.3} roughness={0.1} transparent opacity={0.8} emissive="#00ffff" emissiveIntensity={0.2} />
+      </mesh>
+      
+      {/* Ala izquierda - Blanca con borde cian */}
       <mesh position={[-0.25, 0, 0.1]} rotation={[0, 0, -Math.PI / 6]}>
         <boxGeometry args={[0.3, 0.02, 0.2]} />
-        <meshStandardMaterial color="#2d3748" metalness={0.7} roughness={0.4} />
+        <meshStandardMaterial color="#f0f0f0" metalness={0.8} roughness={0.2} />
+      </mesh>
+      <mesh position={[-0.37, 0, 0.1]} rotation={[0, 0, -Math.PI / 6]}>
+        <boxGeometry args={[0.08, 0.025, 0.22]} />
+        <meshStandardMaterial color="#00d4ff" metalness={0.9} roughness={0.1} emissive="#00d4ff" emissiveIntensity={0.5} />
       </mesh>
       
-      {/* Ala derecha */}
+      {/* Ala derecha - Blanca con borde cian */}
       <mesh position={[0.25, 0, 0.1]} rotation={[0, 0, Math.PI / 6]}>
         <boxGeometry args={[0.3, 0.02, 0.2]} />
-        <meshStandardMaterial color="#2d3748" metalness={0.7} roughness={0.4} />
+        <meshStandardMaterial color="#f0f0f0" metalness={0.8} roughness={0.2} />
+      </mesh>
+      <mesh position={[0.37, 0, 0.1]} rotation={[0, 0, Math.PI / 6]}>
+        <boxGeometry args={[0.08, 0.025, 0.22]} />
+        <meshStandardMaterial color="#00d4ff" metalness={0.9} roughness={0.1} emissive="#00d4ff" emissiveIntensity={0.5} />
       </mesh>
       
-      {/* Motor trasero */}
+      {/* Motor trasero - Dorado metálico */}
       <mesh position={[0, 0, 0.35]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.08, 0.1, 0.1, 8]} />
-        <meshStandardMaterial color="#1a202c" metalness={0.9} roughness={0.2} />
+        <meshStandardMaterial color="#ffd700" metalness={0.95} roughness={0.15} />
       </mesh>
       
       {/* === PROPULSORES === */}
@@ -811,13 +2396,25 @@ function SpaceshipModel() {
 }
 
 // Controles de nave espacial
-function SpaceshipControls() {
+interface SpaceshipControlsProps {
+  initialPosition?: THREE.Vector3 | null;
+}
+
+function SpaceshipControls({ initialPosition }: SpaceshipControlsProps) {
   const { camera } = useThree();
   const velocity = useRef(new THREE.Vector3());
   const rotation = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
   const keys = useRef<Set<string>>(new Set());
   const initialized = useRef(false);
   const isMobile = useRef(isTouchDevice());
+  
+  // Posición objetivo para el inicio
+  const targetPosition = useMemo(() => {
+    if (initialPosition) {
+      return initialPosition.clone();
+    }
+    return new THREE.Vector3(0, 75, 175);
+  }, [initialPosition]);
   
   const SPEED = 0.04;
   const FRICTION = 0.92;
@@ -850,10 +2447,10 @@ function SpaceshipControls() {
 
   useFrame(() => {
     if (!initialized.current) {
-      camera.position.lerp(new THREE.Vector3(0, 75, 175), 0.02);
+      camera.position.lerp(targetPosition, 0.05);
       camera.lookAt(0, 0, 0);
       rotation.current.setFromQuaternion(camera.quaternion);
-      if (camera.position.distanceTo(new THREE.Vector3(0, 75, 175)) < 1) {
+      if (camera.position.distanceTo(targetPosition) < 1) {
         initialized.current = true;
       }
       return;
@@ -1134,14 +2731,82 @@ function useCameraPosition() {
   return position;
 }
 
-// Escena interna que tiene acceso al contexto de Three
-function SolarSystemScene({ planets, language, selectedPlanet, onSelectPlanet }: {
+// Hook para detectar entrada a planeta
+interface PlanetProximity {
+  planet: PlanetData | null;
+  distance: number;
+  isEntering: boolean;
+}
+
+function usePlanetProximityDetection(
+  planets: PlanetData[], 
+  cameraPosition: THREE.Vector3,
+  planetPositions: Map<string, THREE.Vector3>
+): PlanetProximity {
+  const [proximity, setProximity] = useState<PlanetProximity>({
+    planet: null,
+    distance: Infinity,
+    isEntering: false
+  });
+  
+  useFrame(() => {
+    let closestPlanet: PlanetData | null = null;
+    let closestDistance = Infinity;
+    
+    for (const planet of planets) {
+      const planetPos = planetPositions.get(planet.id);
+      if (!planetPos) continue;
+      
+      const dist = cameraPosition.distanceTo(planetPos);
+      
+      if (dist < closestDistance) {
+        closestDistance = dist;
+        closestPlanet = planet;
+      }
+    }
+    
+    // Distancia para entrar al planeta es 1.5x su tamaño
+    const entryThreshold = closestPlanet ? closestPlanet.size * 1.5 : 0;
+    const isEntering = closestPlanet !== null && closestDistance < entryThreshold;
+    
+    setProximity({
+      planet: closestPlanet,
+      distance: closestDistance,
+      isEntering
+    });
+  });
+  
+  return proximity;
+}
+
+// Referencia global para posiciones de planetas
+const planetPositionsRef = new Map<string, THREE.Vector3>();
+
+// Escena del sistema solar (modo espacio)
+function SolarSystemScene({ planets, language, selectedPlanet, onSelectPlanet, onEnterPlanet, initialCameraPosition }: {
   planets: PlanetData[];
   language: Language;
   selectedPlanet: PlanetData | null;
   onSelectPlanet: (planet: PlanetData | null) => void;
+  onEnterPlanet: (planet: PlanetData, cameraPos: THREE.Vector3) => void;
+  initialCameraPosition?: THREE.Vector3 | null;
 }) {
   const cameraPosition = useCameraPosition();
+  const proximity = usePlanetProximityDetection(planets, cameraPosition, planetPositionsRef);
+  const enteredRef = useRef(false);
+  
+  // Detectar entrada al planeta
+  useFrame(() => {
+    if (proximity.isEntering && proximity.planet && !enteredRef.current) {
+      enteredRef.current = true;
+      // Guardar la posición de la cámara antes de entrar
+      onEnterPlanet(proximity.planet, cameraPosition.clone());
+    }
+    
+    if (!proximity.isEntering) {
+      enteredRef.current = false;
+    }
+  });
   
   return (
     <>
@@ -1161,13 +2826,48 @@ function SolarSystemScene({ planets, language, selectedPlanet, onSelectPlanet }:
             cameraPosition={cameraPosition}
             onSelect={onSelectPlanet}
             selectedPlanet={selectedPlanet}
+            onPositionUpdate={(pos) => planetPositionsRef.set(planet.id, pos)}
           />
         </group>
       ))}
       
       <SpaceshipModel />
-      <SpaceshipControls />
+      <SpaceshipControls initialPosition={initialCameraPosition} />
+      
+      {/* Indicador de proximidad al planeta */}
+      {proximity.planet && proximity.distance < proximity.planet.size * 3 && !proximity.isEntering && (
+        <Html
+          center
+          position={[
+            cameraPosition.x,
+            cameraPosition.y - 2,
+            cameraPosition.z
+          ]}
+          style={{ pointerEvents: 'none' }}
+        >
+          <div className="planet-entry-indicator">
+            <span>🚀 {language === 'es' ? 'Acércate más para aterrizar en' : 'Get closer to land on'} {proximity.planet.name[language]}</span>
+          </div>
+        </Html>
+      )}
     </>
+  );
+}
+
+// Escena de superficie planetaria
+function PlanetSurfaceScene({ planet, allPlanets, language, onExitSurface }: {
+  planet: PlanetData;
+  allPlanets: PlanetData[];
+  language: Language;
+  onExitSurface: () => void;
+}) {
+  return (
+    <PlanetarySurface
+      planetData={planet}
+      allPlanets={allPlanets}
+      onExitSurface={onExitSurface}
+      language={language}
+    />
   );
 }
 
@@ -1176,8 +2876,21 @@ interface PortfolioSolarSystemProps {
   language: Language;
 }
 
+// Posición guardada de la cámara al entrar a un planeta
+const savedCameraPosition = {
+  position: new THREE.Vector3(0, 75, 175),
+  rotation: new THREE.Euler(0, 0, 0, 'YXZ')
+};
+
 export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemProps) {
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null);
+  const [surfaceMode, setSurfaceMode] = useState<{ active: boolean; planet: PlanetData | null; entryPosition: THREE.Vector3 | null }>({
+    active: false,
+    planet: null,
+    entryPosition: null
+  });
+  const [cameraKey, setCameraKey] = useState(0); // Para forzar reset de cámara
+  const [instructionsCollapsed, setInstructionsCollapsed] = useState(false);
   
   // Obtener datos del portfolio
   const projects = useMemo(() => getProjects(language), [language]);
@@ -1271,28 +2984,101 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
     setSelectedPlanet(planet);
   }, []);
 
+  const handleEnterPlanet = useCallback((planet: PlanetData, cameraPos: THREE.Vector3) => {
+    // Guardar la posición de la cámara antes de entrar al planeta
+    savedCameraPosition.position.copy(cameraPos);
+    
+    // Actualizar estado del modo de vuelo
+    flightModeState.mode = 'surface';
+    flightModeState.planetData = planet;
+    flightModeState.entryPosition.copy(cameraPos);
+    notifyFlightModeChange();
+    
+    setSurfaceMode({ active: true, planet, entryPosition: cameraPos.clone() });
+    setSelectedPlanet(null);
+    setCameraKey(prev => prev + 1);
+  }, []);
+
+  const handleExitSurface = useCallback(() => {
+    // Volver al modo espacio
+    flightModeState.mode = 'space';
+    flightModeState.planetData = null;
+    notifyFlightModeChange();
+    
+    // Mantener la posición de entrada guardada para restaurarla
+    setSurfaceMode(prev => ({ active: false, planet: null, entryPosition: prev.entryPosition }));
+    setCameraKey(prev => prev + 1);
+  }, []);
+
+  // Instrucciones según el modo (colapsables)
+  const instructions = (
+    <div className={`space-instructions desktop-only ${surfaceMode.active ? 'surface-mode' : ''} ${instructionsCollapsed ? 'collapsed' : ''}`}>
+      <button 
+        className="instructions-toggle"
+        onClick={() => setInstructionsCollapsed(!instructionsCollapsed)}
+        title={instructionsCollapsed ? (language === 'es' ? 'Mostrar controles' : 'Show controls') : (language === 'es' ? 'Ocultar controles' : 'Hide controls')}
+      >
+        {instructionsCollapsed ? '◀' : '▶'}
+      </button>
+      {surfaceMode.active ? (
+        <>
+          <span>⌨️ WASD {language === 'es' ? 'mover' : 'move'}</span>
+          <span>🎯 {language === 'es' ? 'Flechas mirar' : 'Arrows look'}</span>
+          <span>⬆️ {language === 'es' ? 'Espacio ascender' : 'Space ascend'}</span>
+          <span>⬇️ {language === 'es' ? 'Shift descender' : 'Shift descend'}</span>
+        </>
+      ) : (
+        <>
+          <span>⌨️ WASD {language === 'es' ? 'mover' : 'move'}</span>
+          <span>🎯 {language === 'es' ? 'Flechas mirar' : 'Arrows look'}</span>
+          <span>⬆️ {language === 'es' ? 'Espacio subir' : 'Space up'}</span>
+          <span>⬇️ {language === 'es' ? 'Shift bajar' : 'Shift down'}</span>
+        </>
+      )}
+    </div>
+  );
+
   return (
     <div className="solar-system-container">
       <Canvas
-        camera={{ position: [0, 75, 175], fov: 60 }}
+        key={cameraKey}
+        camera={{ 
+          position: surfaceMode.active 
+            ? [0, 550, 0] 
+            : surfaceMode.entryPosition 
+              ? [surfaceMode.entryPosition.x, surfaceMode.entryPosition.y, surfaceMode.entryPosition.z]
+              : [0, 75, 175], 
+          fov: 60 
+        }}
         gl={{ antialias: true, alpha: true }}
-        style={{ background: 'transparent' }}
+        style={{ background: surfaceMode.active ? '#000' : 'transparent' }}
       >
         <Suspense fallback={null}>
-          <SolarSystemScene
-            planets={planets}
-            language={language}
-            selectedPlanet={selectedPlanet}
-            onSelectPlanet={handleSelectPlanet}
-          />
+          {surfaceMode.active && surfaceMode.planet ? (
+            <PlanetSurfaceScene
+              planet={surfaceMode.planet}
+              allPlanets={planets}
+              language={language}
+              onExitSurface={handleExitSurface}
+            />
+          ) : (
+            <SolarSystemScene
+              planets={planets}
+              language={language}
+              selectedPlanet={selectedPlanet}
+              onSelectPlanet={handleSelectPlanet}
+              onEnterPlanet={handleEnterPlanet}
+              initialCameraPosition={surfaceMode.entryPosition}
+            />
+          )}
         </Suspense>
       </Canvas>
 
       <SpaceshipHUD />
       <MobileControls />
 
-      {/* Panel de información del planeta seleccionado */}
-      {selectedPlanet && (
+      {/* Panel de información del planeta seleccionado (solo en modo espacio) */}
+      {!surfaceMode.active && selectedPlanet && (
         <div className="planet-info-panel">
           <button 
             className="planet-info-close"
@@ -1317,13 +3103,7 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
       )}
 
       {/* Instrucciones */}
-      <div className="space-instructions desktop-only">
-        <span>⌨️ WASD {language === 'es' ? 'mover' : 'move'}</span>
-        <span>🎯 {language === 'es' ? 'Flechas mirar' : 'Arrows look'}</span>
-        <span>⬆️ {language === 'es' ? 'Espacio subir' : 'Space up'}</span>
-        <span>⬇️ {language === 'es' ? 'Shift bajar' : 'Shift down'}</span>
-        <span>🌍 {language === 'es' ? 'Acércate a los planetas' : 'Get close to planets'}</span>
-      </div>
+      {instructions}
     </div>
   );
 }
