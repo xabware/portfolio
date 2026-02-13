@@ -1,6 +1,6 @@
 import { useRef, useState, useMemo, useCallback, Suspense, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Text, Stars, Html, Line } from '@react-three/drei';
+import { Stars, Html, Line } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Language } from '../../contexts/LanguageContext';
 import { getProjects } from '../../data/projects';
@@ -13,6 +13,57 @@ function seededRandom(seed: number): () => number {
     seed = (seed * 9301 + 49297) % 233280;
     return seed / 233280;
   };
+}
+
+// Función de ruido Simplex 3D simplificada para terreno procedural
+function noise3D(x: number, y: number, z: number, seed: number = 0): number {
+  const p = (n: number) => {
+    const s = seed + n * 127.1;
+    return Math.sin(s * 43758.5453) * 0.5 + 0.5;
+  };
+  
+  const fx = Math.floor(x), fy = Math.floor(y), fz = Math.floor(z);
+  const dx = x - fx, dy = y - fy, dz = z - fz;
+  
+  const fade = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
+  const lerp = (a: number, b: number, t: number) => a + t * (b - a);
+  
+  const hash = (xi: number, yi: number, zi: number) => {
+    return p(xi * 374761393 + yi * 668265263 + zi * 1440670431);
+  };
+  
+  const u = fade(dx), v = fade(dy), w = fade(dz);
+  
+  return lerp(
+    lerp(
+      lerp(hash(fx, fy, fz), hash(fx + 1, fy, fz), u),
+      lerp(hash(fx, fy + 1, fz), hash(fx + 1, fy + 1, fz), u),
+      v
+    ),
+    lerp(
+      lerp(hash(fx, fy, fz + 1), hash(fx + 1, fy, fz + 1), u),
+      lerp(hash(fx, fy + 1, fz + 1), hash(fx + 1, fy + 1, fz + 1), u),
+      v
+    ),
+    w
+  );
+}
+
+// Generar múltiples octavas de ruido para terreno más realista
+function fbm(x: number, y: number, z: number, octaves: number = 4, seed: number = 0): number {
+  let value = 0;
+  let amplitude = 1;
+  let frequency = 1;
+  let maxValue = 0;
+  
+  for (let i = 0; i < octaves; i++) {
+    value += amplitude * noise3D(x * frequency, y * frequency, z * frequency, seed + i * 100);
+    maxValue += amplitude;
+    amplitude *= 0.5;
+    frequency *= 2;
+  }
+  
+  return value / maxValue;
 }
 
 // Detectar dispositivo táctil
@@ -37,6 +88,8 @@ const joystickState: JoystickState = {
 };
 
 // Datos de los planetas del sistema solar del portfolio
+type PlanetType = 'terrestrial' | 'gas_giant' | 'ice' | 'volcanic';
+
 interface PlanetData {
   id: string;
   name: { es: string; en: string };
@@ -45,6 +98,7 @@ interface PlanetData {
   size: number;
   orbitRadius: number;
   orbitSpeed: number;
+  planetType: PlanetType;
   items: PlanetItem[];
 }
 
@@ -65,7 +119,7 @@ interface PlanetProps {
 }
 
 // Componente del Sol central
-function Sun({ language }: { language: Language }) {
+function Sun() {
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
   
@@ -83,7 +137,7 @@ function Sun({ language }: { language: Language }) {
     <group>
       {/* Sol principal */}
       <mesh ref={meshRef}>
-        <sphereGeometry args={[2, 64, 64]} />
+        <sphereGeometry args={[10, 32, 32]} />
         <meshStandardMaterial
           color="#ffd700"
           emissive="#ff8c00"
@@ -95,7 +149,7 @@ function Sun({ language }: { language: Language }) {
       
       {/* Halo de brillo */}
       <mesh ref={glowRef}>
-        <sphereGeometry args={[2.5, 32, 32]} />
+        <sphereGeometry args={[12.5, 24, 24]} />
         <meshBasicMaterial
           color="#ffaa00"
           transparent
@@ -105,21 +159,250 @@ function Sun({ language }: { language: Language }) {
       </mesh>
       
       {/* Luz del sol */}
-      <pointLight color="#fff5e0" intensity={3} distance={100} />
-      
-      {/* Texto del portafolio */}
-      <Text
-        position={[0, 3.5, 0]}
-        fontSize={0.6}
-        color="#ffffff"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.02}
-        outlineColor="#000000"
-      >
-        {language === 'es' ? 'Mi Portfolio' : 'My Portfolio'}
-      </Text>
+      <pointLight color="#fff5e0" intensity={4} distance={500} />
     </group>
+  );
+}
+
+// Geometría de planeta con terreno procedural según tipo
+function createPlanetGeometry(
+  radius: number, 
+  detail: number, 
+  seed: number, 
+  heightScale: number,
+  planetType: PlanetType
+): THREE.BufferGeometry {
+  const geometry = new THREE.IcosahedronGeometry(radius, detail);
+  const positions = geometry.attributes.position;
+  
+  // Crear nuevos arrays para las posiciones modificadas
+  const newPositions = new Float32Array(positions.count * 3);
+  const colors = new Float32Array(positions.count * 3);
+  
+  for (let i = 0; i < positions.count; i++) {
+    const x = positions.getX(i);
+    const y = positions.getY(i);
+    const z = positions.getZ(i);
+    
+    // Normalizar para obtener dirección
+    const length = Math.sqrt(x * x + y * y + z * z);
+    const nx = x / length;
+    const ny = y / length;
+    const nz = z / length;
+    
+    // Generar altura con ruido - varía según tipo
+    let noiseValue: number;
+    let height: number;
+    
+    if (planetType === 'gas_giant') {
+      // Gigante gaseoso: sin terreno real, superficie lisa con bandas
+      noiseValue = fbm(nx * 0.5, ny * 8, nz * 0.5, 2, seed);
+      height = radius + (noiseValue - 0.5) * heightScale * 0.1; // Casi plano
+    } else if (planetType === 'ice') {
+      // Planeta helado: suave con algunos cráteres
+      noiseValue = fbm(nx * 3, ny * 3, nz * 3, 3, seed);
+      height = radius + (noiseValue - 0.5) * heightScale * 0.5;
+    } else if (planetType === 'volcanic') {
+      // Volcánico: muy irregular con picos
+      noiseValue = fbm(nx * 4, ny * 4, nz * 4, 4, seed);
+      height = radius + (noiseValue - 0.5) * heightScale * 1.2;
+    } else {
+      // Terrestre: océanos, vegetación, montañas
+      noiseValue = fbm(nx * 2, ny * 2, nz * 2, 3, seed);
+      height = radius + (noiseValue - 0.5) * heightScale;
+    }
+    
+    newPositions[i * 3] = nx * height;
+    newPositions[i * 3 + 1] = ny * height;
+    newPositions[i * 3 + 2] = nz * height;
+    
+    // Colores según tipo de planeta
+    const heightNorm = (noiseValue - 0.3) / 0.4;
+    
+    if (planetType === 'terrestrial') {
+      // Planeta tipo Tierra: océanos azules, vegetación verde, montañas marrones
+      if (heightNorm < 0.35) {
+        // Océano profundo
+        colors[i * 3] = 0.05;
+        colors[i * 3 + 1] = 0.15;
+        colors[i * 3 + 2] = 0.5;
+      } else if (heightNorm < 0.42) {
+        // Océano costero
+        colors[i * 3] = 0.1;
+        colors[i * 3 + 1] = 0.35;
+        colors[i * 3 + 2] = 0.6;
+      } else if (heightNorm < 0.48) {
+        // Playa/arena
+        colors[i * 3] = 0.76;
+        colors[i * 3 + 1] = 0.7;
+        colors[i * 3 + 2] = 0.5;
+      } else if (heightNorm < 0.58) {
+        // Llanuras verdes
+        colors[i * 3] = 0.2;
+        colors[i * 3 + 1] = 0.55;
+        colors[i * 3 + 2] = 0.15;
+      } else if (heightNorm < 0.68) {
+        // Bosque denso
+        colors[i * 3] = 0.1;
+        colors[i * 3 + 1] = 0.4;
+        colors[i * 3 + 2] = 0.1;
+      } else if (heightNorm < 0.8) {
+        // Montañas rocosas
+        colors[i * 3] = 0.45;
+        colors[i * 3 + 1] = 0.35;
+        colors[i * 3 + 2] = 0.25;
+      } else {
+        // Picos nevados
+        colors[i * 3] = 0.95;
+        colors[i * 3 + 1] = 0.97;
+        colors[i * 3 + 2] = 1.0;
+      }
+    } else if (planetType === 'gas_giant') {
+      // Gigante gaseoso: bandas de colores (naranjas, rojos, amarillos, marrones)
+      const bandNoise = fbm(ny * 12, nx * 0.5, nz * 0.5, 2, seed + 100);
+      const band = Math.sin(ny * 15 + bandNoise * 3);
+      
+      if (band < -0.5) {
+        // Banda oscura marrón
+        colors[i * 3] = 0.5;
+        colors[i * 3 + 1] = 0.3;
+        colors[i * 3 + 2] = 0.15;
+      } else if (band < 0) {
+        // Banda naranja
+        colors[i * 3] = 0.85;
+        colors[i * 3 + 1] = 0.5;
+        colors[i * 3 + 2] = 0.2;
+      } else if (band < 0.5) {
+        // Banda crema/amarilla
+        colors[i * 3] = 0.9;
+        colors[i * 3 + 1] = 0.8;
+        colors[i * 3 + 2] = 0.6;
+      } else {
+        // Banda roja/tormenta
+        colors[i * 3] = 0.75;
+        colors[i * 3 + 1] = 0.35;
+        colors[i * 3 + 2] = 0.2;
+      }
+    } else if (planetType === 'ice') {
+      // Planeta helado: blancos, azules claros, grietas azules
+      if (heightNorm < 0.4) {
+        // Hielo profundo azul
+        colors[i * 3] = 0.6;
+        colors[i * 3 + 1] = 0.8;
+        colors[i * 3 + 2] = 0.95;
+      } else if (heightNorm < 0.6) {
+        // Hielo blanco
+        colors[i * 3] = 0.9;
+        colors[i * 3 + 1] = 0.95;
+        colors[i * 3 + 2] = 1.0;
+      } else if (heightNorm < 0.75) {
+        // Nieve compacta
+        colors[i * 3] = 0.85;
+        colors[i * 3 + 1] = 0.88;
+        colors[i * 3 + 2] = 0.92;
+      } else {
+        // Grietas/glaciares azul intenso
+        colors[i * 3] = 0.4;
+        colors[i * 3 + 1] = 0.6;
+        colors[i * 3 + 2] = 0.85;
+      }
+    } else if (planetType === 'volcanic') {
+      // Planeta volcánico: negro, rojo lava, naranja
+      if (heightNorm < 0.3) {
+        // Lava brillante
+        colors[i * 3] = 1.0;
+        colors[i * 3 + 1] = 0.3;
+        colors[i * 3 + 2] = 0.0;
+      } else if (heightNorm < 0.45) {
+        // Lava enfriándose
+        colors[i * 3] = 0.8;
+        colors[i * 3 + 1] = 0.2;
+        colors[i * 3 + 2] = 0.05;
+      } else if (heightNorm < 0.6) {
+        // Roca caliente
+        colors[i * 3] = 0.3;
+        colors[i * 3 + 1] = 0.1;
+        colors[i * 3 + 2] = 0.05;
+      } else if (heightNorm < 0.8) {
+        // Roca oscura
+        colors[i * 3] = 0.15;
+        colors[i * 3 + 1] = 0.12;
+        colors[i * 3 + 2] = 0.1;
+      } else {
+        // Ceniza/humo
+        colors[i * 3] = 0.25;
+        colors[i * 3 + 1] = 0.22;
+        colors[i * 3 + 2] = 0.2;
+      }
+    }
+  }
+  
+  geometry.setAttribute('position', new THREE.BufferAttribute(newPositions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geometry.computeVertexNormals();
+  
+  return geometry;
+}
+
+// Componente de terreno del planeta (versión detallada)
+interface PlanetTerrainProps {
+  size: number;
+  color: string;
+  seed: number;
+  hovered: boolean;
+  planetType: PlanetType;
+}
+
+function PlanetTerrain({ size, color, seed, hovered, planetType }: PlanetTerrainProps) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  
+  const geometry = useMemo(() => {
+    return createPlanetGeometry(size, 3, seed, size * 0.3, planetType);
+  }, [size, seed, planetType]);
+  
+  // Velocidad de rotación según tipo
+  const rotationSpeed = planetType === 'gas_giant' ? 0.003 : 0.001;
+  
+  useFrame(() => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y += rotationSpeed;
+    }
+  });
+  
+  // Mezclar colores del terreno con el color temático del planeta
+  const planetColor = useMemo(() => new THREE.Color(color), [color]);
+  
+  // Materiales diferentes según tipo
+  const emissiveIntensity = planetType === 'volcanic' ? (hovered ? 0.5 : 0.3) : (hovered ? 0.3 : 0.1);
+  const metalness = planetType === 'ice' ? 0.4 : 0.2;
+  const roughness = planetType === 'gas_giant' ? 0.4 : 0.8;
+  
+  return (
+    <mesh ref={meshRef} geometry={geometry}>
+      <meshStandardMaterial
+        vertexColors
+        emissive={planetColor}
+        emissiveIntensity={emissiveIntensity}
+        metalness={metalness}
+        roughness={roughness}
+        flatShading={planetType !== 'gas_giant'}
+      />
+    </mesh>
+  );
+}
+
+// Atmósfera del planeta
+function PlanetAtmosphere({ size, color }: { size: number; color: string }) {
+  return (
+    <mesh>
+      <sphereGeometry args={[size * 1.05, 24, 24]} />
+      <meshBasicMaterial
+        color={color}
+        transparent
+        opacity={0.15}
+        side={THREE.BackSide}
+      />
+    </mesh>
   );
 }
 
@@ -128,14 +411,23 @@ function getInitialAngle(id: string): number {
   return id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) * 0.1 % (Math.PI * 2);
 }
 
-// Componente del Planeta
+// Componente del Planeta con LOD (Level of Detail)
 function Planet({ data, language, cameraPosition, onSelect, selectedPlanet }: PlanetProps) {
   const groupRef = useRef<THREE.Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
-  // Usar función en useState para calcular ángulo inicial una sola vez
   const [angle, setAngle] = useState(() => getInitialAngle(data.id));
   const [showDetails, setShowDetails] = useState(false);
+  const [showTerrain, setShowTerrain] = useState(false);
+  
+  // Seed único para cada planeta basado en su id
+  const planetSeed = useMemo(() => {
+    return data.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  }, [data.id]);
+  
+  // Umbral de distancia para mostrar terreno (proporcional al tamaño)
+  const terrainThreshold = data.size * 4;
+  const detailsThreshold = data.size * 6;
   
   useFrame(() => {
     // Órbita
@@ -145,17 +437,18 @@ function Planet({ data, language, cameraPosition, onSelect, selectedPlanet }: Pl
       groupRef.current.position.x = Math.cos(angle) * data.orbitRadius;
       groupRef.current.position.z = Math.sin(angle) * data.orbitRadius;
       
-      // Calcular distancia a la cámara y mostrar detalles si estamos cerca
+      // Calcular distancia a la cámara
       const dist = cameraPosition.distanceTo(groupRef.current.position);
-      setShowDetails(dist < 8);
+      setShowDetails(dist < detailsThreshold);
+      setShowTerrain(dist < terrainThreshold);
     }
     
-    if (meshRef.current) {
-      // Rotación propia del planeta
-      meshRef.current.rotation.y += 0.01;
+    if (meshRef.current && !showTerrain) {
+      // Rotación propia del planeta (solo cuando es esfera simple)
+      meshRef.current.rotation.y += 0.005;
       
       // Escala al hover
-      const targetScale = hovered ? 1.3 : 1;
+      const targetScale = hovered ? 1.1 : 1;
       meshRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
     }
   });
@@ -166,78 +459,120 @@ function Planet({ data, language, cameraPosition, onSelect, selectedPlanet }: Pl
 
   return (
     <group ref={groupRef}>
-      {/* Planeta */}
+      {/* Hitbox invisible para interacción */}
       <mesh
-        ref={meshRef}
         onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
         onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
         onClick={handleClick}
+        visible={false}
       >
-        <sphereGeometry args={[data.size, 32, 32]} />
-        <meshStandardMaterial
-          color={data.color}
-          emissive={data.color}
-          emissiveIntensity={hovered ? 0.5 : 0.2}
-          metalness={0.4}
-          roughness={0.6}
-        />
+        <sphereGeometry args={[data.size * 1.1, 16, 16]} />
+        <meshBasicMaterial transparent opacity={0} />
       </mesh>
       
-      {/* Anillos decorativos para algunos planetas */}
-      {data.id === 'projects' && (
-        <mesh rotation={[Math.PI / 2.5, 0, 0]}>
-          <ringGeometry args={[data.size * 1.5, data.size * 2, 64]} />
-          <meshBasicMaterial color={data.color} transparent opacity={0.4} side={THREE.DoubleSide} />
+      {/* Planeta simple (lejos) o con terreno (cerca) */}
+      {showTerrain ? (
+        <group>
+          <PlanetTerrain 
+            size={data.size} 
+            color={data.color} 
+            seed={planetSeed}
+            hovered={hovered}
+            planetType={data.planetType}
+          />
+          <PlanetAtmosphere size={data.size} color={data.color} />
+        </group>
+      ) : (
+        <mesh ref={meshRef}>
+          <sphereGeometry args={[data.size, 24, 24]} />
+          <meshStandardMaterial
+            color={data.color}
+            emissive={data.color}
+            emissiveIntensity={hovered ? 0.5 : 0.2}
+            metalness={0.4}
+            roughness={0.6}
+          />
         </mesh>
       )}
       
-      {/* Nombre del planeta */}
-      <Text
-        position={[0, data.size + 0.8, 0]}
-        fontSize={0.35}
-        color="#ffffff"
-        anchorX="center"
-        anchorY="middle"
+      {/* Anillos para planetas con anillos (gigante gaseoso) */}
+      {data.planetType === 'gas_giant' && (
+        <group rotation={[Math.PI / 2.2, 0.1, 0]}>
+          <mesh>
+            <ringGeometry args={[data.size * 1.3, data.size * 1.6, 64]} />
+            <meshBasicMaterial color="#c9a86c" transparent opacity={0.5} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh>
+            <ringGeometry args={[data.size * 1.65, data.size * 1.9, 64]} />
+            <meshBasicMaterial color="#8b7355" transparent opacity={0.3} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh>
+            <ringGeometry args={[data.size * 1.95, data.size * 2.1, 64]} />
+            <meshBasicMaterial color="#a08060" transparent opacity={0.2} side={THREE.DoubleSide} />
+          </mesh>
+        </group>
+      )}
+      
+      {/* Nombre del planeta con Html para mejor rendimiento */}
+      <Html
+        center
+        distanceFactor={15}
+        position={[0, data.size + 3, 0]}
+        style={{ pointerEvents: 'none' }}
       >
-        {data.name[language]}
-      </Text>
+        <div className="planet-name-label">{data.name[language]}</div>
+      </Html>
       
       {/* Luz del planeta */}
-      <pointLight color={data.color} intensity={hovered ? 1 : 0.3} distance={5} />
+      <pointLight color={data.color} intensity={hovered ? 3 : 1} distance={data.size * 10} />
       
-      {/* Información detallada al acercarse */}
-      {showDetails && (
+      {/* Indicador de distancia cuando estás cerca */}
+      {showDetails && !showTerrain && (
         <Html
           center
-          distanceFactor={15}
-          position={[data.size + 2, 0, 0]}
+          distanceFactor={12}
+          position={[0, -data.size - 2, 0]}
           style={{ pointerEvents: 'none' }}
         >
-          <div className="planet-details-popup">
+          <div className="planet-approach-label">
+            {language === 'es' ? 'Acércate más...' : 'Get closer...'}
+          </div>
+        </Html>
+      )}
+      
+      {/* Información detallada al acercarse */}
+      {showTerrain && (
+        <Html
+          center
+          distanceFactor={12}
+          position={[data.size + 8, 0, 0]}
+          style={{ pointerEvents: 'none' }}
+        >
+          <div className="planet-details-popup planet-details-large">
             <h3>{data.name[language]}</h3>
             <p className="planet-description">{data.description[language]}</p>
             <div className="planet-items-preview">
-              {data.items.slice(0, 3).map((item, idx) => (
+              {data.items.slice(0, 5).map((item, idx) => (
                 <div key={idx} className="planet-item-mini">
                   <span className="item-dot" style={{ background: data.color }}></span>
                   <span>{item.title}</span>
                 </div>
               ))}
-              {data.items.length > 3 && (
-                <p className="more-items">+{data.items.length - 3} {language === 'es' ? 'más' : 'more'}</p>
+              {data.items.length > 5 && (
+                <p className="more-items">+{data.items.length - 5} {language === 'es' ? 'más' : 'more'}</p>
               )}
             </div>
           </div>
         </Html>
       )}
       
-      {/* Lunas (items) orbitando cuando estás cerca */}
-      {showDetails && data.items.slice(0, 5).map((item, idx) => (
+      {/* Lunas (items) orbitando cuando estás muy cerca */}
+      {showTerrain && data.items.slice(0, 8).map((item, idx) => (
         <Moon 
           key={item.id} 
           item={item} 
           index={idx} 
-          total={Math.min(data.items.length, 5)}
+          total={Math.min(data.items.length, 8)}
           parentSize={data.size}
           color={data.color}
         />
@@ -259,14 +594,15 @@ function Moon({ item, index, total, parentSize, color }: MoonProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const angle = useRef((index / total) * Math.PI * 2);
-  const moonOrbitRadius = parentSize * 2 + 0.5;
+  const moonOrbitRadius = parentSize * 1.5 + 3;
+  const moonSize = Math.max(0.5, parentSize * 0.08);
   
   useFrame(() => {
-    angle.current += 0.02;
+    angle.current += 0.002; // Mucho más lento
     if (meshRef.current) {
       meshRef.current.position.x = Math.cos(angle.current) * moonOrbitRadius;
       meshRef.current.position.z = Math.sin(angle.current) * moonOrbitRadius;
-      meshRef.current.position.y = Math.sin(angle.current * 2) * 0.3;
+      meshRef.current.position.y = Math.sin(angle.current * 2) * (parentSize * 0.2);
     }
   });
 
@@ -276,7 +612,7 @@ function Moon({ item, index, total, parentSize, color }: MoonProps) {
       onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
       onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
     >
-      <sphereGeometry args={[0.2, 16, 16]} />
+      <sphereGeometry args={[moonSize, 16, 16]} />
       <meshStandardMaterial
         color={color}
         emissive={color}
@@ -325,7 +661,7 @@ function SpaceshipControls() {
   const initialized = useRef(false);
   const isMobile = useRef(isTouchDevice());
   
-  const SPEED = 0.03;
+  const SPEED = 0.15;
   const FRICTION = 0.92;
   const LOOK_SPEED = 0.025;
   
@@ -356,10 +692,10 @@ function SpaceshipControls() {
 
   useFrame(() => {
     if (!initialized.current) {
-      camera.position.lerp(new THREE.Vector3(0, 15, 35), 0.02);
+      camera.position.lerp(new THREE.Vector3(0, 75, 175), 0.02);
       camera.lookAt(0, 0, 0);
       rotation.current.setFromQuaternion(camera.quaternion);
-      if (camera.position.distanceTo(new THREE.Vector3(0, 15, 35)) < 0.5) {
+      if (camera.position.distanceTo(new THREE.Vector3(0, 75, 175)) < 1) {
         initialized.current = true;
       }
       return;
@@ -419,9 +755,9 @@ function SpaceshipControls() {
     camera.position.add(velocity.current);
     
     const clampedPos = new THREE.Vector3(
-      Math.max(-80, Math.min(80, camera.position.x)),
-      Math.max(-40, Math.min(60, camera.position.y)),
-      Math.max(-80, Math.min(80, camera.position.z))
+      Math.max(-400, Math.min(400, camera.position.x)),
+      Math.max(-200, Math.min(300, camera.position.y)),
+      Math.max(-400, Math.min(400, camera.position.z))
     );
     camera.position.copy(clampedPos);
     camera.quaternion.setFromEuler(rotation.current);
@@ -580,9 +916,9 @@ function FloatingParticles({ count = 300, seed = 12345 }: { count?: number; seed
     const random = seededRandom(seed);
     const positions = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      positions[i * 3] = (random() - 0.5) * 100;
-      positions[i * 3 + 1] = (random() - 0.5) * 100;
-      positions[i * 3 + 2] = (random() - 0.5) * 100;
+      positions[i * 3] = (random() - 0.5) * 500;
+      positions[i * 3 + 1] = (random() - 0.5) * 500;
+      positions[i * 3 + 2] = (random() - 0.5) * 500;
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -599,7 +935,7 @@ function FloatingParticles({ count = 300, seed = 12345 }: { count?: number; seed
 
   return (
     <points ref={particlesRef} geometry={geometry}>
-      <pointsMaterial size={0.08} color="#ffffff" transparent opacity={0.5} sizeAttenuation />
+      <pointsMaterial size={0.4} color="#ffffff" transparent opacity={0.5} sizeAttenuation />
     </points>
   );
 }
@@ -629,10 +965,10 @@ function SolarSystemScene({ planets, language, selectedPlanet, onSelectPlanet }:
     <>
       <ambientLight intensity={0.2} />
       
-      <Stars radius={150} depth={80} count={8000} factor={5} saturation={0} fade speed={0.3} />
-      <FloatingParticles count={400} />
+      <Stars radius={750} depth={400} count={5000} factor={6} saturation={0} fade speed={0.3} />
+      <FloatingParticles count={300} />
       
-      <Sun language={language} />
+      <Sun />
       
       {planets.map((planet) => (
         <group key={planet.id}>
@@ -676,9 +1012,10 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
         en: 'My featured projects and completed works' 
       },
       color: '#60a5fa',
-      size: 1.2,
-      orbitRadius: 10,
-      orbitSpeed: 0.03,
+      size: 5,
+      orbitRadius: 50,
+      orbitSpeed: 0.02,
+      planetType: 'terrestrial' as PlanetType,
       items: projects.map(p => ({
         id: `project-${p.id}`,
         title: p.title,
@@ -693,10 +1030,11 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
         es: 'Mi trayectoria profesional', 
         en: 'My professional journey' 
       },
-      color: '#34d399',
-      size: 1.0,
-      orbitRadius: 16,
-      orbitSpeed: 0.02,
+      color: '#e8a850',
+      size: 9,
+      orbitRadius: 85,
+      orbitSpeed: 0.012,
+      planetType: 'gas_giant' as PlanetType,
       items: experiences.map((exp, idx) => ({
         id: `exp-${idx}`,
         title: exp.title,
@@ -711,10 +1049,11 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
         es: 'Mi formación académica', 
         en: 'My academic background' 
       },
-      color: '#f472b6',
-      size: 0.8,
-      orbitRadius: 22,
-      orbitSpeed: 0.015,
+      color: '#88ccff',
+      size: 4,
+      orbitRadius: 125,
+      orbitSpeed: 0.01,
+      planetType: 'ice' as PlanetType,
       items: educationItems.map((edu, idx) => ({
         id: `edu-${idx}`,
         title: edu.degree,
@@ -729,10 +1068,11 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
         es: 'Tecnologías y herramientas que domino', 
         en: 'Technologies and tools I master' 
       },
-      color: '#a78bfa',
-      size: 0.9,
-      orbitRadius: 28,
-      orbitSpeed: 0.01,
+      color: '#ff6644',
+      size: 4.5,
+      orbitRadius: 160,
+      orbitSpeed: 0.008,
+      planetType: 'volcanic' as PlanetType,
       items: skillCategories.flatMap(cat => 
         cat.skills.slice(0, 3).map(skill => ({
           id: `skill-${skill.name}`,
@@ -751,7 +1091,7 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
   return (
     <div className="solar-system-container">
       <Canvas
-        camera={{ position: [0, 30, 50], fov: 60 }}
+        camera={{ position: [0, 75, 175], fov: 60 }}
         gl={{ antialias: true, alpha: true }}
         style={{ background: 'transparent' }}
       >

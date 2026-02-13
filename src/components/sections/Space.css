@@ -264,6 +264,40 @@
   color: rgba(255, 255, 255, 0.6);
 }
 
+/* Labels de nombres de planetas */
+.planet-name-label {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 
+    0 0 10px rgba(0, 0, 0, 0.8),
+    0 0 20px rgba(0, 0, 0, 0.6),
+    2px 2px 4px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.planet-approach-label {
+  font-size: 1.2rem;
+  color: #88ff88;
+  text-shadow: 
+    0 0 10px rgba(136, 255, 136, 0.5),
+    0 0 20px rgba(136, 255, 136, 0.3);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.planet-details-large {
+  min-width: 300px;
+  max-width: 400px;
+}
+
 /* HUD de la nave */
 .spaceship-hud {
   position: absolute;
