@@ -50,7 +50,7 @@ function App() {
       <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
       <div className="main-content">
         <Header onNavigate={handleSectionChange} />
-        <main className={`content-area ${activeSection === 'chat' ? 'chat-active' : ''}`}>
+        <main className={`content-area ${activeSection === 'chat' ? 'chat-active' : ''} ${activeSection === 'space' ? 'space-active' : ''}`}>
           {activeSection !== 'chat' && (
             <Suspense fallback={<div className="loading">Cargando...</div>}>
               {renderSection()}

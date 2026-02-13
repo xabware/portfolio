@@ -11,14 +11,15 @@
     rgba(10, 10, 35, 1) 50%,
     rgba(5, 5, 20, 1) 100%
   );
-  /* NO usar touch-action: none aquí - bloquea la navegación */
 }
 
 .solar-system-container {
   width: 100%;
   height: 100%;
-  position: relative;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
+  touch-action: none;
 }
 
 /* Aplicar touch-action solo al canvas de Three.js */
@@ -401,7 +402,7 @@
   }
 
   .mobile-controls {
-    bottom: 70px; /* 60px de la barra de navegación + 10px margen */
+    bottom: 10px; /* El contenedor .space-active ya termina sobre la barra de navegación */
   }
 
   .planet-info-panel {
