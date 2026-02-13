@@ -390,13 +390,12 @@
 
 /* Ocultar instrucciones en movil */
 @media (max-width: 768px) {
-  .space-fullscreen {
-    bottom: 60px; /* Dejar espacio para la barra de navegación */
-    inset: 0 0 60px 0;
-  }
-  
   .desktop-only {
     display: none !important;
+  }
+
+  .mobile-controls {
+    bottom: 70px; /* 60px de la barra de navegación + 10px margen */
   }
 
   .planet-info-panel {
@@ -439,6 +438,10 @@
 
 /* Modo horizontal (landscape) - mantener mismos controles */
 @media (orientation: landscape) and (max-height: 500px) {
+  .desktop-only {
+    display: none !important;
+  }
+  
   .mobile-controls {
     padding: 10px 20px;
   }
