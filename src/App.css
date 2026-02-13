@@ -83,6 +83,10 @@
     right: 0;
     bottom: 60px;
     touch-action: none;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: auto;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   .section-content {

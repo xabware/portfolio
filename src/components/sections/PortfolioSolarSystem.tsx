@@ -15,10 +15,12 @@ function seededRandom(seed: number): () => number {
   };
 }
 
-// Detectar dispositivo móvil
-function isMobileDevice(): boolean {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-    (window.innerWidth <= 768 && 'ontouchstart' in window);
+// Detectar dispositivo táctil
+function isTouchDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  return ('ontouchstart' in window) || 
+    (navigator.maxTouchPoints > 0) || 
+    window.matchMedia('(pointer: coarse)').matches;
 }
 
 // Estado global para joysticks virtuales y botones
@@ -321,7 +323,7 @@ function SpaceshipControls() {
   const rotation = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
   const keys = useRef<Set<string>>(new Set());
   const initialized = useRef(false);
-  const isMobile = useRef(isMobileDevice());
+  const isMobile = useRef(isTouchDevice());
   
   const SPEED = 0.03;
   const FRICTION = 0.92;
@@ -424,14 +426,12 @@ function SpaceshipControls() {
   return null;
 }
 
-// HUD de la nave
+// HUD de la nave (fuera del Canvas para evitar interferencia con eventos táctiles)
 function SpaceshipHUD() {
   return (
-    <Html fullscreen>
-      <div className="spaceship-hud">
-        <div className="hud-crosshair">+</div>
-      </div>
-    </Html>
+    <div className="spaceship-hud">
+      <div className="hud-crosshair">+</div>
+    </div>
   );
 }
 
@@ -539,11 +539,11 @@ function VerticalButton({ direction, label }: VerticalButtonProps) {
 function MobileControls() {
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return isMobileDevice();
+    return isTouchDevice();
   });
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(isMobileDevice());
+    const handleResize = () => setIsMobile(isTouchDevice());
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -644,7 +644,6 @@ function SolarSystemScene({ planets, language, selectedPlanet, onSelectPlanet }:
       ))}
       
       <SpaceshipControls />
-      <SpaceshipHUD />
     </>
   );
 }
@@ -762,6 +761,7 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
         </Suspense>
       </Canvas>
 
+      <SpaceshipHUD />
       <MobileControls />
 
       {/* Panel de información del planeta seleccionado */}

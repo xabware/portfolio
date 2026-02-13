@@ -11,6 +11,22 @@
     rgba(10, 10, 35, 1) 50%,
     rgba(5, 5, 20, 1) 100%
   );
+  /* Prevenir selección de texto en toda la sección */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.space-fullscreen * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .solar-system-container {
@@ -19,7 +35,6 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  touch-action: none;
 }
 
 /* Aplicar touch-action solo al canvas de Three.js */
@@ -251,10 +266,10 @@
 
 /* HUD de la nave */
 .spaceship-hud {
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 1000;
+  z-index: 100; /* Menor que los controles móviles */
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
@@ -306,11 +321,11 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0; /* Ahora bottom:0 porque .space-fullscreen ya tiene margen inferior en móvil */
+  bottom: 0;
   top: auto;
   height: auto;
   pointer-events: none;
-  z-index: 300;
+  z-index: 500;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -331,6 +346,7 @@
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .joystick-knob {
@@ -375,6 +391,7 @@
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
