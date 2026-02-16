@@ -17,6 +17,8 @@ import { getProjects } from './projects';
 import { getSkillCategories, getAdditionalSkills } from './skills';
 import { getPersonalInfo, getExperiences, getEducation } from './about';
 
+const paragraphsToText = (paragraphs: readonly string[]) => paragraphs.join(' ');
+
 /**
  * Interfaz para contenido searchable
  */
@@ -108,7 +110,7 @@ ${context.projects.map((p, i) =>
   `${i + 1}. ${p.nombre}
    Descripción: ${p.descripcion}
    Tecnologías: ${p.tecnologias.join(', ')}
-   Overview: ${p.detalles.overview.substring(0, 200)}...`
+  Overview: ${paragraphsToText(p.detalles.overview).substring(0, 200)}...`
 ).join('\n\n')}
 
 INSTRUCCIONES:
@@ -151,7 +153,7 @@ ${context.projects.map((p, i) =>
   `${i + 1}. ${p.nombre}
    Description: ${p.descripcion}
    Technologies: ${p.tecnologias.join(', ')}
-   Overview: ${p.detalles.overview.substring(0, 200)}...`
+  Overview: ${paragraphsToText(p.detalles.overview).substring(0, 200)}...`
 ).join('\n\n')}
 
 INSTRUCTIONS:
@@ -221,7 +223,7 @@ export function generateSearchableContent(language: Language, translations: Reco
     content.push({
       section: 'projects',
       title: project.title,
-      content: `${project.title} ${project.description} ${project.detailedContent.overview} ${project.tech.join(' ')}`,
+      content: `${project.title} ${project.description} ${project.detailedContent.overview.join(' ')} ${project.tech.join(' ')}`,
       projectId: project.id,
     });
   });

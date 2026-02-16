@@ -22,9 +22,9 @@
  *   demo: 'https://tu-demo.com',
  *   details: {
  *     es: {
- *       overview: 'Descripción general del proyecto...',
- *       challenge: 'El desafío que resolviste...',
- *       solution: 'Cómo lo resolviste...',
+ *       overview: ['Descripción general del proyecto...'],
+ *       challenge: ['El desafío que resolviste...'],
+ *       solution: ['Cómo lo resolviste...'],
  *       features: [
  *         'Característica 1',
  *         'Característica 2',
@@ -35,9 +35,9 @@
  *       team: 'Proyecto personal',
  *     },
  *     en: {
- *       overview: 'Project overview...',
- *       challenge: 'The challenge you solved...',
- *       solution: 'How you solved it...',
+ *       overview: ['Project overview...'],
+ *       challenge: ['The challenge you solved...'],
+ *       solution: ['How you solved it...'],
  *       features: [
  *         'Feature 1',
  *         'Feature 2',
@@ -57,9 +57,9 @@ import type { Language } from '../contexts/LanguageContext';
 
 // Interfaz para el contenido detallado de un proyecto
 export interface ProjectDetails {
-  overview: string;
-  challenge: string;
-  solution: string;
+  overview: readonly string[];
+  challenge: readonly string[];
+  solution: readonly string[];
   features: readonly string[];
   techDetails: string;
   results: string;
@@ -123,9 +123,9 @@ export const projects: Project[] = [
     demo: 'https://xabware.github.io/portfolio',
     details: {
       es: {
-        overview: 'Este proyecto es una plantilla de portfolio diseñada para desarrolladores que buscan destacar en el mercado laboral. Combina un diseño de dashboard moderno con funcionalidades avanzadas como un chatbot con IA integrado que se ejecuta completamente en el navegador, soporte multilingüe (español/inglés), tema claro/oscuro, y una experiencia de usuario fluida y profesional.',
-        challenge: 'Crear un portfolio que no sea solo una página estática, sino una experiencia interactiva que demuestre habilidades técnicas reales. El mayor reto fue integrar un modelo de lenguaje que funcione localmente en el navegador sin depender de APIs externas, manteniendo al mismo tiempo un rendimiento óptimo y tiempos de carga rápidos.',
-        solution: 'Implementé una arquitectura modular con React y TypeScript que permite escalar fácilmente. Utilicé WebLLM para ejecutar modelos de IA directamente en el navegador aprovechando WebGPU. El sistema de traducciones está centralizado para facilitar la internacionalización, y el diseño responsivo garantiza una experiencia perfecta en cualquier dispositivo.',
+        overview: ['Este proyecto es una plantilla de portfolio diseñada para desarrolladores que buscan destacar en el mercado laboral. Combina un diseño de dashboard moderno con funcionalidades avanzadas como un chatbot con IA integrado que se ejecuta completamente en el navegador, soporte multilingüe (español/inglés), tema claro/oscuro, y una experiencia de usuario fluida y profesional.'],
+        challenge: ['Crear un portfolio que no sea solo una página estática, sino una experiencia interactiva que demuestre habilidades técnicas reales. El mayor reto fue integrar un modelo de lenguaje que funcione localmente en el navegador sin depender de APIs externas, manteniendo al mismo tiempo un rendimiento óptimo y tiempos de carga rápidos.'],
+        solution: ['Implementé una arquitectura modular con React y TypeScript que permite escalar fácilmente. Utilicé WebLLM para ejecutar modelos de IA directamente en el navegador aprovechando WebGPU. El sistema de traducciones está centralizado para facilitar la internacionalización, y el diseño responsivo garantiza una experiencia perfecta en cualquier dispositivo.'],
         features: [
           'Chatbot con IA ejecutándose localmente en el navegador (WebLLM)',
           'Diseño de dashboard moderno e intuitivo',
@@ -143,9 +143,9 @@ export const projects: Project[] = [
         team: 'Proyecto personal',
       },
       en: {
-        overview: 'This project is a portfolio template designed for developers looking to stand out in the job market. It combines a modern dashboard design with advanced features like an integrated AI chatbot that runs entirely in the browser, multilingual support (Spanish/English), light/dark theme, and a smooth, professional user experience.',
-        challenge: 'Create a portfolio that is not just a static page, but an interactive experience that demonstrates real technical skills. The biggest challenge was integrating a language model that works locally in the browser without relying on external APIs, while maintaining optimal performance and fast load times.',
-        solution: 'I implemented a modular architecture with React and TypeScript that scales easily. I used WebLLM to run AI models directly in the browser leveraging WebGPU. The translation system is centralized for easy internationalization, and the responsive design ensures a perfect experience on any device.',
+        overview: ['This project is a portfolio template designed for developers looking to stand out in the job market. It combines a modern dashboard design with advanced features like an integrated AI chatbot that runs entirely in the browser, multilingual support (Spanish/English), light/dark theme, and a smooth, professional user experience.'],
+        challenge: ['Create a portfolio that is not just a static page, but an interactive experience that demonstrates real technical skills. The biggest challenge was integrating a language model that works locally in the browser without relying on external APIs, while maintaining optimal performance and fast load times.'],
+        solution: ['I implemented a modular architecture with React and TypeScript that scales easily. I used WebLLM to run AI models directly in the browser leveraging WebGPU. The translation system is centralized for easy internationalization, and the responsive design ensures a perfect experience on any device.'],
         features: [
           'AI chatbot running locally in the browser (WebLLM)',
           'Modern and intuitive dashboard design',
@@ -168,40 +168,31 @@ export const projects: Project[] = [
     id: 2,
     title: {
       es: 'Medidor de Raíces',
-      en: 'Root Measurement App',
+      en: 'Root Measurement Tool',
     },
     description: {
-      es: 'Aplicación móvil para medición precisa de raíces mediante visión por computadora y marcadores ArUco',
-      en: 'Mobile application for precise root measurement using computer vision and ArUco markers',
+      es: 'Herramienta web para la medición de objetos en imágenes',
+      en: 'Web tool for precise measurement of objects in images',
     },
-    tech: ['Flutter', 'Dart', 'OpenCV', 'ArUco', 'Google Sheets API'],
-    github: 'https://github.com/xabware/medidor-raices',
-    demo: 'https://github.com/xabware/medidor-raices',
+    tech: ['React', 'Vite', 'ArUco', 'Visión artificial', 'Redes convolucionales'],
+    github: 'https://github.com/xabware/medidor',
+    demo: 'https://xabware.github.io/medidor/',
     details: {
       es: {
-        overview: 'Aplicación móvil desarrollada con Flutter para facilitar la medición precisa de raíces en estudios agrícolas y de botánica. Utiliza visión por computadora con OpenCV y marcadores ArUco para establecer una referencia de escala automática, permitiendo mediciones exactas sin necesidad de instrumentos físicos complejos. Incluye integración con Google Sheets para exportar datos automáticamente.',
-        challenge: 'Los métodos tradicionales de medición de raíces son lentos, propensos a errores humanos y requieren equipos especializados. El desafío era crear una solución móvil que pudiera realizar mediciones precisas usando solo la cámara del teléfono, con calibración automática de escala y procesamiento en tiempo real, sin depender de conexión a internet.',
-        solution: 'Implementé un sistema de visión por computadora usando opencv_dart que detecta automáticamente marcadores ArUco en las imágenes para establecer la escala real. El procesamiento se realiza completamente en el dispositivo, garantizando privacidad y funcionamiento offline. Los usuarios imprimen una hoja A4 con marcadores ArUco generados por la app, colocan las raíces sobre ella y capturan una foto. La app calcula automáticamente las mediciones reales.',
+        overview: ['Herramienta web para la medición de objetos en imágenes, fue planteada para simplificar la medición de raices en experimentos biológicos. Utiliza visión por computadora con OpenCV y marcadores ArUco para establecer una referencia de escala automática, permitiendo mediciones más rápidas y fiables que las manuales, además de sintetizar esta información en una hoja de excel.'],
+        challenge: ['Muchos expedimentos relacionados con el desarrollo de productos agrícolas o pesticidas, requieren la medición de raices para evaluar los efectos de compuestos sobre el desarrollo de las plantas. Esto supone un proceso en el cual se cultivan cientos de plantas con diferentes extractos, y luego se miden y se anotan manualmente raiz a raiz. Este proceso es lento, y además se tiene que hacer en un plazo de tiempo corto, ya que si se deja pasar tiempo entre mediciones, las condiciones en las que se han desarrollado las raices cambian mucho, y por tanto el experimento deja de servir'],
+        solution: ['El concepto de solución es simple. cultivar las semillas en bolsas zip planas con los extractos, y tomar fotografías de las mismas a contraluz, de forma que en las fotografías se distinga claramente las raices del sustrato translúcido sobre el que crecen. La herramienta web debe cargar esas fotografías, y una vez cargadas, una cómoda interfaz permite al usuario dibujar líneas sobre cada imagen. Cada línea es una medición, y se muestra a la derecha en un panel de mediciones.',' El usuario puede eliminar mediciones erróneas, modificar las existentes de este modo sobre una imagen con raices, acabará dibujando una línea que siga la trayectoria de cada raiz. además, en cada imagen, debe proporcionar una linea recta de referencia, marcando la referencia para esa imagen, e indicando el tamaño real de esta recta. En nuestro caso usamos el borde superior del rectángulo de sustrato, que siempre mide 12 cm. La web utiliza esta referencia, para determinar exactamente cuanto mide cada una de las líneas dibujadas, y al final, con un botón, descarga un excel con todas las mediciones estructuradas y etiquetadas acorde a los nombres de las imágenes.'],
         features: [
-          'Detección automática de marcadores ArUco para calibración de escala',
-          'Captura de imágenes desde cámara o galería',
-          'Procesamiento local de imágenes con OpenCV',
-          'Generador integrado de PDF con marcadores ArUco para imprimir',
-          'Historial de mediciones con fecha y hora',
-          'Exportación automática a Google Sheets mediante webhook',
-          'Interfaz intuitiva con Material Design 3',
-          'No requiere conexión a internet para medir (solo para exportar)',
-          'Soporte completo para Android y iOS',
         ],
-        techDetails: 'La aplicación está construida con Flutter 3 y utiliza opencv_dart para el procesamiento de imágenes. Los marcadores ArUco se detectan mediante detectores configurables, y el cálculo de escala se realiza en base al tamaño conocido de los marcadores (200mm). El paquete pdf genera documentos para imprimir los marcadores, y la integración con Google Sheets se logra mediante HTTP requests a un Google Apps Script desplegado como webhook. El estado se gestiona con StatefulWidgets y shared_preferences para persistencia local.',
-        results: 'Una herramienta práctica que simplifica significativamente el proceso de medición de raíces en campo. Elimina la necesidad de equipos costosos y reduce el tiempo de medición en más del 60%. La precisión alcanzada es comparable a métodos tradicionales. La integración con Google Sheets permite análisis de datos inmediato. Ideal para investigadores, estudiantes y profesionales de agricultura.',
-        date: '2024',
+        techDetails: '',
+        results: '',
+        date: '2026',
         team: 'Proyecto personal',
       },
       en: {
-        overview: 'Mobile application developed with Flutter to facilitate precise root measurement in agricultural and botanical studies. Uses computer vision with OpenCV and ArUco markers to establish automatic scale reference, enabling exact measurements without complex physical instruments. Includes Google Sheets integration for automatic data export.',
-        challenge: 'Traditional root measurement methods are slow, prone to human error, and require specialized equipment. The challenge was to create a mobile solution that could perform accurate measurements using only the phone camera, with automatic scale calibration and real-time processing, without depending on internet connection.',
-        solution: 'I implemented a computer vision system using opencv_dart that automatically detects ArUco markers in images to establish the real scale. Processing is done entirely on the device, ensuring privacy and offline functionality. Users print an A4 sheet with ArUco markers generated by the app, place the roots on it, and capture a photo. The app automatically calculates the real measurements.',
+        overview: ['Mobile application developed with Flutter to facilitate precise root measurement in agricultural and botanical studies. Uses computer vision with OpenCV and ArUco markers to establish automatic scale reference, enabling exact measurements without complex physical instruments. Includes Google Sheets integration for automatic data export.'],
+        challenge: ['Traditional root measurement methods are slow, prone to human error, and require specialized equipment. The challenge was to create a mobile solution that could perform accurate measurements using only the phone camera, with automatic scale calibration and real-time processing, without depending on internet connection.'],
+        solution: ['I implemented a computer vision system using opencv_dart that automatically detects ArUco markers in images to establish the real scale. Processing is done entirely on the device, ensuring privacy and offline functionality. Users print an A4 sheet with ArUco markers generated by the app, place the roots on it, and capture a photo. The app automatically calculates the real measurements.'],
         features: [
           'Automatic ArUco marker detection for scale calibration',
           'Image capture from camera or gallery',
@@ -235,9 +226,9 @@ export const projects: Project[] = [
     demo: 'https://github.com/xabware/mapa-procedural',
     details: {
       es: {
-        overview: 'Un proyecto de visualización interactiva que implementa un sistema de mundo infinito con generación procedural de terreno. Utiliza el algoritmo de ruido Perlin para crear paisajes coherentes y naturales que se generan dinámicamente mientras el usuario explora. El mapa está dividido en chunks que se cargan bajo demanda, permitiendo una exploración fluida sin límites.',
-        challenge: 'Crear un sistema de mapa infinito requiere resolver varios desafíos técnicos: generar terreno que sea consistente y reproducible, gestionar eficientemente la memoria usando un sistema de chunks, mantener el rendimiento con múltiples chunks en pantalla, y proporcionar una experiencia de navegación suave. Todo esto mientras se mantiene el código simple y mantenible.',
-        solution: 'Implementé un sistema de chunks de 16x16 tiles con generación procedural basada en ruido Perlin. Cada chunk tiene coordenadas únicas que se usan como semilla para el generador, garantizando que el mismo chunk siempre genere el mismo terreno. El sistema carga y descarga chunks dinámicamente según la posición del viewport. La navegación se maneja con eventos de arrastre del mouse, proporcionando una experiencia intuitiva similar a Google Maps.',
+        overview: ['Un proyecto de visualización interactiva que implementa un sistema de mundo infinito con generación procedural de terreno. Utiliza el algoritmo de ruido Perlin para crear paisajes coherentes y naturales que se generan dinámicamente mientras el usuario explora. El mapa está dividido en chunks que se cargan bajo demanda, permitiendo una exploración fluida sin límites.'],
+        challenge: ['Crear un sistema de mapa infinito requiere resolver varios desafíos técnicos: generar terreno que sea consistente y reproducible, gestionar eficientemente la memoria usando un sistema de chunks, mantener el rendimiento con múltiples chunks en pantalla, y proporcionar una experiencia de navegación suave. Todo esto mientras se mantiene el código simple y mantenible.'],
+        solution: ['Implementé un sistema de chunks de 16x16 tiles con generación procedural basada en ruido Perlin. Cada chunk tiene coordenadas únicas que se usan como semilla para el generador, garantizando que el mismo chunk siempre genere el mismo terreno. El sistema carga y descarga chunks dinámicamente según la posición del viewport. La navegación se maneja con eventos de arrastre del mouse, proporcionando una experiencia intuitiva similar a Google Maps.'],
         features: [
           'Mapa verdaderamente infinito en todas direcciones',
           'Generación procedural con algoritmo de ruido Perlin',
@@ -255,9 +246,9 @@ export const projects: Project[] = [
         team: 'Proyecto personal',
       },
       en: {
-        overview: 'An interactive visualization project that implements an infinite world system with procedural terrain generation. Uses the Perlin noise algorithm to create coherent and natural landscapes that generate dynamically as the user explores. The map is divided into chunks that load on demand, allowing smooth exploration without limits.',
-        challenge: 'Creating an infinite map system requires solving several technical challenges: generating terrain that is consistent and reproducible, efficiently managing memory using a chunk system, maintaining performance with multiple chunks on screen, and providing a smooth navigation experience. All while keeping the code simple and maintainable.',
-        solution: 'I implemented a 16x16 tile chunk system with procedural generation based on Perlin noise. Each chunk has unique coordinates used as a seed for the generator, ensuring the same chunk always generates the same terrain. The system dynamically loads and unloads chunks based on viewport position. Navigation is handled with mouse drag events, providing an intuitive experience similar to Google Maps.',
+        overview: ['An interactive visualization project that implements an infinite world system with procedural terrain generation. Uses the Perlin noise algorithm to create coherent and natural landscapes that generate dynamically as the user explores. The map is divided into chunks that load on demand, allowing smooth exploration without limits.'],
+        challenge: ['Creating an infinite map system requires solving several technical challenges: generating terrain that is consistent and reproducible, efficiently managing memory using a chunk system, maintaining performance with multiple chunks on screen, and providing a smooth navigation experience. All while keeping the code simple and maintainable.'],
+        solution: ['I implemented a 16x16 tile chunk system with procedural generation based on Perlin noise. Each chunk has unique coordinates used as a seed for the generator, ensuring the same chunk always generates the same terrain. The system dynamically loads and unloads chunks based on viewport position. Navigation is handled with mouse drag events, providing an intuitive experience similar to Google Maps.'],
         features: [
           'Truly infinite map in all directions',
           'Procedural generation with Perlin noise algorithm',

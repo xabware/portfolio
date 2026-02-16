@@ -169,6 +169,7 @@ interface PlanetProps {
   language: Language;
   cameraPosition: THREE.Vector3;
   onSelect: (planet: PlanetData | null) => void;
+  onLabelAction: (planet: PlanetData, cameraPos: THREE.Vector3) => void;
   selectedPlanet: PlanetData | null;
   onPositionUpdate?: (position: THREE.Vector3) => void;
 }
@@ -501,19 +502,15 @@ function getInitialAngle(id: string): number {
 }
 
 // Componente del Planeta con LOD (Level of Detail)
-function Planet({ data, language, cameraPosition, onSelect, selectedPlanet, onPositionUpdate }: PlanetProps) {
+function Planet({ data, language, cameraPosition, onSelect, onLabelAction, selectedPlanet, onPositionUpdate }: PlanetProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   const [angle, setAngle] = useState(() => getInitialAngle(data.id));
-  const [showDetails, setShowDetails] = useState(false);
   
   // Seed único para cada planeta basado en su id
   const planetSeed = useMemo(() => {
     return data.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   }, [data.id]);
-  
-  // Umbral de distancia para mostrar detalles (tarjeta expandida)
-  const detailsThreshold = data.size * 6;
   
   useFrame(() => {
     // Órbita
@@ -527,16 +524,33 @@ function Planet({ data, language, cameraPosition, onSelect, selectedPlanet, onPo
       if (onPositionUpdate) {
         onPositionUpdate(groupRef.current.position.clone());
       }
-      
-      // Calcular distancia a la cámara
-      const dist = cameraPosition.distanceTo(groupRef.current.position);
-      setShowDetails(dist < detailsThreshold);
     }
   });
 
   const handleClick = useCallback(() => {
     onSelect(selectedPlanet?.id === data.id ? null : data);
   }, [data, onSelect, selectedPlanet]);
+
+  const handleLabelClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onLabelAction(data, cameraPosition.clone());
+  }, [cameraPosition, data, onLabelAction]);
+
+  const labelActionText = useMemo(() => {
+    if (data.id === 'projects') {
+      return language === 'es' ? 'Ver destacados' : 'View featured';
+    }
+    if (data.id === 'experience') {
+      return language === 'es' ? 'Ver cronología' : 'View timeline';
+    }
+    if (data.id === 'education') {
+      return language === 'es' ? 'Aterrizar' : 'Land now';
+    }
+    if (data.id === 'skills') {
+      return language === 'es' ? 'Top habilidades' : 'Top skills';
+    }
+    return language === 'es' ? 'Abrir' : 'Open';
+  }, [data.id, language]);
 
   return (
     <group ref={groupRef}>
@@ -581,14 +595,21 @@ function Planet({ data, language, cameraPosition, onSelect, selectedPlanet, onPo
         </group>
       )}
       
-      {/* Nombre del planeta con Html para mejor rendimiento */}
+      {/* Etiqueta interactiva del planeta */}
       <Html
         center
         distanceFactor={15}
         position={[0, data.size + 3, 0]}
-        style={{ pointerEvents: 'none' }}
       >
-        <div className="planet-name-label">{data.name[language]}</div>
+        <button
+          type="button"
+          className="planet-name-label"
+          onClick={handleLabelClick}
+          aria-label={`${data.name[language]} - ${labelActionText}`}
+        >
+          <span className="planet-name-main">{data.name[language]}</span>
+          <span className="planet-name-action">{labelActionText}</span>
+        </button>
       </Html>
       
       {/* Luz del planeta */}
@@ -597,29 +618,6 @@ function Planet({ data, language, cameraPosition, onSelect, selectedPlanet, onPo
       {/* Satélites decorativos (siempre visibles) */}
       <PlanetSatellites planetSize={data.size} planetSeed={planetSeed} color={data.color} />
       
-      {/* Tarjeta flotante con información (siempre visible) */}
-      <Html
-        center
-        distanceFactor={8}
-        position={[data.size + 6, data.size * 0.3, 0]}
-        style={{ pointerEvents: 'none' }}
-      >
-        <div className={`planet-details-popup planet-floating-card ${showDetails ? 'expanded' : ''}`}>
-          <h3>{data.name[language]}</h3>
-          <p className="planet-description">{data.description[language]}</p>
-          <div className="planet-items-preview">
-            {data.items.slice(0, showDetails ? 5 : 3).map((item, idx) => (
-              <div key={idx} className="planet-item-mini">
-                <span className="item-dot" style={{ background: data.color }}></span>
-                <span>{item.title}</span>
-              </div>
-            ))}
-            {data.items.length > (showDetails ? 5 : 3) && (
-              <p className="more-items">+{data.items.length - (showDetails ? 5 : 3)} {language === 'es' ? 'más' : 'more'}</p>
-            )}
-          </div>
-        </div>
-      </Html>
     </group>
   );
 }
@@ -1680,48 +1678,89 @@ function generateSurfacePositions(
 // Árboles para planetas terrestres organizados en bosques
 function SurfaceTrees({ radius, seed, config }: { radius: number; seed: number; config: SurfaceConfig }) {
   const trees = useMemo(() => {
-    // Generar muchas más posiciones candidatas
-    const allPositions = generateSurfacePositions(600, radius, seed + 1000, seed, 0.4, config);
-    
-    // Filtrar usando ruido para crear zonas de bosques
-    const forestPositions = allPositions.filter(pos => {
-      const nx = pos.x / radius;
-      const ny = pos.y / radius;
-      const nz = pos.z / radius;
-      
-      // Ruido de baja frecuencia para definir zonas de bosque
-      const forestNoise = fbm(nx * 3, ny * 3, nz * 3, 2, seed + 500);
-      // Umbral alto = bosques más densos en algunas zonas, ausentes en otras
-      return forestNoise > 0.45;
-    });
-    
-    return forestPositions.slice(0, 150);
+    // Muchos más candidatos para poder rellenar casi por completo las manchas de bosque
+    const allPositions = generateSurfacePositions(7800, radius, seed + 1000, seed, 0.24, config);
+
+    // Evitar árboles bajo agua
+    const waterHeight = config.hasWater
+      ? radius + (config.waterLevel - 0.4) * config.heightScale * 2
+      : -Infinity;
+    const landPositions = allPositions.filter(pos => pos.length() > waterHeight + 0.35);
+
+    // Crear núcleos de bosque deterministas para concentrar la masa arbórea
+    const random = seededRandom(seed + 4200);
+    const clusterCenters: THREE.Vector3[] = [];
+    const clusterCount = Math.min(30, Math.max(16, Math.floor(landPositions.length / 100)));
+
+    for (let i = 0; i < clusterCount; i++) {
+      if (landPositions.length === 0) break;
+      const index = Math.floor(random() * landPositions.length);
+      clusterCenters.push(landPositions[index].clone().normalize());
+    }
+
+    const smoothstep = (edge0: number, edge1: number, x: number) => {
+      const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+      return t * t * (3 - 2 * t);
+    };
+
+    const rankedForestPositions = landPositions
+      .map(pos => {
+        const nPos = pos.clone().normalize();
+        const nx = nPos.x;
+        const ny = nPos.y;
+        const nz = nPos.z;
+
+        const macroForest = fbm(nx * 1.8, ny * 1.8, nz * 1.8, 3, seed + 500);
+        const localDensity = fbm(nx * 9.5, ny * 9.5, nz * 9.5, 2, seed + 1500);
+        const clearings = ridgedNoise(nx * 4.2, ny * 4.2, nz * 4.2, 2, seed + 2500);
+
+        let nearestCenterDot = -1;
+        for (let i = 0; i < clusterCenters.length; i++) {
+          const d = nPos.dot(clusterCenters[i]);
+          if (d > nearestCenterDot) nearestCenterDot = d;
+        }
+
+        // Mantener manchas bien marcadas y muy llenas
+        const clusterInfluence = smoothstep(0.978, 0.9978, nearestCenterDot);
+        const densityScore = clusterInfluence * 1.1 + macroForest * 0.2 + localDensity * 0.18 - clearings * 0.08;
+
+        return { pos, densityScore, clusterInfluence, macroForest };
+      })
+      .filter(({ densityScore, clusterInfluence, macroForest }) => (
+        clusterInfluence > 0.12 && macroForest > 0.36 && densityScore > 0.4
+      ))
+      .sort((a, b) => b.densityScore - a.densityScore);
+
+    return rankedForestPositions.slice(0, 2600).map(({ pos }) => pos);
   }, [radius, seed, config]);
   
   return (
     <group>
       {trees.map((pos, i) => {
         const random = seededRandom(seed + i);
-        const scale = 0.3 + random() * 0.5;
+        const scale = (0.3 + random() * 0.5) * 2;
         const treeType = random() > 0.5;
+        const trunkHeight = scale * 1.45;
+        const rootSink = trunkHeight * 0.2;
         
         const normal = pos.clone().normalize();
+        const rootedPosition = pos.clone().addScaledVector(normal, -rootSink);
         const quaternion = new THREE.Quaternion();
         quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
         
         return (
-          <group key={i} position={pos} quaternion={quaternion}>
-            <mesh position={[0, scale * 0.5, 0]}>
-              <cylinderGeometry args={[scale * 0.1, scale * 0.15, scale, 6]} />
+          <group key={i} position={rootedPosition} quaternion={quaternion}>
+            <mesh position={[0, trunkHeight * 0.5, 0]}>
+              <cylinderGeometry args={[scale * 0.12, scale * 0.18, trunkHeight, 6]} />
               <meshStandardMaterial color="#5d4037" roughness={0.9} />
             </mesh>
             {treeType ? (
-              <mesh position={[0, scale * 1.2, 0]}>
+              <mesh position={[0, trunkHeight * 1.05, 0]}>
                 <coneGeometry args={[scale * 0.6, scale * 1.5, 6]} />
                 <meshStandardMaterial color="#2e7d32" roughness={0.8} />
               </mesh>
             ) : (
-              <mesh position={[0, scale * 1.3, 0]}>
+              <mesh position={[0, trunkHeight * 1.1, 0]}>
                 <dodecahedronGeometry args={[scale * 0.7, 1]} />
                 <meshStandardMaterial color="#388e3c" roughness={0.7} />
               </mesh>
@@ -1975,34 +2014,506 @@ function GasCloudFormations({ radius, seed }: { radius: number; seed: number }) 
   );
 }
 
-// Gran tormenta (como la Gran Mancha Roja)
-function GiantStorm({ radius, seed }: { radius: number; seed: number }) {
-  const stormRef = useRef<THREE.Mesh>(null);
-  
-  useFrame(({ clock }) => {
-    if (stormRef.current) {
-      stormRef.current.rotation.z = clock.elapsedTime * 0.5;
+interface StormInstance {
+  id: number;
+  normal: THREE.Vector3;
+  altitude: number;
+  cloudRadius: number;
+  cloudCount: number;
+  rainCount: number;
+  spinSpeed: number;
+  lightningRate: number;
+  lightningRange: number;
+  lightningPower: number;
+  expiresAt: number;
+  seed: number;
+}
+
+function randomRange(min: number, max: number) {
+  return min + Math.random() * (max - min);
+}
+
+function randomDirection() {
+  const phi = Math.acos(1 - 2 * Math.random());
+  const theta = Math.random() * Math.PI * 2;
+  return new THREE.Vector3(
+    Math.sin(phi) * Math.cos(theta),
+    Math.cos(phi),
+    Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+function createStormInstance(
+  id: number,
+  now: number,
+  radius: number,
+  seedBase: number,
+  config: SurfaceConfig
+): StormInstance {
+  const isGas = config.planetType === 'gas_giant';
+  const isVolcanic = config.planetType === 'volcanic';
+
+  const lifeSeconds = config.planetType === 'terrestrial'
+    ? randomRange(130, 250)
+    : randomRange(180, 320);
+
+  return {
+    id,
+    normal: randomDirection(),
+    altitude: radius + randomRange(14, isGas ? 24 : 18),
+    cloudRadius: isGas ? randomRange(10, 16) : isVolcanic ? randomRange(9, 13) : randomRange(8, 12),
+    cloudCount: isGas ? Math.floor(randomRange(12, 18)) : Math.floor(randomRange(9, 14)),
+    rainCount: isGas ? Math.floor(randomRange(90, 140)) : isVolcanic ? Math.floor(randomRange(70, 110)) : Math.floor(randomRange(60, 95)),
+    spinSpeed: randomRange(0.04, 0.12),
+    lightningRate: isGas ? randomRange(0.15, 0.3) : isVolcanic ? randomRange(0.11, 0.24) : randomRange(0.08, 0.18),
+    lightningRange: isGas ? 55 : isVolcanic ? 48 : 42,
+    lightningPower: isGas ? 7.5 : isVolcanic ? 6.5 : 5.8,
+    expiresAt: now + lifeSeconds,
+    seed: seedBase + id * 97
+  };
+}
+
+function StormVisual({ storm, config }: { storm: StormInstance; config: SurfaceConfig }) {
+  const stormGroupRef = useRef<THREE.Group>(null);
+  const rainGeometryRef = useRef<THREE.BufferGeometry | null>(null);
+  const rainPositionsRef = useRef<Float32Array>(new Float32Array(0));
+  const rainVelocityRef = useRef<Float32Array>(new Float32Array(0));
+  const lightningCooldownRef = useRef(randomRange(2, 8));
+  const lightningFlashRef = useRef(0);
+  const lightningRef = useRef<THREE.PointLight>(null);
+
+  const cloudColor = useMemo(() => {
+    if (config.planetType === 'volcanic') return '#4a2b1a';
+    if (config.planetType === 'gas_giant') return '#cfb184';
+    return '#f2f6ff';
+  }, [config.planetType]);
+
+  const rainColor = config.planetType === 'volcanic' ? '#ff9c5f' : '#9dd6ff';
+
+  const cloudBlobs = useMemo(() => {
+    const random = seededRandom(storm.seed + 1000);
+    const blobs: { x: number; y: number; z: number; scale: number; opacity: number }[] = [];
+
+    for (let i = 0; i < storm.cloudCount; i++) {
+      const radial = storm.cloudRadius * Math.pow(random(), 0.7);
+      const angle = random() * Math.PI * 2;
+      const x = Math.cos(angle) * radial;
+      const z = Math.sin(angle) * radial;
+      const y = randomRange(-0.8, 1.4) + random() * 1.2;
+
+      blobs.push({
+        x,
+        y,
+        z,
+        scale: randomRange(2.2, 5.3),
+        opacity: randomRange(0.35, 0.68)
+      });
+    }
+
+    return blobs;
+  }, [storm.cloudCount, storm.cloudRadius, storm.seed]);
+
+  useEffect(() => {
+    const random = seededRandom(storm.seed + 3000);
+    const positions = new Float32Array(storm.rainCount * 3);
+    const velocities = new Float32Array(storm.rainCount);
+    const rainHeight = storm.cloudRadius * 2.8;
+    const rainSpread = storm.cloudRadius * 0.95;
+
+    for (let i = 0; i < storm.rainCount; i++) {
+      const index = i * 3;
+      const radial = rainSpread * Math.sqrt(random());
+      const angle = random() * Math.PI * 2;
+
+      positions[index] = Math.cos(angle) * radial;
+      positions[index + 1] = -random() * rainHeight;
+      positions[index + 2] = Math.sin(angle) * radial;
+      velocities[i] = 6 + random() * 6;
+    }
+
+    rainPositionsRef.current = positions;
+    rainVelocityRef.current = velocities;
+
+    if (rainGeometryRef.current) {
+      rainGeometryRef.current.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      rainGeometryRef.current.computeBoundingSphere();
+    }
+  }, [storm.rainCount, storm.cloudRadius, storm.seed]);
+
+  useFrame((_, delta) => {
+    if (stormGroupRef.current) {
+      stormGroupRef.current.rotation.y += storm.spinSpeed * delta;
+    }
+
+    const geometry = rainGeometryRef.current;
+    const positions = rainPositionsRef.current;
+    const velocities = rainVelocityRef.current;
+    if (geometry && positions.length > 0 && velocities.length > 0) {
+      const rainHeight = storm.cloudRadius * 2.8;
+      const topY = storm.cloudRadius * 0.4;
+
+      for (let i = 0; i < velocities.length; i++) {
+        const index = i * 3 + 1;
+        positions[index] -= velocities[i] * delta;
+        if (positions[index] < -rainHeight) {
+          positions[index] = topY;
+        }
+      }
+
+      const attr = geometry.getAttribute('position') as THREE.BufferAttribute;
+      attr.needsUpdate = true;
+    }
+
+    lightningCooldownRef.current -= delta;
+    if (lightningCooldownRef.current <= 0) {
+      if (Math.random() < storm.lightningRate) {
+        lightningFlashRef.current = randomRange(0.9, 1.6);
+      }
+      lightningCooldownRef.current = randomRange(1.5, 7.5);
+    }
+
+    lightningFlashRef.current = Math.max(0, lightningFlashRef.current - delta * 4.5);
+    if (lightningRef.current) {
+      lightningRef.current.intensity = lightningFlashRef.current * storm.lightningPower;
     }
   });
-  
-  const random = seededRandom(seed + 8000);
-  const lat = (random() - 0.5) * 0.6;
-  const lon = random() * Math.PI * 2;
-  
-  const x = Math.cos(lat) * Math.cos(lon) * radius * 1.015;
-  const y = Math.sin(lat) * radius * 1.015;
-  const z = Math.cos(lat) * Math.sin(lon) * radius * 1.015;
-  
-  const pos = new THREE.Vector3(x, y, z);
-  const normal = pos.clone().normalize();
-  const quaternion = new THREE.Quaternion();
-  quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
-  
+
+  const stormPosition = useMemo(
+    () => storm.normal.clone().multiplyScalar(storm.altitude),
+    [storm]
+  );
+  const stormQuaternion = useMemo(() => {
+    const q = new THREE.Quaternion();
+    q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), storm.normal);
+    return q;
+  }, [storm.normal]);
+
   return (
-    <mesh ref={stormRef} position={pos} quaternion={quaternion}>
-      <torusGeometry args={[5, 2, 8, 16]} />
-      <meshStandardMaterial color="#a33a1d" roughness={0.8} />
-    </mesh>
+    <group position={stormPosition} quaternion={stormQuaternion}>
+      <group ref={stormGroupRef}>
+        {cloudBlobs.map((blob, i) => (
+          <mesh key={i} position={[blob.x, blob.y, blob.z]} scale={[blob.scale, blob.scale * 0.62, blob.scale * 0.9]}>
+            <sphereGeometry args={[1, 10, 8]} />
+            <meshStandardMaterial
+              color={cloudColor}
+              roughness={0.95}
+              metalness={0.02}
+              transparent
+              opacity={blob.opacity}
+              depthWrite={false}
+            />
+          </mesh>
+        ))}
+
+        <points position={[0, -storm.cloudRadius * 0.15, 0]}>
+          <bufferGeometry ref={rainGeometryRef} />
+          <pointsMaterial
+            color={rainColor}
+            size={config.planetType === 'gas_giant' ? 0.2 : 0.16}
+            transparent
+            opacity={0.75}
+            depthWrite={false}
+          />
+        </points>
+
+        <pointLight
+          ref={lightningRef}
+          color="#d7ebff"
+          intensity={0}
+          distance={storm.lightningRange}
+          decay={1.2}
+          position={[0, 1.6, 0]}
+        />
+      </group>
+    </group>
+  );
+}
+
+function PlanetaryStorms({ radius, seed, config }: { radius: number; seed: number; config: SurfaceConfig }) {
+  const [storms, setStorms] = useState<StormInstance[]>([]);
+  const nextIdRef = useRef(1);
+  const nextTerrestrialSpawnRef = useRef(randomRange(20, 70));
+
+  const mode = config.planetType;
+
+  useEffect(() => {
+    nextIdRef.current = 1;
+    nextTerrestrialSpawnRef.current = randomRange(20, 70);
+
+    if (mode === 'volcanic') {
+      const now = 0;
+      setStorms([
+        createStormInstance(nextIdRef.current++, now, radius, seed, config),
+        createStormInstance(nextIdRef.current++, now, radius, seed, config)
+      ]);
+      return;
+    }
+
+    if (mode === 'gas_giant') {
+      const now = 0;
+      const stormBatch: StormInstance[] = [];
+      for (let i = 0; i < 8; i++) {
+        stormBatch.push(createStormInstance(nextIdRef.current++, now, radius, seed, config));
+      }
+      setStorms(stormBatch);
+      return;
+    }
+
+    if (mode === 'terrestrial') {
+      setStorms([]);
+      return;
+    }
+
+    setStorms([]);
+  }, [mode, radius, seed, config]);
+
+  useFrame(({ clock }, delta) => {
+    const now = clock.elapsedTime;
+
+    if (mode === 'terrestrial') {
+      if (storms.length === 0) {
+        nextTerrestrialSpawnRef.current -= delta;
+        if (nextTerrestrialSpawnRef.current <= 0) {
+          const storm = createStormInstance(nextIdRef.current++, now, radius, seed, config);
+          setStorms([storm]);
+        }
+      } else {
+        const active = storms[0];
+        if (now >= active.expiresAt) {
+          setStorms([]);
+          nextTerrestrialSpawnRef.current = randomRange(35, 95);
+        }
+      }
+      return;
+    }
+
+    if (mode === 'volcanic' || mode === 'gas_giant') {
+      const minimumCount = mode === 'volcanic' ? 2 : 8;
+
+      let hasExpired = false;
+      const refreshed = storms.map(storm => {
+        if (now >= storm.expiresAt) {
+          hasExpired = true;
+          return createStormInstance(nextIdRef.current++, now, radius, seed, config);
+        }
+        return storm;
+      });
+
+      if (hasExpired || refreshed.length < minimumCount) {
+        const fixed = [...refreshed];
+        while (fixed.length < minimumCount) {
+          fixed.push(createStormInstance(nextIdRef.current++, now, radius, seed, config));
+        }
+        setStorms(fixed.slice(0, minimumCount));
+      }
+    }
+  });
+
+  if (!config.hasAtmosphere || (mode !== 'terrestrial' && mode !== 'volcanic' && mode !== 'gas_giant')) {
+    return null;
+  }
+
+  return (
+    <group>
+      {storms.map(storm => (
+        <StormVisual key={storm.id} storm={storm} config={config} />
+      ))}
+    </group>
+  );
+}
+
+function GasGiantSkyRings({ radius }: { radius: number }) {
+  const ringsRef = useRef<THREE.Group>(null);
+
+  useFrame(({ clock }) => {
+    if (ringsRef.current) {
+      ringsRef.current.rotation.z = Math.sin(clock.elapsedTime * 0.05) * 0.02;
+      ringsRef.current.rotation.y += 0.00025;
+    }
+  });
+
+  return (
+    <group ref={ringsRef} rotation={[Math.PI / 2.7, 0, 0.34]}>
+      <mesh>
+        <ringGeometry args={[radius * 1.52, radius * 1.72, 128]} />
+        <meshBasicMaterial
+          color="#d8bf92"
+          transparent
+          opacity={0.23}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh>
+        <ringGeometry args={[radius * 1.78, radius * 2.02, 128]} />
+        <meshBasicMaterial
+          color="#bea06f"
+          transparent
+          opacity={0.19}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh>
+        <ringGeometry args={[radius * 2.06, radius * 2.24, 128]} />
+        <meshBasicMaterial
+          color="#e5d0a6"
+          transparent
+          opacity={0.14}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+function PolarSkyStructures({ radius, seed }: { radius: number; seed: number }) {
+  const { camera } = useThree();
+  const northLightRef = useRef<THREE.PointLight>(null);
+  const southLightRef = useRef<THREE.PointLight>(null);
+  const meshRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const materialRefs = useRef<(THREE.MeshStandardMaterial | null)[]>([]);
+
+  const palette = useMemo(() => {
+    return [new THREE.Color('#b03bff'), new THREE.Color('#47ff6f'), new THREE.Color('#ff2b57')];
+  }, []);
+
+  const structures = useMemo(() => {
+    const random = seededRandom(seed + 9700);
+    const items: {
+      pole: 'north' | 'south';
+      y: number;
+      innerRadius: number;
+      outerRadius: number;
+      tiltX: number;
+      tiltZ: number;
+      phase: number;
+      speed: number;
+      rotationY: number;
+    }[] = [];
+
+    const buildPole = (pole: 'north' | 'south') => {
+      const poleSign = pole === 'north' ? 1 : -1;
+      for (let i = 0; i < 4; i++) {
+        const innerRadius = radius * randomRange(0.32, 0.52);
+        const thickness = radius * randomRange(0.05, 0.09);
+
+        items.push({
+          pole,
+          y: poleSign * radius * randomRange(1.95, 2.25),
+          innerRadius,
+          outerRadius: innerRadius + thickness,
+          tiltX: randomRange(-0.2, 0.2),
+          tiltZ: randomRange(-0.22, 0.22),
+          phase: random() * Math.PI * 2,
+          speed: randomRange(0.45, 1.1),
+          rotationY: random() * Math.PI * 2
+        });
+      }
+    };
+
+    buildPole('north');
+    buildPole('south');
+    return items;
+  }, [radius, seed]);
+
+  const smoothstep = useCallback((edge0: number, edge1: number, value: number) => {
+    const t = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
+    return t * t * (3 - 2 * t);
+  }, []);
+
+  useFrame(({ clock }, delta) => {
+    const t = clock.elapsedTime;
+    const cameraY = camera.position.clone().normalize().y;
+    const northVisibility = smoothstep(0.35, 0.72, cameraY);
+    const southVisibility = smoothstep(0.35, 0.72, -cameraY);
+
+    structures.forEach((structure, index) => {
+      const mesh = meshRefs.current[index];
+      const material = materialRefs.current[index];
+      if (!mesh || !material) return;
+
+      const wave = 1 + 0.15 * Math.sin(t * structure.speed + structure.phase);
+      mesh.scale.setScalar(wave);
+      mesh.rotation.y += delta * (0.06 + structure.speed * 0.03);
+
+      const cycle = (t * 0.22 + structure.phase * 0.18) % 3;
+      const fromIndex = Math.floor(cycle);
+      const toIndex = (fromIndex + 1) % 3;
+      const blend = cycle - fromIndex;
+
+      const dynamicColor = new THREE.Color().lerpColors(palette[fromIndex], palette[toIndex], blend);
+      material.color.copy(dynamicColor);
+      material.emissive.copy(dynamicColor);
+      material.emissiveIntensity = 0.95;
+      const visibility = structure.pole === 'north' ? northVisibility : southVisibility;
+      material.opacity = visibility * (0.42 + 0.22 * Math.sin(t * 1.2 + structure.phase));
+    });
+
+    const lightCycle = (t * 0.2) % 3;
+    const fromIndex = Math.floor(lightCycle);
+    const toIndex = (fromIndex + 1) % 3;
+    const blend = lightCycle - fromIndex;
+    const lightColor = new THREE.Color().lerpColors(palette[fromIndex], palette[toIndex], blend);
+
+    if (northLightRef.current) {
+      northLightRef.current.color.copy(lightColor);
+      northLightRef.current.intensity = northVisibility * (3 + Math.sin(t * 1.1) * 0.8);
+    }
+    if (southLightRef.current) {
+      southLightRef.current.color.copy(lightColor);
+      southLightRef.current.intensity = southVisibility * (3 + Math.cos(t * 1.1) * 0.8);
+    }
+  });
+
+  return (
+    <group>
+      {structures.map((structure, index) => (
+        <mesh
+          key={index}
+          ref={mesh => {
+            meshRefs.current[index] = mesh;
+          }}
+          position={[0, structure.y, 0]}
+          rotation={[Math.PI / 2 + structure.tiltX, structure.rotationY, structure.tiltZ]}
+        >
+          <ringGeometry args={[structure.innerRadius, structure.outerRadius, 96]} />
+          <meshStandardMaterial
+            ref={material => {
+              materialRefs.current[index] = material;
+            }}
+            color="#b03bff"
+            emissive="#b03bff"
+            emissiveIntensity={0.9}
+            metalness={0.7}
+            roughness={0.3}
+            transparent
+            opacity={0}
+            side={THREE.DoubleSide}
+            fog={false}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+
+      <pointLight
+        ref={northLightRef}
+        color="#b03bff"
+        intensity={0}
+        distance={radius * 2.2}
+        decay={1.4}
+        position={[0, radius * 2.08, 0]}
+      />
+      <pointLight
+        ref={southLightRef}
+        color="#b03bff"
+        intensity={0}
+        distance={radius * 2.2}
+        decay={1.4}
+        position={[0, -radius * 2.08, 0]}
+      />
+    </group>
   );
 }
 
@@ -2014,11 +2525,20 @@ interface PlanetarySurfaceProps {
   language: Language;
 }
 
-function PlanetarySurface({ planetData, allPlanets, onExitSurface }: PlanetarySurfaceProps) {
+interface SurfaceShipTransform {
+  position: THREE.Vector3;
+  quaternion: THREE.Quaternion;
+}
+
+function PlanetarySurface({ planetData, allPlanets, onExitSurface, language }: PlanetarySurfaceProps) {
   const config = useMemo(() => getSurfaceConfig(planetData.planetType), [planetData.planetType]);
   const planetSeed = useMemo(() => {
     return planetData.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   }, [planetData.id]);
+  const [surfaceTraversalMode, setSurfaceTraversalMode] = useState<'ship' | 'foot'>('ship');
+  const [parkedShipTransform, setParkedShipTransform] = useState<SurfaceShipTransform | null>(null);
+  const [shipResumeTransform, setShipResumeTransform] = useState<SurfaceShipTransform | null>(null);
+  const [onFootSpawn, setOnFootSpawn] = useState<THREE.Vector3 | null>(null);
   
   // Radio de la esfera de superficie (más pequeño para ver mejor el relieve)
   const surfaceRadius = 120;
@@ -2084,6 +2604,24 @@ function PlanetarySurface({ planetData, allPlanets, onExitSurface }: PlanetarySu
     
     return texture;
   }, [planetSeed]);
+
+  const handleDisembark = useCallback((shipTransform: SurfaceShipTransform, onFootPosition: THREE.Vector3) => {
+    setParkedShipTransform({
+      position: shipTransform.position.clone(),
+      quaternion: shipTransform.quaternion.clone()
+    });
+    setOnFootSpawn(onFootPosition.clone());
+    setSurfaceTraversalMode('foot');
+  }, []);
+
+  const handleBoardShip = useCallback(() => {
+    if (!parkedShipTransform) return;
+    setShipResumeTransform({
+      position: parkedShipTransform.position.clone(),
+      quaternion: parkedShipTransform.quaternion.clone()
+    });
+    setSurfaceTraversalMode('ship');
+  }, [parkedShipTransform]);
   
   return (
     <group>
@@ -2103,6 +2641,7 @@ function PlanetarySurface({ planetData, allPlanets, onExitSurface }: PlanetarySu
       
       {/* Nubes atmosféricas (por encima del límite de vuelo) */}
       <AtmosphericClouds radius={surfaceRadius} seed={planetSeed} config={config} />
+      <PlanetaryStorms radius={surfaceRadius} seed={planetSeed} config={config} />
       
       {/* Iluminación con sol de tamaño variable */}
       <PlanetarySun config={config} radius={surfaceRadius} orbitRadius={planetData.orbitRadius} />
@@ -2150,91 +2689,39 @@ function PlanetarySurface({ planetData, allPlanets, onExitSurface }: PlanetarySu
       {planetData.planetType === 'gas_giant' && (
         <>
           <GasCloudFormations radius={surfaceRadius} seed={planetSeed} />
-          <GiantStorm radius={surfaceRadius} seed={planetSeed} />
+          <GasGiantSkyRings radius={surfaceRadius} />
+          <PolarSkyStructures radius={surfaceRadius} seed={planetSeed} />
         </>
       )}
       
-      {/* Controles de vuelo atmosférico */}
-      <AtmosphericFlightControls 
-        surfaceRadius={surfaceRadius}
-        onExitSurface={onExitSurface}
-      />
+      {/* Controles de superficie: vuelo o modo a pie */}
+      {surfaceTraversalMode === 'ship' ? (
+        <AtmosphericFlightControls 
+          surfaceRadius={surfaceRadius}
+          planetSeed={planetSeed}
+          config={config}
+          language={language}
+          initialShipTransform={shipResumeTransform}
+          onDisembark={handleDisembark}
+          onExitSurface={onExitSurface}
+        />
+      ) : (
+        <SurfaceOnFootControls
+          surfaceRadius={surfaceRadius}
+          planetSeed={planetSeed}
+          config={config}
+          language={language}
+          initialPosition={onFootSpawn ?? parkedShipTransform?.position ?? null}
+          parkedShipPosition={parkedShipTransform?.position ?? null}
+          onBoardShip={handleBoardShip}
+        />
+      )}
       
       {/* Nave en modo superficie */}
-      <SurfaceSpaceshipModel />
-      
-      {/* Etiquetas flotantes para items del planeta sobre la superficie */}
-      <SurfaceFloatingLabels 
-        items={planetData.items}
-        radius={surfaceRadius}
-        seed={planetSeed}
-        color={planetData.color}
-        config={config}
+      <SurfaceSpaceshipModel
+        parkedTransform={surfaceTraversalMode === 'foot' ? parkedShipTransform : null}
       />
-    </group>
-  );
-}
-
-// Etiquetas flotantes sobre la superficie del planeta
-interface SurfaceFloatingLabelsProps {
-  items: PlanetItem[];
-  radius: number;
-  seed: number;
-  color: string;
-  config: SurfaceConfig;
-}
-
-function SurfaceFloatingLabels({ items, radius, seed, color, config }: SurfaceFloatingLabelsProps) {
-  // Generar posiciones aleatorias sobre la superficie
-  const labelPositions = useMemo(() => {
-    const random = seededRandom(seed + 8888);
-    const positions: THREE.Vector3[] = [];
-    
-    items.forEach((_, i) => {
-      // Distribuir en puntos aleatorios de la esfera
-      const phi = Math.acos(1 - 2 * ((i + random() * 0.5) / (items.length + 1)));
-      const theta = random() * Math.PI * 2;
       
-      const nx = Math.sin(phi) * Math.cos(theta);
-      const ny = Math.cos(phi);
-      const nz = Math.sin(phi) * Math.sin(theta);
-      
-      // Calcular altura del terreno y añadir offset para flotar
-      const terrainHeight = getTerrainHeight(nx, ny, nz, radius, seed, config);
-      const floatHeight = terrainHeight + 8 + random() * 5; // Flotar entre 8-13 unidades sobre el terreno
-      
-      positions.push(new THREE.Vector3(
-        nx * floatHeight,
-        ny * floatHeight,
-        nz * floatHeight
-      ));
-    });
-    
-    return positions;
-  }, [items, radius, seed, config]);
-  
-  return (
-    <group>
-      {items.map((item, i) => {
-        const pos = labelPositions[i];
-        if (!pos) return null;
-        
-        return (
-          <Html
-            key={item.id}
-            center
-            distanceFactor={15}
-            position={[pos.x, pos.y, pos.z]}
-            style={{ pointerEvents: 'none' }}
-          >
-            <div className="floating-item-label" style={{ borderColor: color }}>
-              <span className="item-dot-small" style={{ background: color }}></span>
-              <span className="item-title">{item.title}</span>
-              {item.subtitle && <span className="item-subtitle">{item.subtitle}</span>}
-            </div>
-          </Html>
-        );
-      })}
     </group>
   );
 }
@@ -2242,11 +2729,26 @@ function SurfaceFloatingLabels({ items, radius, seed, color, config }: SurfaceFl
 // Controles de vuelo atmosférico (sin singularidades en los polos)
 interface AtmosphericFlightControlsProps {
   surfaceRadius: number;
+  planetSeed: number;
+  config: SurfaceConfig;
+  language: Language;
+  initialShipTransform?: SurfaceShipTransform | null;
+  onDisembark: (shipTransform: SurfaceShipTransform, onFootPosition: THREE.Vector3) => void;
   onExitSurface: () => void;
 }
 
-function AtmosphericFlightControls({ surfaceRadius, onExitSurface }: AtmosphericFlightControlsProps) {
+function AtmosphericFlightControls({
+  surfaceRadius,
+  planetSeed,
+  config,
+  language,
+  initialShipTransform,
+  onDisembark,
+  onExitSurface
+}: AtmosphericFlightControlsProps) {
   const { camera } = useThree();
+  const baseFov = useRef<number | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   
   // Sistema basado en vectores para evitar singularidades en los polos
   // surfaceNormal: dirección desde el centro del planeta (define "arriba")
@@ -2259,16 +2761,26 @@ function AtmosphericFlightControls({ surfaceRadius, onExitSurface }: Atmospheric
   const keys = useRef<Set<string>>(new Set());
   const initialized = useRef(false);
   const isMobile = useRef(isTouchDevice());
+  const [showLandingPrompt, setShowLandingPrompt] = useState(false);
+  const [canLand, setCanLand] = useState(false);
+  const showLandingPromptRef = useRef(false);
+  const canLandRef = useRef(false);
   
   const SPEED = 0.08;
   const FRICTION = 0.92;
   const LOOK_SPEED = 0.02;
   const ALTITUDE_SPEED = 0.3               ;
-  const MIN_ALTITUDE = surfaceRadius + 5;
+  const SHIP_HOVER_CLEARANCE = 3.5;
+  const SHIP_CONTACT_CLEARANCE = 1.25;
+  const LANDING_WINDOW = 2.8;
   const MAX_ALTITUDE = surfaceRadius + 80;
   
   const MOBILE_MOVE_SENSITIVITY = 0.15;
   const MOBILE_LOOK_SENSITIVITY = 0.25;
+
+  useEffect(() => {
+    cameraRef.current = camera instanceof THREE.PerspectiveCamera ? camera : null;
+  }, [camera]);
   
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -2288,15 +2800,42 @@ function AtmosphericFlightControls({ surfaceRadius, onExitSurface }: Atmospheric
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      const perspectiveCamera = cameraRef.current;
+      if (perspectiveCamera && baseFov.current !== null) {
+        perspectiveCamera.fov = baseFov.current;
+        perspectiveCamera.updateProjectionMatrix();
+      }
     };
   }, []);
   
   useFrame(() => {
     // Inicialización
     if (!initialized.current) {
-      surfaceNormal.current.set(0, 0, 1).normalize();
-      forwardDir.current.set(0, 1, 0).normalize();
-      altitude.current = surfaceRadius + 10;
+      if (initialShipTransform) {
+        const initialPosition = initialShipTransform.position.clone();
+        surfaceNormal.current.copy(initialPosition).normalize();
+        altitude.current = initialPosition.length();
+
+        const worldForward = new THREE.Vector3(0, 0, -1).applyQuaternion(initialShipTransform.quaternion);
+        const projectedForward = worldForward.sub(
+          surfaceNormal.current.clone().multiplyScalar(worldForward.dot(surfaceNormal.current))
+        );
+
+        if (projectedForward.lengthSq() > 0.0001) {
+          forwardDir.current.copy(projectedForward.normalize());
+        } else {
+          const fallbackRight = new THREE.Vector3().crossVectors(surfaceNormal.current, new THREE.Vector3(0, 1, 0));
+          if (fallbackRight.lengthSq() > 0.0001) {
+            forwardDir.current.crossVectors(fallbackRight.normalize(), surfaceNormal.current).normalize();
+          } else {
+            forwardDir.current.set(0, 1, 0).normalize();
+          }
+        }
+      } else {
+        surfaceNormal.current.set(0, 0, 1).normalize();
+        forwardDir.current.set(0, 1, 0).normalize();
+        altitude.current = surfaceRadius + 10;
+      }
       pitch.current = 0;
       initialized.current = true;
     }
@@ -2405,8 +2944,26 @@ function AtmosphericFlightControls({ surfaceRadius, onExitSurface }: Atmospheric
       forwardDir.current.crossVectors(newUp, newRight).normalize();
     }
     
-    // Clamping de altitud
-    altitude.current = Math.max(MIN_ALTITUDE, Math.min(MAX_ALTITUDE + 20, altitude.current));
+    // Altura mínima basada en relieve real del terreno
+    const terrainRadius = getTerrainHeight(
+      surfaceNormal.current.x,
+      surfaceNormal.current.y,
+      surfaceNormal.current.z,
+      surfaceRadius,
+      planetSeed,
+      config
+    );
+    const minHoverAltitude = terrainRadius + SHIP_HOVER_CLEARANCE;
+    const isTryingToLand = thrusterState.down;
+    const isNearGround = altitude.current <= minHoverAltitude + LANDING_WINDOW;
+
+    if (isTryingToLand && isNearGround) {
+      altitude.current -= ALTITUDE_SPEED * 1.4;
+    }
+
+    const altitudeBeforeClamp = altitude.current;
+    altitude.current = Math.max(minHoverAltitude, Math.min(MAX_ALTITUDE + 20, altitude.current));
+    const blockedByTerrain = isTryingToLand && altitude.current <= minHoverAltitude + 0.001 && altitudeBeforeClamp <= minHoverAltitude;
     
     // Verificar salida al espacio
     if (altitude.current >= MAX_ALTITUDE) {
@@ -2431,22 +2988,287 @@ function AtmosphericFlightControls({ surfaceRadius, onExitSurface }: Atmospheric
     const lookTarget = camera.position.clone().add(pitchedForward);
     camera.up.copy(currentUp);
     camera.lookAt(lookTarget);
+
+    // Evaluar contacto real de la nave con el relieve
+    const shipQuaternion = camera.quaternion.clone();
+    const shipOffset = new THREE.Vector3(0, -0.25, -2.3).applyQuaternion(shipQuaternion);
+    const shipPosition = camera.position.clone().add(shipOffset);
+    const shipNormal = shipPosition.clone().normalize();
+    const shipTerrainRadius = getTerrainHeight(
+      shipNormal.x,
+      shipNormal.y,
+      shipNormal.z,
+      surfaceRadius,
+      planetSeed,
+      config
+    );
+    const shipClearance = shipPosition.length() - shipTerrainRadius;
+    const canLandNow = shipClearance <= SHIP_CONTACT_CLEARANCE || blockedByTerrain;
+    const shouldShowLandingPrompt = shipClearance <= SHIP_HOVER_CLEARANCE + LANDING_WINDOW;
+
+    if (shouldShowLandingPrompt !== showLandingPromptRef.current) {
+      showLandingPromptRef.current = shouldShowLandingPrompt;
+      setShowLandingPrompt(shouldShowLandingPrompt);
+    }
+    if (canLandNow !== canLandRef.current) {
+      canLandRef.current = canLandNow;
+      setCanLand(canLandNow);
+    }
+
+    if (isTryingToLand && canLandNow) {
+      const parkedShipPosition = shipNormal.clone().multiplyScalar(shipTerrainRadius + 0.95);
+      const onFootPosition = shipNormal.clone().multiplyScalar(shipTerrainRadius + 1.35);
+
+      onDisembark(
+        {
+          position: parkedShipPosition,
+          quaternion: shipQuaternion
+        },
+        onFootPosition
+      );
+      return;
+    }
+
+    const perspectiveCamera = cameraRef.current;
+    if (perspectiveCamera) {
+      if (baseFov.current === null) {
+        baseFov.current = perspectiveCamera.fov;
+      }
+      const speedRatio = Math.min(1, velocity.current.length() / (SPEED * 2));
+      const targetFov = baseFov.current + speedRatio * 4;
+      perspectiveCamera.fov += (targetFov - perspectiveCamera.fov) * 0.08;
+      perspectiveCamera.updateProjectionMatrix();
+    }
     
     // Actualizar estado
     flightModeState.altitude = altitude.current - surfaceRadius;
   });
   
-  return null;
+  return (
+    <>
+      {showLandingPrompt && (
+        <Html fullscreen style={{ pointerEvents: 'none' }}>
+          <div className="surface-boarding-indicator">
+            {canLand
+              ? (language === 'es'
+                  ? 'Pulsa Shift para aterrizar y bajar a pie'
+                  : 'Press Shift to land and continue on foot')
+              : (language === 'es'
+                  ? 'Acércate más al relieve para poder aterrizar'
+                  : 'Get closer to terrain to enable landing')}
+          </div>
+        </Html>
+      )}
+    </>
+  );
+}
+
+interface SurfaceOnFootControlsProps {
+  surfaceRadius: number;
+  planetSeed: number;
+  config: SurfaceConfig;
+  language: Language;
+  initialPosition?: THREE.Vector3 | null;
+  parkedShipPosition?: THREE.Vector3 | null;
+  onBoardShip: () => void;
+}
+
+function SurfaceOnFootControls({
+  surfaceRadius,
+  planetSeed,
+  config,
+  language,
+  initialPosition,
+  parkedShipPosition,
+  onBoardShip
+}: SurfaceOnFootControlsProps) {
+  const { camera } = useThree();
+  const keys = useRef<Set<string>>(new Set());
+  const initialized = useRef(false);
+  const surfaceNormal = useRef(new THREE.Vector3(0, 0, 1));
+  const headingDir = useRef(new THREE.Vector3(0, 1, 0));
+  const velocity = useRef(new THREE.Vector3());
+  const pitch = useRef(0);
+  const boardPressedRef = useRef(false);
+  const [canBoard, setCanBoard] = useState(false);
+  const canBoardRef = useRef(false);
+
+  const WALK_SPEED = 0.026;
+  const FRICTION = 0.82;
+  const LOOK_SPEED = 0.02;
+  const EYE_HEIGHT = 0.72;
+  const BOARDING_DISTANCE = 4.5;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      keys.current.add(e.code.toLowerCase());
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'keye'].includes(e.code.toLowerCase())) {
+        e.preventDefault();
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      keys.current.delete(e.code.toLowerCase());
+      if (e.code.toLowerCase() === 'keye') {
+        boardPressedRef.current = false;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
+  useFrame(() => {
+    if (!initialized.current) {
+      const spawnPosition = initialPosition?.clone() ?? new THREE.Vector3(0, surfaceRadius + EYE_HEIGHT, 0);
+      surfaceNormal.current.copy(spawnPosition).normalize();
+
+      const terrainRadius = getTerrainHeight(
+        surfaceNormal.current.x,
+        surfaceNormal.current.y,
+        surfaceNormal.current.z,
+        surfaceRadius,
+        planetSeed,
+        config
+      );
+      camera.position.copy(surfaceNormal.current).multiplyScalar(terrainRadius + EYE_HEIGHT);
+
+      const forward = new THREE.Vector3(0, 1, 0);
+      const projectedForward = forward.sub(
+        surfaceNormal.current.clone().multiplyScalar(forward.dot(surfaceNormal.current))
+      );
+      if (projectedForward.lengthSq() > 0.0001) {
+        headingDir.current.copy(projectedForward.normalize());
+      }
+      initialized.current = true;
+    }
+
+    const up = surfaceNormal.current.clone().normalize();
+    const right = new THREE.Vector3().crossVectors(headingDir.current, up).normalize();
+    const forward = new THREE.Vector3().crossVectors(up, right).normalize();
+    headingDir.current.copy(forward);
+
+    const movement = new THREE.Vector3();
+    if (keys.current.has('keyw')) movement.add(forward);
+    if (keys.current.has('keys')) movement.sub(forward);
+    if (keys.current.has('keya')) movement.sub(right);
+    if (keys.current.has('keyd')) movement.add(right);
+
+    let yawDelta = 0;
+    if (keys.current.has('arrowleft')) yawDelta += LOOK_SPEED;
+    if (keys.current.has('arrowright')) yawDelta -= LOOK_SPEED;
+    if (keys.current.has('arrowup')) {
+      pitch.current += LOOK_SPEED;
+      pitch.current = Math.min(pitch.current, Math.PI / 3.5);
+    }
+    if (keys.current.has('arrowdown')) {
+      pitch.current -= LOOK_SPEED;
+      pitch.current = Math.max(pitch.current, -Math.PI / 4);
+    }
+
+    if (Math.abs(yawDelta) > 0.0001) {
+      const yawQuat = new THREE.Quaternion().setFromAxisAngle(up, yawDelta);
+      headingDir.current.applyQuaternion(yawQuat).normalize();
+    }
+
+    if (movement.lengthSq() > 0) {
+      movement.normalize().multiplyScalar(WALK_SPEED);
+      velocity.current.add(movement);
+    }
+    velocity.current.multiplyScalar(FRICTION);
+
+    if (velocity.current.length() > 0.0005) {
+      const moveDir = velocity.current.clone().normalize();
+      const rotationAxis = new THREE.Vector3().crossVectors(up, moveDir).normalize();
+      const currentTerrainRadius = getTerrainHeight(
+        surfaceNormal.current.x,
+        surfaceNormal.current.y,
+        surfaceNormal.current.z,
+        surfaceRadius,
+        planetSeed,
+        config
+      );
+      const angularSpeed = velocity.current.length() / Math.max(currentTerrainRadius + EYE_HEIGHT, 1);
+      const moveQuat = new THREE.Quaternion().setFromAxisAngle(rotationAxis, angularSpeed);
+      surfaceNormal.current.applyQuaternion(moveQuat).normalize();
+      headingDir.current.applyQuaternion(moveQuat).normalize();
+    }
+
+    const terrainRadius = getTerrainHeight(
+      surfaceNormal.current.x,
+      surfaceNormal.current.y,
+      surfaceNormal.current.z,
+      surfaceRadius,
+      planetSeed,
+      config
+    );
+    camera.position.copy(surfaceNormal.current).multiplyScalar(terrainRadius + EYE_HEIGHT);
+
+    const pitchedForward = new THREE.Vector3()
+      .addScaledVector(headingDir.current, Math.cos(pitch.current))
+      .addScaledVector(up, Math.sin(pitch.current))
+      .normalize();
+    camera.up.copy(up);
+    camera.lookAt(camera.position.clone().add(pitchedForward));
+
+    if (parkedShipPosition) {
+      const distanceToShip = camera.position.distanceTo(parkedShipPosition);
+      const shouldEnableBoard = distanceToShip <= BOARDING_DISTANCE;
+
+      if (shouldEnableBoard !== canBoardRef.current) {
+        canBoardRef.current = shouldEnableBoard;
+        setCanBoard(shouldEnableBoard);
+      }
+
+      if (shouldEnableBoard && keys.current.has('keye') && !boardPressedRef.current) {
+        boardPressedRef.current = true;
+        onBoardShip();
+      }
+    }
+  });
+
+  return (
+    <>
+      {canBoard && (
+        <Html fullscreen style={{ pointerEvents: 'none' }}>
+          <div className="surface-boarding-indicator">
+            {language === 'es'
+              ? 'Pulsa E para volver a la nave'
+              : 'Press E to board the ship again'}
+          </div>
+        </Html>
+      )}
+    </>
+  );
 }
 
 // Modelo de nave para modo superficie (siempre nivelada)
-function SurfaceSpaceshipModel() {
+function SurfaceSpaceshipModel({ parkedTransform = null }: { parkedTransform?: SurfaceShipTransform | null }) {
   const { camera } = useThree();
   const shipRef = useRef<THREE.Group>(null);
   const [thrusters, setThrusters] = useState({ ...thrusterState });
   
   useFrame(() => {
     if (!shipRef.current) return;
+
+    if (parkedTransform) {
+      setThrusters({
+        forward: false,
+        backward: false,
+        left: false,
+        right: false,
+        up: false,
+        down: false
+      });
+      shipRef.current.position.copy(parkedTransform.position);
+      shipRef.current.quaternion.copy(parkedTransform.quaternion);
+      return;
+    }
     
     setThrusters({ ...thrusterState });
     
@@ -2454,7 +3276,7 @@ function SurfaceSpaceshipModel() {
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
     
-    const offset = new THREE.Vector3(0, -0.25, -1.5);
+    const offset = new THREE.Vector3(0, -0.25, -2.3);
     offset.applyQuaternion(camera.quaternion);
     shipRef.current.position.copy(camera.position).add(offset);
     
@@ -2463,7 +3285,7 @@ function SurfaceSpaceshipModel() {
   });
   
   return (
-    <group ref={shipRef} scale={0.5}>
+    <group ref={shipRef} scale={1}>
       {/* Cuerpo principal de la nave - Naranja vibrante */}
       <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <coneGeometry args={[0.15, 0.6, 6]} />
@@ -2592,7 +3414,7 @@ function SpaceshipModel() {
     setThrusters({ ...thrusterState });
     
     // Posicionar la nave delante de la cámara
-    const offset = new THREE.Vector3(0, -0.2, -1.3);
+    const offset = new THREE.Vector3(0, -0.2, -2.1);
     offset.applyQuaternion(camera.quaternion);
     shipRef.current.position.copy(camera.position).add(offset);
     
@@ -2601,7 +3423,7 @@ function SpaceshipModel() {
   });
   
   return (
-    <group ref={shipRef} scale={0.5}>
+    <group ref={shipRef} scale={1}>
       {/* Cuerpo principal de la nave - Naranja vibrante */}
       <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <coneGeometry args={[0.15, 0.6, 6]} />
@@ -2707,6 +3529,8 @@ function SpaceshipControls({ initialPosition }: SpaceshipControlsProps) {
   const { camera } = useThree();
   const velocity = useRef(new THREE.Vector3());
   const rotation = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
+  const baseFov = useRef<number | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const keys = useRef<Set<string>>(new Set());
   const initialized = useRef(false);
   const isMobile = useRef(isTouchDevice());
@@ -2728,6 +3552,10 @@ function SpaceshipControls({ initialPosition }: SpaceshipControlsProps) {
   const MOBILE_LOOK_SENSITIVITY = 0.25;
 
   useEffect(() => {
+    cameraRef.current = camera instanceof THREE.PerspectiveCamera ? camera : null;
+  }, [camera]);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       keys.current.add(e.code.toLowerCase());
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'space'].includes(e.code.toLowerCase())) {
@@ -2745,6 +3573,11 @@ function SpaceshipControls({ initialPosition }: SpaceshipControlsProps) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      const perspectiveCamera = cameraRef.current;
+      if (perspectiveCamera && baseFov.current !== null) {
+        perspectiveCamera.fov = baseFov.current;
+        perspectiveCamera.updateProjectionMatrix();
+      }
     };
   }, []);
 
@@ -2843,6 +3676,17 @@ function SpaceshipControls({ initialPosition }: SpaceshipControlsProps) {
     );
     camera.position.copy(clampedPos);
     camera.quaternion.setFromEuler(rotation.current);
+
+    const perspectiveCamera = cameraRef.current;
+    if (perspectiveCamera) {
+      if (baseFov.current === null) {
+        baseFov.current = perspectiveCamera.fov;
+      }
+      const speedRatio = Math.min(1, velocity.current.length() / (SPEED * 2));
+      const targetFov = baseFov.current + speedRatio * 4;
+      perspectiveCamera.fov += (targetFov - perspectiveCamera.fov) * 0.08;
+      perspectiveCamera.updateProjectionMatrix();
+    }
   });
 
   return null;
@@ -3086,11 +3930,12 @@ function usePlanetProximityDetection(
 const planetPositionsRef = new Map<string, THREE.Vector3>();
 
 // Escena del sistema solar (modo espacio)
-function SolarSystemScene({ planets, language, selectedPlanet, onSelectPlanet, onEnterPlanet, initialCameraPosition }: {
+function SolarSystemScene({ planets, language, selectedPlanet, onSelectPlanet, onLabelAction, onEnterPlanet, initialCameraPosition }: {
   planets: PlanetData[];
   language: Language;
   selectedPlanet: PlanetData | null;
   onSelectPlanet: (planet: PlanetData | null) => void;
+  onLabelAction: (planet: PlanetData, cameraPos: THREE.Vector3) => void;
   onEnterPlanet: (planet: PlanetData, cameraPos: THREE.Vector3) => void;
   initialCameraPosition?: THREE.Vector3 | null;
 }) {
@@ -3128,6 +3973,7 @@ function SolarSystemScene({ planets, language, selectedPlanet, onSelectPlanet, o
             language={language}
             cameraPosition={cameraPosition}
             onSelect={onSelectPlanet}
+            onLabelAction={onLabelAction}
             selectedPlanet={selectedPlanet}
             onPositionUpdate={(pos) => planetPositionsRef.set(planet.id, pos)}
           />
@@ -3137,22 +3983,6 @@ function SolarSystemScene({ planets, language, selectedPlanet, onSelectPlanet, o
       <SpaceshipModel />
       <SpaceshipControls initialPosition={initialCameraPosition} />
       
-      {/* Indicador de proximidad al planeta */}
-      {proximity.planet && proximity.distance < proximity.planet.size * 3 && !proximity.isEntering && (
-        <Html
-          center
-          position={[
-            cameraPosition.x,
-            cameraPosition.y - 2,
-            cameraPosition.z
-          ]}
-          style={{ pointerEvents: 'none' }}
-        >
-          <div className="planet-entry-indicator">
-            <span>🚀 {language === 'es' ? 'Acércate más para aterrizar en' : 'Get closer to land on'} {proximity.planet.name[language]}</span>
-          </div>
-        </Html>
-      )}
     </>
   );
 }
@@ -3187,6 +4017,7 @@ const savedCameraPosition = {
 
 export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemProps) {
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null);
+  const [selectedPlanetItemsOverride, setSelectedPlanetItemsOverride] = useState<PlanetItem[] | null>(null);
   const [surfaceMode, setSurfaceMode] = useState<{ active: boolean; planet: PlanetData | null; entryPosition: THREE.Vector3 | null }>({
     active: false,
     planet: null,
@@ -3285,6 +4116,13 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
 
   const handleSelectPlanet = useCallback((planet: PlanetData | null) => {
     setSelectedPlanet(planet);
+    setSelectedPlanetItemsOverride(null);
+  }, []);
+
+  const extractPercentValue = useCallback((subtitle?: string) => {
+    if (!subtitle) return 0;
+    const match = subtitle.match(/\d+/);
+    return match ? Number(match[0]) : 0;
   }, []);
 
   const handleEnterPlanet = useCallback((planet: PlanetData, cameraPos: THREE.Vector3) => {
@@ -3299,8 +4137,40 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
     
     setSurfaceMode({ active: true, planet, entryPosition: cameraPos.clone() });
     setSelectedPlanet(null);
+    setSelectedPlanetItemsOverride(null);
     setCameraKey(prev => prev + 1);
   }, []);
+
+  const handlePlanetLabelAction = useCallback((planet: PlanetData, cameraPos: THREE.Vector3) => {
+    if (planet.id === 'projects') {
+      setSelectedPlanet(planet);
+      setSelectedPlanetItemsOverride(planet.items.slice(0, 5));
+      return;
+    }
+
+    if (planet.id === 'experience') {
+      setSelectedPlanet(planet);
+      setSelectedPlanetItemsOverride([...planet.items].reverse());
+      return;
+    }
+
+    if (planet.id === 'education') {
+      handleEnterPlanet(planet, cameraPos);
+      return;
+    }
+
+    if (planet.id === 'skills') {
+      const topSkills = [...planet.items]
+        .sort((a, b) => extractPercentValue(b.subtitle) - extractPercentValue(a.subtitle))
+        .slice(0, 6);
+      setSelectedPlanet(planet);
+      setSelectedPlanetItemsOverride(topSkills);
+      return;
+    }
+
+    setSelectedPlanet(planet);
+    setSelectedPlanetItemsOverride(null);
+  }, [extractPercentValue, handleEnterPlanet]);
 
   const handleExitSurface = useCallback(() => {
     // Volver al modo espacio
@@ -3308,8 +4178,31 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
     flightModeState.planetData = null;
     notifyFlightModeChange();
     
-    // Mantener la posición de entrada guardada para restaurarla
-    setSurfaceMode(prev => ({ active: false, planet: null, entryPosition: prev.entryPosition }));
+    // Al salir, reaparecer algo más lejos del planeta
+    setSurfaceMode(prev => {
+      if (!prev.entryPosition || !prev.planet) {
+        return { active: false, planet: null, entryPosition: prev.entryPosition };
+      }
+
+      const planetPosition = planetPositionsRef.get(prev.planet.id);
+      if (!planetPosition) {
+        return { active: false, planet: null, entryPosition: prev.entryPosition.clone() };
+      }
+
+      const exitPosition = prev.entryPosition.clone();
+      const awayDirection = exitPosition.clone().sub(planetPosition);
+
+      if (awayDirection.lengthSq() < 0.0001) {
+        awayDirection.copy(exitPosition).normalize();
+      } else {
+        awayDirection.normalize();
+      }
+
+      const extraDistance = prev.planet.size * 2 + 8;
+      exitPosition.addScaledVector(awayDirection, extraDistance);
+
+      return { active: false, planet: null, entryPosition: exitPosition };
+    });
     setCameraKey(prev => prev + 1);
   }, []);
 
@@ -3328,7 +4221,8 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
           <span>⌨️ WASD {language === 'es' ? 'mover' : 'move'}</span>
           <span>🎯 {language === 'es' ? 'Flechas mirar' : 'Arrows look'}</span>
           <span>⬆️ {language === 'es' ? 'Espacio ascender' : 'Space ascend'}</span>
-          <span>⬇️ {language === 'es' ? 'Shift descender' : 'Shift descend'}</span>
+          <span>⬇️ {language === 'es' ? 'Shift aterrizar/bajar' : 'Shift land/descend'}</span>
+          <span>🧍 {language === 'es' ? 'E subir a la nave (a pie)' : 'E board ship (on foot)'}</span>
         </>
       ) : (
         <>
@@ -3340,6 +4234,11 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
       )}
     </div>
   );
+
+  const selectedPlanetItems = useMemo(() => {
+    if (!selectedPlanet) return [];
+    return selectedPlanetItemsOverride ?? selectedPlanet.items;
+  }, [selectedPlanet, selectedPlanetItemsOverride]);
 
   return (
     <div className="solar-system-container">
@@ -3370,6 +4269,7 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
               language={language}
               selectedPlanet={selectedPlanet}
               onSelectPlanet={handleSelectPlanet}
+              onLabelAction={handlePlanetLabelAction}
               onEnterPlanet={handleEnterPlanet}
               initialCameraPosition={surfaceMode.entryPosition}
             />
@@ -3392,9 +4292,9 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
           <h3 style={{ color: selectedPlanet.color }}>{selectedPlanet.name[language]}</h3>
           <p className="planet-info-description">{selectedPlanet.description[language]}</p>
           <div className="planet-info-items">
-            <h4>{language === 'es' ? 'Contenido' : 'Contents'} ({selectedPlanet.items.length})</h4>
+            <h4>{language === 'es' ? 'Contenido' : 'Contents'} ({selectedPlanetItems.length})</h4>
             <ul>
-              {selectedPlanet.items.map((item) => (
+              {selectedPlanetItems.map((item) => (
                 <li key={item.id}>
                   <strong>{item.title}</strong>
                   {item.subtitle && <span className="item-subtitle"> - {item.subtitle}</span>}

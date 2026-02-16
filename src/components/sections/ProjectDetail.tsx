@@ -14,9 +14,9 @@ interface ProjectDetailProps {
     github: string;
     demo: string;
     detailedContent: {
-      overview: string;
-      challenge: string;
-      solution: string;
+      overview: readonly string[];
+      challenge: readonly string[];
+      solution: readonly string[];
       features: readonly string[];
       techDetails: string;
       results: string;
@@ -31,6 +31,12 @@ interface ProjectDetailProps {
 const ProjectDetail = memo(({ project, onClose }: ProjectDetailProps) => {
   const { language } = useLanguage();
   const t = useTranslations(language);
+  const overviewParagraphs = project.detailedContent.overview.filter(paragraph => paragraph.trim().length > 0);
+  const challengeParagraphs = project.detailedContent.challenge.filter(paragraph => paragraph.trim().length > 0);
+  const solutionParagraphs = project.detailedContent.solution.filter(paragraph => paragraph.trim().length > 0);
+  const featureItems = project.detailedContent.features.filter(feature => feature.trim().length > 0);
+  const hasTechDetails = project.detailedContent.techDetails.trim().length > 0;
+  const hasResults = project.detailedContent.results.trim().length > 0;
 
   return (
     <div className="project-detail-overlay" onClick={onClose}>
@@ -80,39 +86,57 @@ const ProjectDetail = memo(({ project, onClose }: ProjectDetailProps) => {
           </header>
 
           <article className="project-detail-article">
-            <section className="article-section">
-              <h2>{t.projectOverview}</h2>
-              <p>{project.detailedContent.overview}</p>
-            </section>
-
-            <section className="article-section">
-              <h2>{t.projectChallenge}</h2>
-              <p>{project.detailedContent.challenge}</p>
-            </section>
-
-            <section className="article-section">
-              <h2>{t.projectSolution}</h2>
-              <p>{project.detailedContent.solution}</p>
-            </section>
-
-            <section className="article-section">
-              <h2>{t.keyFeatures}</h2>
-              <ul className="features-list">
-                {project.detailedContent.features.map((feature, index) => (
-                  <li key={index}>{feature}</li>
+            {overviewParagraphs.length > 0 && (
+              <section className="article-section">
+                <h2>{t.projectOverview}</h2>
+                {overviewParagraphs.map((paragraph, index) => (
+                  <p key={`overview-${index}`}>{paragraph}</p>
                 ))}
-              </ul>
-            </section>
+              </section>
+            )}
 
-            <section className="article-section">
-              <h2>{t.technicalDetails}</h2>
-              <p>{project.detailedContent.techDetails}</p>
-            </section>
+            {challengeParagraphs.length > 0 && (
+              <section className="article-section">
+                <h2>{t.projectChallenge}</h2>
+                {challengeParagraphs.map((paragraph, index) => (
+                  <p key={`challenge-${index}`}>{paragraph}</p>
+                ))}
+              </section>
+            )}
 
-            <section className="article-section">
-              <h2>{t.resultsImpact}</h2>
-              <p>{project.detailedContent.results}</p>
-            </section>
+            {solutionParagraphs.length > 0 && (
+              <section className="article-section">
+                <h2>{t.projectSolution}</h2>
+                {solutionParagraphs.map((paragraph, index) => (
+                  <p key={`solution-${index}`}>{paragraph}</p>
+                ))}
+              </section>
+            )}
+
+            {featureItems.length > 0 && (
+              <section className="article-section">
+                <h2>{t.keyFeatures}</h2>
+                <ul className="features-list">
+                  {featureItems.map((feature, index) => (
+                    <li key={index}>{feature}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {hasTechDetails && (
+              <section className="article-section">
+                <h2>{t.technicalDetails}</h2>
+                <p>{project.detailedContent.techDetails}</p>
+              </section>
+            )}
+
+            {hasResults && (
+              <section className="article-section">
+                <h2>{t.resultsImpact}</h2>
+                <p>{project.detailedContent.results}</p>
+              </section>
+            )}
           </article>
         </div>
       </div>

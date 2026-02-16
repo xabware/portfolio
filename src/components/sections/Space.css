@@ -181,204 +181,47 @@
   font-size: 0.8rem;
 }
 
-/* Popup de detalles del planeta (al acercarse) */
-.planet-details-popup {
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 215, 0, 0.4);
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
-  min-width: 220px;
-  max-width: 280px;
-  color: #fff;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.planet-details-popup h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.1rem;
-  color: #ffd700;
-}
-
-.planet-description {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 0.75rem;
-  line-height: 1.4;
-}
-
-.planet-items-preview {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.planet-item-mini {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.item-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.more-items {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.5);
-  font-style: italic;
-  margin: 0.25rem 0 0 0;
-}
-
-/* Tooltip de luna */
-.moon-tooltip {
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-  color: #fff;
-  white-space: nowrap;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-}
-
-.moon-tooltip strong {
-  font-size: 0.85rem;
-}
-
-.moon-subtitle {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* Labels de nombres de planetas */
+/* Labels interactivos de planetas */
 .planet-name-label {
-  font-size: 2rem;
-  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(12, 18, 35, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   color: #ffffff;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+}
+
+.planet-name-label:hover {
+  transform: translateY(-2px) scale(1.03);
+  border-color: rgba(255, 215, 0, 0.65);
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.35);
+}
+
+.planet-name-label:focus-visible {
+  outline: 2px solid rgba(255, 215, 0, 0.9);
+  outline-offset: 2px;
+}
+
+.planet-name-main {
+  font-size: 1rem;
+  font-weight: 700;
   text-shadow: 
     0 0 10px rgba(0, 0, 0, 0.8),
     0 0 20px rgba(0, 0, 0, 0.6),
     2px 2px 4px rgba(0, 0, 0, 0.9);
-  white-space: nowrap;
-  pointer-events: none;
 }
 
-.planet-approach-label {
-  font-size: 1.2rem;
-  color: #88ff88;
-  text-shadow: 
-    0 0 10px rgba(136, 255, 136, 0.5),
-    0 0 20px rgba(136, 255, 136, 0.3);
-  white-space: nowrap;
-  pointer-events: none;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-/* Etiquetas flotantes para items del planeta */
-.floating-item-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: rgba(10, 10, 30, 0.85);
-  border: 1px solid rgba(150, 150, 255, 0.4);
-  border-left: 3px solid currentColor;
-  border-radius: 4px;
-  backdrop-filter: blur(8px);
-  white-space: nowrap;
-  pointer-events: none;
-  animation: floatLabel 6s ease-in-out infinite;
-}
-
-.floating-item-label .item-dot-small {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  box-shadow: 0 0 6px currentColor;
-}
-
-.floating-item-label .item-title {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.95);
-  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
-}
-
-.floating-item-label .item-subtitle {
-  font-size: 0.7rem;
-  color: rgba(200, 200, 255, 0.7);
-  margin-left: 6px;
-}
-
-@keyframes floatLabel {
-  0%, 100% { 
-    transform: translateY(0);
-    opacity: 0.9;
-  }
-  50% { 
-    transform: translateY(-3px);
-    opacity: 1;
-  }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-.planet-details-large {
-  min-width: 300px;
-  max-width: 400px;
-}
-
-/* Tarjeta flotante de planeta (siempre visible) */
-.planet-floating-card {
-  min-width: 280px;
-  max-width: 360px;
-  padding: 1.25rem 1.5rem;
-  transform: scale(1.3);
-  transform-origin: left center;
-}
-
-.planet-floating-card h3 {
-  font-size: 1.4rem;
-  margin-bottom: 0.6rem;
-}
-
-.planet-floating-card .planet-description {
-  font-size: 1rem;
-  margin-bottom: 1rem;
-}
-
-.planet-floating-card .planet-item-mini {
-  font-size: 0.95rem;
-  padding: 0.2rem 0;
-}
-
-.planet-floating-card .item-dot {
-  width: 10px;
-  height: 10px;
-}
-
-.planet-floating-card.expanded {
-  transform: scale(1.5);
-  min-width: 320px;
-  max-width: 400px;
+.planet-name-action {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.02em;
 }
 
 /* HUD de la nave */
@@ -763,30 +606,6 @@
   text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
 }
 
-/* Indicador de entrada al planeta */
-.planet-entry-indicator {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 215, 0, 0.4);
-  border-radius: 8px;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.95);
-  white-space: nowrap;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.85;
-    transform: scale(1.02);
-  }
-}
-
 /* Indicador de salida de superficie */
 .surface-exit-indicator {
   background: rgba(15, 23, 42, 0.8);
@@ -798,6 +617,23 @@
   color: rgba(255, 255, 255, 0.9);
   white-space: nowrap;
   animation: float 3s ease-in-out infinite;
+}
+
+.surface-boarding-indicator {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 212, 255, 0.45);
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  box-shadow: 0 0 14px rgba(0, 212, 255, 0.2);
+  animation: float 2.6s ease-in-out infinite;
 }
 
 @keyframes float {
@@ -836,13 +672,17 @@
     font-size: 0.8rem;
   }
 
-  .planet-entry-indicator {
-    font-size: 0.8rem;
-    padding: 0.5rem 1rem;
-  }
-
   .surface-exit-indicator {
     font-size: 0.75rem;
+  }
+
+  .surface-boarding-indicator {
+    bottom: 14px;
+    font-size: 0.75rem;
+    padding: 0.55rem 0.85rem;
+    max-width: calc(100vw - 24px);
+    text-align: center;
+    white-space: normal;
   }
 }
 
