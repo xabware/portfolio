@@ -593,3 +593,456 @@
   opacity: 0.7;
   cursor: wait;
 }
+
+/* =====================================================
+   RAG - Panel de documentos PDF
+   ===================================================== */
+
+/* RAG Status Bar (collapsed) */
+.rag-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--primary-bg, rgba(99, 102, 241, 0.08));
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.rag-status-bar:hover {
+  background: var(--primary-bg, rgba(99, 102, 241, 0.15));
+}
+
+/* RAG Panel (expanded) */
+.rag-panel {
+  border-bottom: 1px solid var(--border-color);
+  background: var(--card-bg);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 400px;
+  }
+}
+
+.rag-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--primary-bg, rgba(99, 102, 241, 0.05));
+}
+
+.rag-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.rag-panel-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.rag-panel-close:hover {
+  background: var(--hover-bg, rgba(0, 0, 0, 0.08));
+  color: var(--text-primary);
+}
+
+.rag-panel-content {
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+/* RAG Toggle */
+.rag-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.rag-toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.rag-toggle-button.active {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: var(--primary-bg, rgba(99, 102, 241, 0.08));
+}
+
+.rag-toggle-button:hover {
+  border-color: var(--primary-color);
+}
+
+/* RAG Upload Button */
+.rag-upload-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: var(--primary-bg, rgba(99, 102, 241, 0.1));
+  border: 1px dashed var(--primary-color);
+  border-radius: 8px;
+  color: var(--primary-color);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rag-upload-button:hover:not(:disabled) {
+  background: var(--primary-bg, rgba(99, 102, 241, 0.18));
+  border-style: solid;
+}
+
+.rag-upload-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+/* RAG Error */
+.rag-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--error-bg, rgba(231, 76, 60, 0.1));
+  border-radius: 6px;
+  color: var(--error-color, #e74c3c);
+  font-size: 0.8rem;
+}
+
+/* RAG Documents List */
+.rag-documents {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rag-documents-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.rag-clear-all {
+  background: none;
+  border: none;
+  color: var(--error-color, #e74c3c);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.rag-clear-all:hover {
+  background: var(--error-bg, rgba(231, 76, 60, 0.1));
+}
+
+.rag-document-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-secondary, rgba(0, 0, 0, 0.03));
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.rag-document-item svg {
+  color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+.rag-document-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.rag-document-name {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rag-document-meta {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.rag-document-remove {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.2rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.rag-document-remove:hover {
+  color: var(--error-color, #e74c3c);
+  background: var(--error-bg, rgba(231, 76, 60, 0.1));
+}
+
+.rag-no-documents {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 0.5rem 0;
+  font-style: italic;
+}
+
+/* RAG Attach Button (in input bar) */
+.rag-attach-button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.rag-attach-button:hover {
+  color: var(--primary-color);
+  background: var(--primary-bg, rgba(99, 102, 241, 0.08));
+}
+
+.rag-attach-button .has-documents {
+  color: var(--primary-color);
+}
+
+.rag-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: var(--primary-color);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Annotated message text */
+.message-text-annotated {
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Inline reference badges [N] */
+.inline-ref {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 0 4px;
+  font-size: 0.65em;
+  font-weight: 700;
+  cursor: pointer;
+  vertical-align: super;
+  line-height: 1;
+  margin: 0 1px;
+  min-width: 16px;
+  height: 14px;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.inline-ref:hover {
+  filter: brightness(1.25);
+  transform: scale(1.15);
+}
+
+.message.user .inline-ref {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.message.user .inline-ref:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Reference legend at bottom of message */
+.ref-legend {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.message.user .ref-legend {
+  border-top-color: rgba(255, 255, 255, 0.15);
+}
+
+.ref-legend-title {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ref-legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.ref-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: var(--primary-bg, rgba(99, 102, 241, 0.08));
+  border: 1px solid var(--primary-bg, rgba(99, 102, 241, 0.15));
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  line-height: 1.2;
+}
+
+.ref-legend-item:hover {
+  background: var(--primary-bg, rgba(99, 102, 241, 0.18));
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.message.user .ref-legend-item {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.message.user .ref-legend-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.ref-legend-id {
+  font-weight: 700;
+  color: var(--primary-color);
+  font-size: 0.7rem;
+}
+
+.message.user .ref-legend-id {
+  color: white;
+}
+
+.ref-legend-item svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.ref-legend-file {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100px;
+}
+
+.ref-legend-page {
+  font-weight: 500;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+/* Responsive RAG */
+@media (max-width: 768px) {
+  .rag-panel-content {
+    max-height: 200px;
+  }
+  
+  .ref-legend-file {
+    max-width: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .rag-panel-content {
+    max-height: 180px;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .rag-document-item {
+    padding: 0.4rem 0.5rem;
+  }
+
+  .rag-upload-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}

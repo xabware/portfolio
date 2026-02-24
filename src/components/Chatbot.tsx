@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback, memo } from 'react';
-import { Send, Bot, User, AlertCircle, Sparkles, ChevronDown, Cpu, Monitor } from 'lucide-react';
+import { Send, Bot, User, AlertCircle, Sparkles, ChevronDown, Cpu, Monitor, Paperclip, FileText, X, ToggleLeft, ToggleRight, Loader2, BookOpen, Bug } from 'lucide-react';
 import { useWebLLM, type Message } from '../hooks/useWebLLM';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTranslations } from '../translations';
 import { detectGPUCapabilities, getCompatibleModels, type GPUCapabilities } from '../config/chatbotConfig';
+import { formatFileSize } from '../utils/pdfParser';
 import './Chatbot.css';
 
 const Chatbot = memo(() => {
@@ -24,7 +25,21 @@ const Chatbot = memo(() => {
     selectedModelId,
     setSelectedModelId,
     availableModels,
-    setCurrentLanguage
+    setCurrentLanguage,
+    // RAG
+    loadPDF,
+    removePDF,
+    clearAllPDFs,
+    loadedDocuments,
+    isProcessingPDF,
+    pdfError,
+    ragEnabled,
+    setRagEnabled,
+    // Debug
+    debugMode,
+    setDebugMode,
+    // PDF Viewer
+    openPdfAtPage,
   } = useWebLLM();
   const { language } = useLanguage();
   const t = useTranslations(language);
@@ -33,7 +48,9 @@ const Chatbot = memo(() => {
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [gpuCapabilities, setGpuCapabilities] = useState<GPUCapabilities | null>(null);
   const [isDetectingGPU, setIsDetectingGPU] = useState(true);
+  const [showRAGPanel, setShowRAGPanel] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const hasInitializedRef = useRef(false);
 
   // Detectar capacidades del GPU al montar
@@ -102,19 +119,25 @@ const Chatbot = memo(() => {
     setIsLoadingResponse(true);
 
     try {
-      const botResponse = await sendMessage(currentInput);
+      const { text: annotatedText, sources: numberedSources } = await sendMessage(currentInput);
+      // Mapear NumberedSource a formato de Message.sources con refId
+      const sources = numberedSources.length > 0 ? numberedSources.map(ns => ({
+        refId: ns.refId,
+        fileName: ns.chunk.fileName,
+        pageNumber: ns.chunk.pageNumber,
+        relevance: ns.relevance,
+        excerpt: ns.chunk.text.substring(0, 150) + '...',
+      })) : undefined;
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: botResponse,
+        text: annotatedText,
         sender: 'bot',
         timestamp: new Date(),
+        sources,
       };
       addMessage(botMessage);
     } catch (error) {
       console.error('Error en el chat:', error);
-      
-      // Siempre detener el loading primero
-      setIsLoadingResponse(false);
       
       const errorMsg = error instanceof Error ? error.message : '';
       
@@ -131,6 +154,8 @@ const Chatbot = memo(() => {
         timestamp: new Date(),
       };
       addMessage(errorMessage);
+    } finally {
+      setIsLoadingResponse(false);
     }
   }, [inputValue, isLoadingResponse, isInitialized, sendMessage, t.chatbotErrorMessage, addMessage, setIsLoadingResponse]);
 
@@ -140,6 +165,16 @@ const Chatbot = memo(() => {
       handleSend();
     }
   }, [handleSend]);
+
+  // RAG: Manejar subida de PDF
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await loadPDF(file);
+      // Limpiar el input para permitir subir el mismo archivo de nuevo
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }, [loadPDF]);
 
   // Mostrar botón inicial si aún no se ha iniciado
   if (!hasStarted) {
@@ -318,6 +353,113 @@ const Chatbot = memo(() => {
 
   return (
     <div className="chatbot-container">
+      {/* RAG Panel */}
+      {showRAGPanel && (
+        <div className="rag-panel">
+          <div className="rag-panel-header">
+            <div className="rag-panel-title">
+              <BookOpen size={16} />
+              <span>RAG - {t.ragUploadPDF}</span>
+            </div>
+            <button className="rag-panel-close" onClick={() => setShowRAGPanel(false)}>
+              <X size={16} />
+            </button>
+          </div>
+          
+          <div className="rag-panel-content">
+            {/* Toggle RAG */}
+            <div className="rag-toggle">
+              <button 
+                className={`rag-toggle-button ${ragEnabled ? 'active' : ''}`}
+                onClick={() => setRagEnabled(!ragEnabled)}
+                title={t.ragToggle}
+              >
+                {ragEnabled ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
+                <span>{ragEnabled ? t.ragEnabled : t.ragDisabled}</span>
+              </button>
+              <button 
+                className={`rag-toggle-button debug-toggle ${debugMode ? 'active' : ''}`}
+                onClick={() => setDebugMode(!debugMode)}
+                title={t.debugToggle}
+              >
+                <Bug size={16} />
+                <span>{t.debugMode}</span>
+                {debugMode ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+              </button>
+            </div>
+            
+            {/* Upload button */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".pdf,application/pdf"
+              onChange={handleFileUpload}
+              style={{ display: 'none' }}
+            />
+            <button 
+              className="rag-upload-button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isProcessingPDF}
+            >
+              {isProcessingPDF ? (
+                <><Loader2 size={16} className="spinning" /> {t.ragProcessing}</>
+              ) : (
+                <><Paperclip size={16} /> {t.ragUploadPDF}</>
+              )}
+            </button>
+            
+            {/* PDF Error */}
+            {pdfError && (
+              <div className="rag-error">
+                <AlertCircle size={14} />
+                <span>{pdfError}</span>
+              </div>
+            )}
+            
+            {/* Loaded documents list */}
+            {loadedDocuments.length > 0 ? (
+              <div className="rag-documents">
+                <div className="rag-documents-header">
+                  <span>{loadedDocuments.length} {loadedDocuments.length === 1 ? t.ragDocumentLoaded : t.ragDocumentsLoaded}</span>
+                  {loadedDocuments.length > 1 && (
+                    <button className="rag-clear-all" onClick={clearAllPDFs}>
+                      {t.ragClearAll}
+                    </button>
+                  )}
+                </div>
+                {loadedDocuments.map((doc) => (
+                  <div key={doc.fileName} className="rag-document-item">
+                    <FileText size={14} />
+                    <div className="rag-document-info">
+                      <span className="rag-document-name">{doc.fileName}</span>
+                      <span className="rag-document-meta">
+                        {doc.totalPages} {t.ragPages} · {doc.chunkCount} {t.ragChunks} · {formatFileSize(doc.fileSize)}
+                      </span>
+                    </div>
+                    <button className="rag-document-remove" onClick={() => removePDF(doc.fileName)}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="rag-no-documents">{t.ragNoDocuments}</p>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* RAG status bar */}
+      {loadedDocuments.length > 0 && !showRAGPanel && (
+        <div className="rag-status-bar" onClick={() => setShowRAGPanel(true)}>
+          <BookOpen size={14} />
+          <span>
+            {loadedDocuments.length} {loadedDocuments.length === 1 ? t.ragDocumentLoaded : t.ragDocumentsLoaded}
+            {ragEnabled ? ` · ${t.ragEnabled}` : ` · ${t.ragDisabled}`}
+          </span>
+        </div>
+      )}
+      
       <div className="chatbot-messages">
         {messages.map((message) => (
           <div key={message.id} className={`message ${message.sender}`}>
@@ -325,7 +467,54 @@ const Chatbot = memo(() => {
               {message.sender === 'bot' ? <Bot size={20} /> : <User size={20} />}
             </div>
             <div className="message-content">
-              <p>{message.text}</p>
+              {/* Renderizar texto con referencias inline [N] clicables */}
+              {message.sources && message.sources.length > 0 ? (
+                <div className="message-text-annotated">
+                  {message.text.split(/(\[\d+\])/).map((part, idx) => {
+                    const refMatch = part.match(/^\[(\d+)\]$/);
+                    if (refMatch) {
+                      const refId = parseInt(refMatch[1]);
+                      const source = message.sources!.find(s => s.refId === refId);
+                      if (source) {
+                        return (
+                          <button
+                            key={idx}
+                            className="inline-ref"
+                            onClick={() => openPdfAtPage(source.fileName, source.pageNumber)}
+                            title={`${source.fileName} — ${t.ragPage} ${source.pageNumber}\n${source.excerpt}`}
+                          >
+                            {refId}
+                          </button>
+                        );
+                      }
+                    }
+                    return <span key={idx}>{part}</span>;
+                  })}
+                </div>
+              ) : (
+                <p>{message.text}</p>
+              )}
+              {/* Leyenda de referencias: mapa refId → fuente */}
+              {message.sources && message.sources.length > 0 && (
+                <div className="ref-legend">
+                  <span className="ref-legend-title">{t.ragSourcesTitle}</span>
+                  <div className="ref-legend-items">
+                    {message.sources.map((source) => (
+                      <button
+                        key={source.refId}
+                        className="ref-legend-item"
+                        onClick={() => openPdfAtPage(source.fileName, source.pageNumber)}
+                        title={source.excerpt}
+                      >
+                        <span className="ref-legend-id">[{source.refId}]</span>
+                        <FileText size={10} />
+                        <span className="ref-legend-file">{source.fileName}</span>
+                        <span className="ref-legend-page">p.{source.pageNumber}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <span className="message-time">
                 {message.timestamp.toLocaleTimeString('es-ES', {
                   hour: '2-digit',
@@ -352,6 +541,14 @@ const Chatbot = memo(() => {
         <div ref={messagesEndRef} />
       </div>
       <div className="chatbot-input">
+        <button 
+          className="rag-attach-button"
+          onClick={() => setShowRAGPanel(!showRAGPanel)}
+          title={t.ragUploadHint}
+        >
+          <BookOpen size={18} className={loadedDocuments.length > 0 ? 'has-documents' : ''} />
+          {loadedDocuments.length > 0 && <span className="rag-badge">{loadedDocuments.length}</span>}
+        </button>
         <input
           type="text"
           placeholder={t.chatbotInputPlaceholder}

@@ -1,0 +1,333 @@
+/* ============================
+   Debug Panel
+   ============================ */
+.debug-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 200px;
+  max-height: 100%;
+}
+
+.debug-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  background: rgba(234, 179, 8, 0.08);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.debug-panel-header svg {
+  color: #eab308;
+  flex-shrink: 0;
+}
+
+.debug-timestamp {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.debug-panel-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.debug-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Collapsible sections */
+.debug-section {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.debug-section.open {
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+.debug-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: none;
+  background: rgba(99, 102, 241, 0.04);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.debug-section-header:hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.debug-section-header svg {
+  flex-shrink: 0;
+  color: var(--primary-color);
+}
+
+.debug-section-title {
+  flex: 1;
+}
+
+.debug-section-badge {
+  background: var(--primary-color);
+  color: white;
+  font-size: 0.6rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.debug-section-content {
+  padding: 0.5rem 0.6rem;
+  border-top: 1px solid var(--border-color);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Pre blocks */
+.debug-pre {
+  margin: 0;
+  padding: 0.4rem 0.5rem;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-primary);
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.debug-query {
+  color: var(--primary-color);
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.debug-prompt {
+  font-size: 0.62rem;
+  max-height: 250px;
+}
+
+/* Source items */
+.debug-source {
+  padding: 0.4rem;
+  margin-bottom: 0.35rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: rgba(99, 102, 241, 0.03);
+}
+
+.debug-source:last-child {
+  margin-bottom: 0;
+}
+
+.debug-source-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.3rem;
+  font-size: 0.7rem;
+}
+
+.debug-ref-badge {
+  background: var(--primary-color);
+  color: white;
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.debug-source-file {
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+}
+
+.debug-source-page {
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+}
+
+.debug-source-relevance {
+  margin-left: auto;
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 0.65rem;
+}
+
+/* Details/Summary (native collapsible) */
+.debug-details {
+  margin-top: 0.25rem;
+}
+
+.debug-details summary {
+  cursor: pointer;
+  font-size: 0.65rem;
+  color: var(--primary-color);
+  font-weight: 500;
+  padding: 0.15rem 0;
+  user-select: none;
+}
+
+.debug-details summary:hover {
+  text-decoration: underline;
+}
+
+.debug-details .debug-pre {
+  margin-top: 0.2rem;
+  max-height: 150px;
+}
+
+/* Reverse search items */
+.debug-reverse-item {
+  padding: 0.35rem 0.5rem;
+  margin-bottom: 0.25rem;
+  border-radius: 4px;
+  border-left: 3px solid transparent;
+  font-size: 0.68rem;
+}
+
+.debug-reverse-item.assigned {
+  background: rgba(34, 197, 94, 0.06);
+  border-left-color: #22c55e;
+}
+
+.debug-reverse-item.unassigned {
+  background: rgba(239, 68, 68, 0.04);
+  border-left-color: rgba(239, 68, 68, 0.3);
+}
+
+.debug-reverse-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.3rem;
+  margin-bottom: 0.2rem;
+}
+
+.debug-icon-ok {
+  color: #22c55e;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.debug-icon-no {
+  color: #ef4444;
+  flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.5;
+}
+
+.debug-reverse-sentence {
+  font-style: italic;
+  color: var(--text-secondary);
+  flex: 1;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.debug-reverse-reason {
+  font-size: 0.63rem;
+  color: var(--text-secondary);
+  margin-left: 1.1rem;
+  margin-top: 0.1rem;
+}
+
+.debug-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.debug-reverse-scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-left: 1.1rem;
+  margin-top: 0.15rem;
+  font-size: 0.6rem;
+}
+
+.debug-score {
+  padding: 0.1rem 0.35rem;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.debug-score.winner {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #16a34a;
+  font-weight: 600;
+}
+
+/* Debug toggle in RAG panel */
+.debug-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rag-toggle-button.debug-toggle {
+  font-size: 0.72rem;
+  gap: 0.3rem;
+}
+
+.rag-toggle-button.debug-toggle svg {
+  color: #eab308;
+}
+
+.rag-toggle-button.debug-toggle.active {
+  color: #eab308;
+  background: rgba(234, 179, 8, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .debug-section-content {
+    max-height: 200px;
+  }
+  
+  .debug-pre {
+    font-size: 0.6rem;
+    max-height: 120px;
+  }
+}

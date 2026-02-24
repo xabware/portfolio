@@ -1,0 +1,322 @@
+/* =====================================================
+   PDF VIEWER - Visualizador lateral de documentos PDF
+   ===================================================== */
+
+.pdf-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--card-bg);
+  border-left: 1px solid var(--border-color);
+  min-width: 0;
+}
+
+/* Toolbar */
+.pdf-viewer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary, rgba(0, 0, 0, 0.02));
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.pdf-viewer-file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--primary-color);
+  min-width: 0;
+  flex: 1;
+}
+
+.pdf-viewer-filename {
+  font-size: 0.75rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-viewer-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pdf-viewer-zoom {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  min-width: 36px;
+  text-align: center;
+}
+
+.pdf-viewer-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.pdf-viewer-btn:hover:not(:disabled) {
+  background: var(--hover-bg, rgba(0, 0, 0, 0.08));
+  color: var(--text-primary);
+}
+
+.pdf-viewer-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pdf-viewer-close:hover {
+  color: var(--error-color, #e74c3c);
+  background: var(--error-bg, rgba(231, 76, 60, 0.1));
+}
+
+/* Navigation bar */
+.pdf-viewer-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.pdf-viewer-page-info {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pdf-viewer-page-info.highlighted {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.pdf-viewer-ref-badge {
+  font-size: 0.6rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: var(--primary-bg, rgba(99, 102, 241, 0.15));
+  color: var(--primary-color);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Highlighted pages quick navigation */
+.pdf-viewer-highlights {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--primary-bg, rgba(99, 102, 241, 0.03));
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.pdf-viewer-highlight-btn {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--primary-color);
+  background: transparent;
+  color: var(--primary-color);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.pdf-viewer-highlight-btn:hover {
+  background: var(--primary-bg, rgba(99, 102, 241, 0.12));
+}
+
+.pdf-viewer-highlight-btn.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+/* Canvas container */
+.pdf-viewer-canvas-container {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem;
+  position: relative;
+  min-height: 0;
+  background: var(--bg-secondary, #f5f5f5);
+}
+
+.pdf-viewer-canvas {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  max-width: 100%;
+  height: auto;
+}
+
+.pdf-viewer-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.loading-spinner.small {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+}
+
+/* =====================================================
+   Chat + PDF Split Layout
+   ===================================================== */
+
+.chat-split-layout {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.chat-split-layout .chatbot-container {
+  flex: 1;
+  min-width: 0;
+  border-right: none;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Side panels container (PDF viewer + debug) */
+.chat-side-panels {
+  display: flex;
+  flex-direction: column;
+  width: 45%;
+  max-width: 550px;
+  min-width: 300px;
+  gap: 0;
+  overflow: hidden;
+}
+
+.chat-side-panels > :first-child {
+  border-top-right-radius: 12px;
+}
+
+.chat-side-panels > :last-child {
+  border-bottom-right-radius: 12px;
+}
+
+/* When only debug panel (no PDF viewer), take full height */
+.chat-side-panels > .debug-panel:only-child {
+  flex: 1;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+/* When both PDF viewer and debug panel, split space */
+.chat-side-panels .pdf-viewer {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.chat-side-panels .debug-panel {
+  flex: 1;
+  min-height: 0;
+  border-radius: 0;
+  border-left: 1px solid var(--border-color);
+}
+
+.chat-split-layout .pdf-viewer {
+  width: 45%;
+  max-width: 550px;
+  min-width: 300px;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+/* Responsive: on small screens stack vertically or hide viewer */
+@media (max-width: 900px) {
+  .chat-split-layout {
+    flex-direction: column;
+  }
+
+  .chat-split-layout .chatbot-container {
+    flex: 1;
+    border-radius: 0;
+    border-right: none;
+    border-bottom: none;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .chat-side-panels {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    height: 40%;
+    min-height: 200px;
+    flex-direction: row;
+  }
+
+  .chat-side-panels > :first-child {
+    border-top-right-radius: 0;
+  }
+
+  .chat-side-panels > :last-child {
+    border-bottom-right-radius: 0;
+  }
+
+  .chat-side-panels .pdf-viewer {
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    flex: 1;
+  }
+
+  .chat-side-panels .debug-panel {
+    border-left: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color);
+    flex: 1;
+  }
+
+  .chat-split-layout .pdf-viewer {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    height: 40%;
+    min-height: 200px;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    border-radius: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-split-layout .pdf-viewer {
+    height: 35%;
+    min-height: 180px;
+  }
+
+  .pdf-viewer-toolbar {
+    padding: 0.35rem 0.5rem;
+  }
+
+  .pdf-viewer-highlights {
+    padding: 0.25rem 0.5rem;
+  }
+}
