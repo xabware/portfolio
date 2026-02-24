@@ -107,7 +107,7 @@ export const personalInfo: PersonalInfo = {
     ],
     en: [
       'I am a curious and engaged person. I chose software engineering as a career because I was torn between too many fields—physics, biology, mathematics... And I felt that software engineering, due to its cross-cutting nature, would allow me to explore many areas and eventually discover what I was most passionate about in life.',
-      'My approach focuses on writing clean, maintainable, and scalable code, always seeking best practices and the latest trends in software development.',
+      'Nowadays, I am aware that what drew me to computer science is its ability to transform every area of the world in a different way, and to positively impact so many lives. I like to stay up to date with the latest technological advances, and to find ways they can improve people’s quality of life.',
       'Over the last 5 years, the world has changed radically, and it still seems likely to change much more. Advances of all kinds in artificial intelligence are extremely attractive to me; I enjoy exploring ways in which AI can solve problems that were previously unsolvable or required huge amounts of resources. The latest advances in agents and generative AI are allowing me to develop projects at a pace I could never have imagined until now.',
     ],
   },

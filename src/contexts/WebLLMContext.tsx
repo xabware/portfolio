@@ -88,7 +88,7 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [initProgress, setInitProgress] = useState<string>('No inicializado');
+  const [initProgress, setInitProgress] = useState<string>('Not initialized');
   const [hasStarted, setHasStarted] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingResponse, setIsLoadingResponse] = useState(false);
@@ -123,7 +123,7 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
       isInitializingRef.current = true;
       setIsLoading(true);
       setError(null);
-      setInitProgress('Inicializando motor de IA...');
+      setInitProgress(currentLanguage === 'es' ? 'Inicializando motor de IA...' : 'Initializing AI engine...');
 
       const newEngine = await webllm.CreateMLCEngine(
         selectedModelId,
@@ -134,13 +134,21 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
             
             // Traducir mensajes comunes de WebLLM
             if (progress.text.includes('Loading model from cache')) {
-              userFriendlyText = 'Cargando modelo desde caché del navegador...';
+              userFriendlyText = currentLanguage === 'es'
+                ? 'Cargando modelo desde caché del navegador...'
+                : 'Loading model from browser cache...';
             } else if (progress.text.includes('Fetching param cache')) {
-              userFriendlyText = 'Descargando modelo (primera vez)...';
+              userFriendlyText = currentLanguage === 'es'
+                ? 'Descargando modelo (primera vez)...'
+                : 'Downloading model (first time)...';
             } else if (progress.text.includes('Loading GPU shader modules')) {
-              userFriendlyText = 'Cargando shaders en GPU...';
+              userFriendlyText = currentLanguage === 'es'
+                ? 'Cargando shaders en GPU...'
+                : 'Loading GPU shaders...';
             } else if (progress.text.includes('Finish loading')) {
-              userFriendlyText = 'Finalizando carga del modelo...';
+              userFriendlyText = currentLanguage === 'es'
+                ? 'Finalizando carga del modelo...'
+                : 'Finalizing model load...';
             }
             
             setInitProgress(userFriendlyText);
@@ -150,19 +158,23 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
 
       engineRef.current = newEngine;
       setIsInitialized(true);
-      setInitProgress('Modelo cargado y listo');
+      setInitProgress(currentLanguage === 'es' ? 'Modelo cargado y listo' : 'Model loaded and ready');
       setError(null);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      const errorMessage = err instanceof Error ? err.message : (currentLanguage === 'es' ? 'Error desconocido' : 'Unknown error');
       
       // Detectar error específico de memoria GPU
       if (errorMessage.includes('Device was lost') || errorMessage.includes('GPUDeviceLostInfo') || errorMessage.includes('insufficient memory')) {
         setError('MEMORY_ERROR'); // Marcador especial para el error de memoria
       } else {
-        setError(`Error al inicializar el modelo: ${errorMessage}`);
+        setError(
+          currentLanguage === 'es'
+            ? `Error al inicializar el modelo: ${errorMessage}`
+            : `Error initializing model: ${errorMessage}`
+        );
       }
       
-      setInitProgress('Error en la inicialización');
+      setInitProgress(currentLanguage === 'es' ? 'Error en la inicialización' : 'Initialization error');
       console.error('Error initializing WebLLM:', err);
       engineRef.current = null;
       setIsInitialized(false);
@@ -175,7 +187,7 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
       isInitializingRef.current = false;
     }
-  }, [isInitialized, isLoading, selectedModelId]);
+  }, [currentLanguage, isInitialized, isLoading, selectedModelId]);
 
   // RAG: Cargar un PDF
   const loadPDF = useCallback(async (file: File) => {
