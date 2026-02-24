@@ -434,6 +434,22 @@
   box-shadow: 0 0 15px rgba(100, 200, 255, 0.3);
 }
 
+.vertical-button.board-button {
+  width: 74px;
+  height: 74px;
+  border-radius: 14px;
+  background: rgba(56, 189, 248, 0.22);
+  border-color: rgba(56, 189, 248, 0.6);
+  color: rgba(224, 242, 254, 0.98);
+  font-size: 0.95rem;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
+}
+
+.vertical-button.board-button:active {
+  background: rgba(56, 189, 248, 0.5);
+  border-color: rgba(125, 211, 252, 0.95);
+}
+
 /* Ocultar instrucciones en movil */
 @media (max-width: 768px) {
   .desktop-only {
@@ -480,6 +496,12 @@
     height: 50px;
     font-size: 1.2rem;
   }
+
+  .vertical-button.board-button {
+    width: 62px;
+    height: 62px;
+    font-size: 0.85rem;
+  }
 }
 
 /* Modo horizontal (landscape) - mantener mismos controles */
@@ -510,6 +532,12 @@
     width: 45px;
     height: 45px;
     font-size: 1rem;
+  }
+
+  .vertical-button.board-button {
+    width: 56px;
+    height: 56px;
+    font-size: 0.78rem;
   }
   
   .planet-info-panel {

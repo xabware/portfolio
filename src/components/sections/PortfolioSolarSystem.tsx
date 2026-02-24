@@ -88,12 +88,14 @@ interface JoystickState {
   left: { x: number; y: number };
   right: { x: number; y: number };
   verticalMovement: number; // -1 = bajar, 0 = nada, 1 = subir
+  boardAction: boolean;
 }
 
 const joystickState: JoystickState = {
   left: { x: 0, y: 0 },
   right: { x: 0, y: 0 },
-  verticalMovement: 0
+  verticalMovement: 0,
+  boardAction: false
 };
 
 // Estado del modo de vuelo: espacio o superficie de planeta
@@ -2523,6 +2525,8 @@ interface PlanetarySurfaceProps {
   allPlanets: PlanetData[];
   onExitSurface: () => void;
   language: Language;
+  onTraversalModeChange?: (mode: 'ship' | 'foot') => void;
+  onFootCanBoardChange?: (canBoard: boolean) => void;
 }
 
 interface SurfaceShipTransform {
@@ -2530,7 +2534,14 @@ interface SurfaceShipTransform {
   quaternion: THREE.Quaternion;
 }
 
-function PlanetarySurface({ planetData, allPlanets, onExitSurface, language }: PlanetarySurfaceProps) {
+function PlanetarySurface({
+  planetData,
+  allPlanets,
+  onExitSurface,
+  language,
+  onTraversalModeChange,
+  onFootCanBoardChange
+}: PlanetarySurfaceProps) {
   const config = useMemo(() => getSurfaceConfig(planetData.planetType), [planetData.planetType]);
   const planetSeed = useMemo(() => {
     return planetData.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -2622,6 +2633,20 @@ function PlanetarySurface({ planetData, allPlanets, onExitSurface, language }: P
     });
     setSurfaceTraversalMode('ship');
   }, [parkedShipTransform]);
+
+  useEffect(() => {
+    onTraversalModeChange?.(surfaceTraversalMode);
+    if (surfaceTraversalMode !== 'foot') {
+      onFootCanBoardChange?.(false);
+    }
+  }, [onFootCanBoardChange, onTraversalModeChange, surfaceTraversalMode]);
+
+  useEffect(() => {
+    return () => {
+      onFootCanBoardChange?.(false);
+      onTraversalModeChange?.('ship');
+    };
+  }, [onFootCanBoardChange, onTraversalModeChange]);
   
   return (
     <group>
@@ -2714,6 +2739,7 @@ function PlanetarySurface({ planetData, allPlanets, onExitSurface, language }: P
           initialPosition={onFootSpawn ?? parkedShipTransform?.position ?? null}
           parkedShipPosition={parkedShipTransform?.position ?? null}
           onBoardShip={handleBoardShip}
+          onCanBoardChange={onFootCanBoardChange}
         />
       )}
       
@@ -2775,8 +2801,8 @@ function AtmosphericFlightControls({
   const LANDING_WINDOW = 2.8;
   const MAX_ALTITUDE = surfaceRadius + 80;
   
-  const MOBILE_MOVE_SENSITIVITY = 0.15;
-  const MOBILE_LOOK_SENSITIVITY = 0.25;
+  const MOBILE_MOVE_SENSITIVITY = 1;
+  const MOBILE_LOOK_SENSITIVITY = 1;
 
   useEffect(() => {
     cameraRef.current = camera instanceof THREE.PerspectiveCamera ? camera : null;
@@ -2858,12 +2884,13 @@ function AtmosphericFlightControls({
     thrusterState.down = keys.current.has('shiftleft') || keys.current.has('shiftright');
     
     // Calcular movimiento tangente a la superficie
-    const movement = new THREE.Vector3();
+    const keyboardMovement = new THREE.Vector3();
+    const analogMovement = new THREE.Vector3();
     
-    if (thrusterState.forward) movement.add(forward);
-    if (thrusterState.backward) movement.sub(forward);
-    if (thrusterState.left) movement.sub(right);
-    if (thrusterState.right) movement.add(right);
+    if (thrusterState.forward) keyboardMovement.add(forward);
+    if (thrusterState.backward) keyboardMovement.sub(forward);
+    if (thrusterState.left) keyboardMovement.sub(right);
+    if (thrusterState.right) keyboardMovement.add(right);
     
     // Ascender/descender
     if (thrusterState.up) altitude.current += ALTITUDE_SPEED;
@@ -2887,8 +2914,8 @@ function AtmosphericFlightControls({
     // Controles móviles
     if (isMobile.current) {
       if (Math.abs(joystickState.left.x) > 0.1 || Math.abs(joystickState.left.y) > 0.1) {
-        movement.addScaledVector(forward, joystickState.left.y * MOBILE_MOVE_SENSITIVITY);
-        movement.addScaledVector(right, joystickState.left.x * MOBILE_MOVE_SENSITIVITY);
+        analogMovement.addScaledVector(forward, joystickState.left.y * MOBILE_MOVE_SENSITIVITY);
+        analogMovement.addScaledVector(right, joystickState.left.x * MOBILE_MOVE_SENSITIVITY);
         thrusterState.forward = joystickState.left.y > 0.1;
         thrusterState.backward = joystickState.left.y < -0.1;
         thrusterState.left = joystickState.left.x < -0.1;
@@ -2905,6 +2932,15 @@ function AtmosphericFlightControls({
         thrusterState.down = joystickState.verticalMovement < 0;
       }
     }
+
+    const movement = keyboardMovement;
+    if (keyboardMovement.lengthSq() > 0) {
+      keyboardMovement.normalize();
+    }
+    movement.add(analogMovement);
+    if (movement.lengthSq() > 1) {
+      movement.normalize();
+    }
     
     // Aplicar rotación yaw al vector forward (girar alrededor del eje up)
     if (Math.abs(yawDelta) > 0.0001) {
@@ -2913,9 +2949,8 @@ function AtmosphericFlightControls({
     }
     
     // Aplicar movimiento con física
-    if (movement.length() > 0) {
-      movement.normalize().multiplyScalar(SPEED);
-      velocity.current.add(movement);
+    if (movement.lengthSq() > 0.0001) {
+      velocity.current.addScaledVector(movement, SPEED);
     }
     
     velocity.current.multiplyScalar(FRICTION);
@@ -3071,6 +3106,7 @@ interface SurfaceOnFootControlsProps {
   initialPosition?: THREE.Vector3 | null;
   parkedShipPosition?: THREE.Vector3 | null;
   onBoardShip: () => void;
+  onCanBoardChange?: (canBoard: boolean) => void;
 }
 
 function SurfaceOnFootControls({
@@ -3080,11 +3116,13 @@ function SurfaceOnFootControls({
   language,
   initialPosition,
   parkedShipPosition,
-  onBoardShip
+  onBoardShip,
+  onCanBoardChange
 }: SurfaceOnFootControlsProps) {
   const { camera } = useThree();
   const keys = useRef<Set<string>>(new Set());
   const initialized = useRef(false);
+  const isMobile = useRef(isTouchDevice());
   const surfaceNormal = useRef(new THREE.Vector3(0, 0, 1));
   const headingDir = useRef(new THREE.Vector3(0, 1, 0));
   const velocity = useRef(new THREE.Vector3());
@@ -3098,6 +3136,8 @@ function SurfaceOnFootControls({
   const LOOK_SPEED = 0.02;
   const EYE_HEIGHT = 0.72;
   const BOARDING_DISTANCE = 4.5;
+  const MOBILE_MOVE_SENSITIVITY = 1;
+  const MOBILE_LOOK_SENSITIVITY = 1;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -3120,8 +3160,10 @@ function SurfaceOnFootControls({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      onCanBoardChange?.(false);
+      joystickState.boardAction = false;
     };
-  }, []);
+  }, [onCanBoardChange]);
 
   useFrame(() => {
     if (!initialized.current) {
@@ -3153,11 +3195,12 @@ function SurfaceOnFootControls({
     const forward = new THREE.Vector3().crossVectors(up, right).normalize();
     headingDir.current.copy(forward);
 
-    const movement = new THREE.Vector3();
-    if (keys.current.has('keyw')) movement.add(forward);
-    if (keys.current.has('keys')) movement.sub(forward);
-    if (keys.current.has('keya')) movement.sub(right);
-    if (keys.current.has('keyd')) movement.add(right);
+    const keyboardMovement = new THREE.Vector3();
+    const analogMovement = new THREE.Vector3();
+    if (keys.current.has('keyw')) keyboardMovement.add(forward);
+    if (keys.current.has('keys')) keyboardMovement.sub(forward);
+    if (keys.current.has('keya')) keyboardMovement.sub(right);
+    if (keys.current.has('keyd')) keyboardMovement.add(right);
 
     let yawDelta = 0;
     if (keys.current.has('arrowleft')) yawDelta += LOOK_SPEED;
@@ -3171,14 +3214,34 @@ function SurfaceOnFootControls({
       pitch.current = Math.max(pitch.current, -Math.PI / 4);
     }
 
+    if (isMobile.current) {
+      if (Math.abs(joystickState.left.x) > 0.1 || Math.abs(joystickState.left.y) > 0.1) {
+        analogMovement.addScaledVector(forward, joystickState.left.y * MOBILE_MOVE_SENSITIVITY);
+        analogMovement.addScaledVector(right, joystickState.left.x * MOBILE_MOVE_SENSITIVITY);
+      }
+      if (Math.abs(joystickState.right.x) > 0.1 || Math.abs(joystickState.right.y) > 0.1) {
+        yawDelta -= joystickState.right.x * LOOK_SPEED * MOBILE_LOOK_SENSITIVITY;
+        pitch.current += joystickState.right.y * LOOK_SPEED * MOBILE_LOOK_SENSITIVITY;
+        pitch.current = Math.max(-Math.PI / 4, Math.min(Math.PI / 3.5, pitch.current));
+      }
+    }
+
     if (Math.abs(yawDelta) > 0.0001) {
       const yawQuat = new THREE.Quaternion().setFromAxisAngle(up, yawDelta);
       headingDir.current.applyQuaternion(yawQuat).normalize();
     }
 
-    if (movement.lengthSq() > 0) {
-      movement.normalize().multiplyScalar(WALK_SPEED);
-      velocity.current.add(movement);
+    const movement = keyboardMovement;
+    if (keyboardMovement.lengthSq() > 0) {
+      keyboardMovement.normalize();
+    }
+    movement.add(analogMovement);
+    if (movement.lengthSq() > 1) {
+      movement.normalize();
+    }
+
+    if (movement.lengthSq() > 0.0001) {
+      velocity.current.addScaledVector(movement, WALK_SPEED);
     }
     velocity.current.multiplyScalar(FRICTION);
 
@@ -3223,12 +3286,22 @@ function SurfaceOnFootControls({
       if (shouldEnableBoard !== canBoardRef.current) {
         canBoardRef.current = shouldEnableBoard;
         setCanBoard(shouldEnableBoard);
+        onCanBoardChange?.(shouldEnableBoard);
       }
 
-      if (shouldEnableBoard && keys.current.has('keye') && !boardPressedRef.current) {
+      const boardRequested = keys.current.has('keye') || joystickState.boardAction;
+      if (!boardRequested) {
+        boardPressedRef.current = false;
+      }
+
+      if (shouldEnableBoard && boardRequested && !boardPressedRef.current) {
         boardPressedRef.current = true;
         onBoardShip();
       }
+    } else if (canBoardRef.current) {
+      canBoardRef.current = false;
+      setCanBoard(false);
+      onCanBoardChange?.(false);
     }
   });
 
@@ -3251,9 +3324,11 @@ function SurfaceOnFootControls({
 function SurfaceSpaceshipModel({ parkedTransform = null }: { parkedTransform?: SurfaceShipTransform | null }) {
   const { camera } = useThree();
   const shipRef = useRef<THREE.Group>(null);
+  const beaconRef = useRef<THREE.Group>(null);
+  const beaconLightRef = useRef<THREE.PointLight>(null);
   const [thrusters, setThrusters] = useState({ ...thrusterState });
   
-  useFrame(() => {
+  useFrame((state) => {
     if (!shipRef.current) return;
 
     if (parkedTransform) {
@@ -3267,6 +3342,17 @@ function SurfaceSpaceshipModel({ parkedTransform = null }: { parkedTransform?: S
       });
       shipRef.current.position.copy(parkedTransform.position);
       shipRef.current.quaternion.copy(parkedTransform.quaternion);
+
+      if (beaconRef.current) {
+        const beaconUp = parkedTransform.position.clone().normalize();
+        beaconRef.current.position.copy(parkedTransform.position);
+        beaconRef.current.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), beaconUp);
+      }
+
+      if (beaconLightRef.current) {
+        const pulse = 1.8 + Math.sin(state.clock.elapsedTime * 3.2) * 0.4;
+        beaconLightRef.current.intensity = pulse;
+      }
       return;
     }
     
@@ -3285,7 +3371,8 @@ function SurfaceSpaceshipModel({ parkedTransform = null }: { parkedTransform?: S
   });
   
   return (
-    <group ref={shipRef} scale={1}>
+    <>
+      <group ref={shipRef} scale={1}>
       {/* Cuerpo principal de la nave - Naranja vibrante */}
       <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <coneGeometry args={[0.15, 0.6, 6]} />
@@ -3337,7 +3424,28 @@ function SurfaceSpaceshipModel({ parkedTransform = null }: { parkedTransform?: S
       <Thruster position={[-0.3, 0, 0.1]} rotation={[0, 0, Math.PI / 2]} active={thrusters.right} color="#ff6600" />
       <Thruster position={[0, -0.15, 0.1]} rotation={[0, 0, Math.PI]} active={thrusters.up} color="#00aaff" />
       <Thruster position={[0, 0.15, 0.1]} rotation={[0, 0, 0]} active={thrusters.down} color="#00aaff" />
-    </group>
+      </group>
+
+      {parkedTransform && (
+        <group ref={beaconRef}>
+          <mesh position={[0, 80, 0]} renderOrder={3}>
+            <cylinderGeometry args={[0.45, 2.4, 160, 14, 1, true]} />
+            <meshBasicMaterial
+              color="#9fdcff"
+              transparent
+              opacity={0.32}
+              depthWrite={false}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+          <mesh position={[0, 2.6, 0]}>
+            <sphereGeometry args={[1.1, 14, 14]} />
+            <meshBasicMaterial color="#d9f0ff" transparent opacity={0.85} />
+          </mesh>
+          <pointLight ref={beaconLightRef} color="#9fdcff" intensity={2} distance={85} />
+        </group>
+      )}
+    </>
   );
 }
 
@@ -3547,9 +3655,8 @@ function SpaceshipControls({ initialPosition }: SpaceshipControlsProps) {
   const FRICTION = 0.92;
   const LOOK_SPEED = 0.015;
   
-  // Sensibilidad reducida para joysticks móviles
-  const MOBILE_MOVE_SENSITIVITY = 0.15;
-  const MOBILE_LOOK_SENSITIVITY = 0.25;
+  const MOBILE_MOVE_SENSITIVITY = 1;
+  const MOBILE_LOOK_SENSITIVITY = 1;
 
   useEffect(() => {
     cameraRef.current = camera instanceof THREE.PerspectiveCamera ? camera : null;
@@ -3600,7 +3707,8 @@ function SpaceshipControls({ initialPosition }: SpaceshipControlsProps) {
     right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
     up.crossVectors(right, forward).normalize();
     
-    const movement = new THREE.Vector3();
+    const keyboardMovement = new THREE.Vector3();
+    const analogMovement = new THREE.Vector3();
     
     // Actualizar estado de propulsores para teclado
     thrusterState.forward = keys.current.has('keyw');
@@ -3610,12 +3718,12 @@ function SpaceshipControls({ initialPosition }: SpaceshipControlsProps) {
     thrusterState.up = keys.current.has('space');
     thrusterState.down = keys.current.has('shiftleft') || keys.current.has('shiftright');
     
-    if (thrusterState.forward) movement.add(forward);
-    if (thrusterState.backward) movement.sub(forward);
-    if (thrusterState.left) movement.sub(right);
-    if (thrusterState.right) movement.add(right);
-    if (thrusterState.up) movement.add(up);
-    if (thrusterState.down) movement.sub(up);
+    if (thrusterState.forward) keyboardMovement.add(forward);
+    if (thrusterState.backward) keyboardMovement.sub(forward);
+    if (thrusterState.left) keyboardMovement.sub(right);
+    if (thrusterState.right) keyboardMovement.add(right);
+    if (thrusterState.up) keyboardMovement.add(up);
+    if (thrusterState.down) keyboardMovement.sub(up);
 
     if (keys.current.has('arrowleft')) rotation.current.y += LOOK_SPEED;
     if (keys.current.has('arrowright')) rotation.current.y -= LOOK_SPEED;
@@ -3630,8 +3738,8 @@ function SpaceshipControls({ initialPosition }: SpaceshipControlsProps) {
 
     if (isMobile.current) {
       if (Math.abs(joystickState.left.x) > 0.1 || Math.abs(joystickState.left.y) > 0.1) {
-        movement.add(forward.clone().multiplyScalar(joystickState.left.y * MOBILE_MOVE_SENSITIVITY));
-        movement.add(right.clone().multiplyScalar(joystickState.left.x * MOBILE_MOVE_SENSITIVITY));
+        analogMovement.addScaledVector(forward, joystickState.left.y * MOBILE_MOVE_SENSITIVITY);
+        analogMovement.addScaledVector(right, joystickState.left.x * MOBILE_MOVE_SENSITIVITY);
         // Actualizar propulsores para joystick móvil
         thrusterState.forward = joystickState.left.y > 0.1;
         thrusterState.backward = joystickState.left.y < -0.1;
@@ -3651,7 +3759,7 @@ function SpaceshipControls({ initialPosition }: SpaceshipControlsProps) {
       }
       // Movimiento vertical con botones
       if (joystickState.verticalMovement !== 0) {
-        movement.add(up.clone().multiplyScalar(joystickState.verticalMovement * MOBILE_MOVE_SENSITIVITY));
+        analogMovement.addScaledVector(up, joystickState.verticalMovement * MOBILE_MOVE_SENSITIVITY);
         thrusterState.up = joystickState.verticalMovement > 0;
         thrusterState.down = joystickState.verticalMovement < 0;
       } else if (isMobile.current) {
@@ -3659,11 +3767,18 @@ function SpaceshipControls({ initialPosition }: SpaceshipControlsProps) {
         if (!keys.current.has('shiftleft') && !keys.current.has('shiftright')) thrusterState.down = false;
       }
     }
-    
-    if (movement.length() > 0) {
+
+    const movement = keyboardMovement;
+    if (keyboardMovement.lengthSq() > 0) {
+      keyboardMovement.normalize();
+    }
+    movement.add(analogMovement);
+    if (movement.lengthSq() > 1) {
       movement.normalize();
-      movement.multiplyScalar(SPEED);
-      velocity.current.add(movement);
+    }
+    
+    if (movement.lengthSq() > 0.0001) {
+      velocity.current.addScaledVector(movement, SPEED);
     }
     
     velocity.current.multiplyScalar(FRICTION);
@@ -3802,7 +3917,14 @@ function VerticalButton({ direction, label }: VerticalButtonProps) {
 }
 
 // Controles móviles
-function MobileControls() {
+interface MobileControlsProps {
+  surfaceActive: boolean;
+  traversalMode: 'ship' | 'foot';
+  showBoardButton: boolean;
+  language: Language;
+}
+
+function MobileControls({ surfaceActive, traversalMode, showBoardButton, language }: MobileControlsProps) {
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
     return isTouchDevice();
@@ -3822,15 +3944,58 @@ function MobileControls() {
     joystickState.right = { x, y };
   }, []);
 
+  const handleBoardStart = useCallback((e: React.TouchEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    joystickState.boardAction = true;
+  }, []);
+
+  const handleBoardEnd = useCallback((e: React.TouchEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    joystickState.boardAction = false;
+  }, []);
+
+  useEffect(() => {
+    if (!surfaceActive || traversalMode !== 'foot' || !showBoardButton) {
+      joystickState.boardAction = false;
+    }
+  }, [showBoardButton, surfaceActive, traversalMode]);
+
+  useEffect(() => {
+    return () => {
+      joystickState.left = { x: 0, y: 0 };
+      joystickState.right = { x: 0, y: 0 };
+      joystickState.verticalMovement = 0;
+      joystickState.boardAction = false;
+    };
+  }, []);
+
   if (!isMobile) return null;
 
   return (
     <div className="mobile-controls">
       <VirtualJoystick onMove={handleLeftMove} />
-      <div className="vertical-buttons">
-        <VerticalButton direction="up" label="▲" />
-        <VerticalButton direction="down" label="▼" />
-      </div>
+      {surfaceActive && traversalMode === 'foot' ? (
+        <div className="vertical-buttons">
+          {showBoardButton && (
+            <button
+              className="vertical-button board-button"
+              onTouchStart={handleBoardStart}
+              onTouchEnd={handleBoardEnd}
+              onTouchCancel={handleBoardEnd}
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              {language === 'es' ? 'Subir' : 'Board'}
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="vertical-buttons">
+          <VerticalButton direction="up" label="▲" />
+          <VerticalButton direction="down" label="▼" />
+        </div>
+      )}
       <VirtualJoystick onMove={handleRightMove} />
     </div>
   );
@@ -3988,11 +4153,20 @@ function SolarSystemScene({ planets, language, selectedPlanet, onSelectPlanet, o
 }
 
 // Escena de superficie planetaria
-function PlanetSurfaceScene({ planet, allPlanets, language, onExitSurface }: {
+function PlanetSurfaceScene({
+  planet,
+  allPlanets,
+  language,
+  onExitSurface,
+  onTraversalModeChange,
+  onFootCanBoardChange
+}: {
   planet: PlanetData;
   allPlanets: PlanetData[];
   language: Language;
   onExitSurface: () => void;
+  onTraversalModeChange?: (mode: 'ship' | 'foot') => void;
+  onFootCanBoardChange?: (canBoard: boolean) => void;
 }) {
   return (
     <PlanetarySurface
@@ -4000,6 +4174,8 @@ function PlanetSurfaceScene({ planet, allPlanets, language, onExitSurface }: {
       allPlanets={allPlanets}
       onExitSurface={onExitSurface}
       language={language}
+      onTraversalModeChange={onTraversalModeChange}
+      onFootCanBoardChange={onFootCanBoardChange}
     />
   );
 }
@@ -4025,6 +4201,8 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
   });
   const [cameraKey, setCameraKey] = useState(0); // Para forzar reset de cámara
   const [instructionsCollapsed, setInstructionsCollapsed] = useState(false);
+  const [surfaceTraversalMode, setSurfaceTraversalMode] = useState<'ship' | 'foot'>('ship');
+  const [surfaceCanBoardShip, setSurfaceCanBoardShip] = useState(false);
   
   // Obtener datos del portfolio
   const projects = useMemo(() => getProjects(language), [language]);
@@ -4136,6 +4314,8 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
     notifyFlightModeChange();
     
     setSurfaceMode({ active: true, planet, entryPosition: cameraPos.clone() });
+    setSurfaceTraversalMode('ship');
+    setSurfaceCanBoardShip(false);
     setSelectedPlanet(null);
     setSelectedPlanetItemsOverride(null);
     setCameraKey(prev => prev + 1);
@@ -4203,6 +4383,8 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
 
       return { active: false, planet: null, entryPosition: exitPosition };
     });
+    setSurfaceTraversalMode('ship');
+    setSurfaceCanBoardShip(false);
     setCameraKey(prev => prev + 1);
   }, []);
 
@@ -4262,6 +4444,8 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
               allPlanets={planets}
               language={language}
               onExitSurface={handleExitSurface}
+              onTraversalModeChange={setSurfaceTraversalMode}
+              onFootCanBoardChange={setSurfaceCanBoardShip}
             />
           ) : (
             <SolarSystemScene
@@ -4278,7 +4462,12 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
       </Canvas>
 
       <SpaceshipHUD />
-      <MobileControls />
+      <MobileControls
+        surfaceActive={surfaceMode.active}
+        traversalMode={surfaceTraversalMode}
+        showBoardButton={surfaceMode.active && surfaceTraversalMode === 'foot' && surfaceCanBoardShip}
+        language={language}
+      />
 
       {/* Panel de información del planeta seleccionado (solo en modo espacio) */}
       {!surfaceMode.active && selectedPlanet && (
