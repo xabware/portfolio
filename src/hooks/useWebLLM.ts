@@ -40,6 +40,8 @@ export interface UseWebLLMReturn {
   debugMode: boolean;
   setDebugMode: (enabled: boolean) => void;
   lastDebugInfo: RAGDebugInfo | null;
+  // Streaming
+  streamingText: string;
   // PDF Viewer
   pdfFiles: Map<string, PDFFileData>;
   activePdfFile: string | null;

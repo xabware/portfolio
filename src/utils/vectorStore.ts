@@ -72,10 +72,24 @@ export interface ReverseSearchResult {
 }
 
 /**
- * Información de debug completa de una interacción RAG
+ * Estado del pipeline RAG para mostrar progreso en tiempo real
+ */
+export type RAGPipelineStatus =
+  | 'searching'    // Buscando en BM25
+  | 'prompting'    // Construyendo prompt RAG
+  | 'generating'   // Generando respuesta del LLM (streaming)
+  | 'annotating'   // Ejecutando búsqueda inversa
+  | 'complete'     // Pipeline completado
+  | 'error';       // Error en algún paso
+
+/**
+ * Información de debug completa de una interacción RAG.
+ * Se actualiza progresivamente a medida que avanza el pipeline.
  */
 export interface RAGDebugInfo {
   timestamp: Date;
+  /** Estado actual del pipeline */
+  status: RAGPipelineStatus;
   query: string;
   /** Fuentes encontradas con texto expandido */
   sources: {
@@ -88,7 +102,7 @@ export interface RAGDebugInfo {
   }[];
   /** Fragmento del prompt RAG enviado al LLM */
   ragPrompt: string;
-  /** Respuesta cruda del LLM (sin anotar) */
+  /** Respuesta cruda del LLM (sin anotar) — se actualiza token a token durante streaming */
   rawResponse: string;
   /** Detalle de la búsqueda inversa por oración */
   reverseSearchDetails: ReverseSearchSentenceDetail[];
@@ -536,12 +550,16 @@ ${r.chunk.text}`;
  * Incluye el texto expandido (con chunks adyacentes) para dar más contexto.
  * Instruye al LLM a NO usar marcadores — el sistema los añade automáticamente.
  */
-export function formatRAGContextNumbered(sources: NumberedSource[], language: 'es' | 'en' = 'es'): string {
+export function formatRAGContextNumbered(sources: NumberedSource[], userQuery: string, language: 'es' | 'en' = 'es'): string {
   if (sources.length === 0) return '';
 
+  const queryHeader = language === 'es'
+    ? `PREGUNTA DEL USUARIO: ${userQuery}`
+    : `USER QUESTION: ${userQuery}`;
+
   const header = language === 'es'
-    ? 'CONTEXTO DEL DOCUMENTO (usa esta información para responder):'
-    : 'DOCUMENT CONTEXT (use this information to answer):';
+    ? 'CONTEXTO DEL DOCUMENTO (usa esta información para responder a la pregunta anterior):'
+    : 'DOCUMENT CONTEXT (use this information to answer the question above):';
 
   const pageLabel = language === 'es' ? 'Página' : 'Page';
 
@@ -553,7 +571,7 @@ export function formatRAGContextNumbered(sources: NumberedSource[], language: 'e
     ? '\nIMPORTANTE: Responde de manera natural y detallada usando la información del documento. NO incluyas marcadores de referencia como [1] o [2] ni menciones "Fuente" en tu respuesta; el sistema añadirá las referencias automáticamente. Si la información no está en el documento, indícalo claramente.'
     : '\nIMPORTANT: Answer naturally and in detail using the document information. Do NOT include reference markers like [1] or [2] or mention "Source" in your response; the system will add references automatically. If the information is not in the document, clearly state so.';
 
-  return `${header}\n\n${chunks}\n${instruction}`;
+  return `${queryHeader}\n\n${header}\n\n${chunks}\n${instruction}`;
 }
 
 /**

@@ -185,6 +185,32 @@
   }
 }
 
+/* Streaming text (tokens arriving from LLM) */
+.message-text-streaming {
+  position: relative;
+}
+
+.message-text-streaming p {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--primary-color);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink-cursor 0.7s step-end infinite;
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 .chatbot-input {
   display: flex;
   gap: 0.75rem;
@@ -884,7 +910,7 @@
 }
 
 .rag-attach-button .has-documents {
-  color: var(--primary-color);
+  color: #22c55e;
 }
 
 .rag-badge {

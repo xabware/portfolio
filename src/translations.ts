@@ -12,7 +12,7 @@ export const translations = {
     about: 'Sobre mí',
     projects: 'Proyectos',
     space: 'Mi espacio',
-    chatbot: 'Chatbot',
+    chatbot: 'Chatbot/RAG',
     contact: 'Contacto',
     
     // Home
@@ -157,7 +157,7 @@ export const translations = {
     about: 'About',
     projects: 'Projects',
     space: 'My space',
-    chatbot: 'Chatbot',
+    chatbot: 'Chatbot/RAG',
     contact: 'Contact',
     
     // Home

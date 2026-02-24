@@ -46,6 +46,70 @@
   text-align: center;
 }
 
+/* Pipeline status bar */
+.debug-pipeline-status {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(234, 179, 8, 0.04);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.pipeline-step {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  opacity: 0.4;
+  transition: all 0.3s ease;
+}
+
+.pipeline-step.active {
+  opacity: 1;
+  color: #eab308;
+  background: rgba(234, 179, 8, 0.1);
+  font-weight: 600;
+}
+
+.pipeline-step.done {
+  opacity: 1;
+  color: #22c55e;
+}
+
+.pipeline-step.done svg {
+  color: #22c55e;
+}
+
+.pipeline-step.error {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.pipeline-step-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pipeline-step-label {
+  white-space: nowrap;
+}
+
+.pipeline-step .spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .debug-panel-body {
   flex: 1;
   overflow-y: auto;

@@ -1,6 +1,6 @@
 import { lazy, Suspense, memo, useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { FileText, Bug } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
 import { useWebLLM } from '../../hooks/useWebLLM';
@@ -46,7 +46,6 @@ const Chat = memo(() => {
 
   // Estado para modales móviles
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
-  const [debugModalOpen, setDebugModalOpen] = useState(false);
   
   // Ventanas popup para desktop (open() se llama desde click handlers)
   const pdfPopup = usePopupWindow({ windowId: 'pdf-viewer-window', width: 700, height: 900 });
@@ -92,6 +91,13 @@ const Chat = memo(() => {
     scores: language === 'es' ? 'Puntuaciones' : 'Scores',
     coverage: language === 'es' ? 'Cobert.' : 'Cover.',
     distinctive: language === 'es' ? 'Distint.' : 'Distint.',
+    // Pipeline status
+    statusSearching: language === 'es' ? 'Buscando...' : 'Searching...',
+    statusPrompting: language === 'es' ? 'Prompt...' : 'Prompting...',
+    statusGenerating: language === 'es' ? 'Generando...' : 'Generating...',
+    statusAnnotating: language === 'es' ? 'Anotando...' : 'Annotating...',
+    statusComplete: language === 'es' ? 'Hecho' : 'Done',
+    statusError: language === 'es' ? 'Error' : 'Error',
   };
 
   // --- Funciones de control de popups (llamadas desde click handlers via PopupContext) ---
@@ -113,17 +119,13 @@ const Chat = memo(() => {
   }, [pdfPopup, setActivePdfFile]);
 
   const openDebugPopup = useCallback(() => {
+    if (isMobile) return; // Debug no disponible en móvil
     setDebugMode(true);
-    if (isMobile) {
-      setDebugModalOpen(true);
-    } else {
-      debugPopup.open('Debug RAG');
-    }
+    debugPopup.open('Debug RAG');
   }, [isMobile, setDebugMode, debugPopup]);
 
   const closeDebugPopup = useCallback(() => {
     debugPopup.close();
-    setDebugModalOpen(false);
     setDebugMode(false);
   }, [debugPopup, setDebugMode]);
 
@@ -132,7 +134,8 @@ const Chat = memo(() => {
     closePdfPopup,
     openDebugPopup,
     closeDebugPopup,
-  }), [openPdfPopup, closePdfPopup, openDebugPopup, closeDebugPopup]);
+    isMobile,
+  }), [openPdfPopup, closePdfPopup, openDebugPopup, closeDebugPopup, isMobile]);
   
   return (
     <div className="chat-full-screen">
@@ -180,19 +183,6 @@ const Chat = memo(() => {
               onClose={closePdfPopup}
               highlightedPages={highlightedPages}
               translations={pdfViewerTranslations}
-            />
-          </MobileModal>
-        )}
-
-        {isMobile && debugModalOpen && debugMode && (
-          <MobileModal
-            title={debugPanelTranslations.title}
-            icon={<Bug size={16} />}
-            onClose={closeDebugPopup}
-          >
-            <DebugPanel
-              debugInfo={lastDebugInfo}
-              translations={debugPanelTranslations}
             />
           </MobileModal>
         )}

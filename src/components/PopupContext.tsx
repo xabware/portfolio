@@ -15,10 +15,12 @@ interface PopupContextType {
   openPdfPopup: (fileName: string, page: number) => void;
   /** Cierra el visor de PDF */
   closePdfPopup: () => void;
-  /** Abre el panel de debug en popup (PC) o modal (móvil). LLAMAR DESDE CLICK HANDLER. */
+  /** Abre el panel de debug en popup (PC). Solo disponible en desktop. LLAMAR DESDE CLICK HANDLER. */
   openDebugPopup: () => void;
   /** Cierra el panel de debug */
   closeDebugPopup: () => void;
+  /** true si es dispositivo móvil */
+  isMobile: boolean;
 }
 
 export const PopupContext = createContext<PopupContextType>({
@@ -26,6 +28,7 @@ export const PopupContext = createContext<PopupContextType>({
   closePdfPopup: () => {},
   openDebugPopup: () => {},
   closeDebugPopup: () => {},
+  isMobile: false,
 });
 
 export const usePopup = () => useContext(PopupContext);

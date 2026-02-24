@@ -1,9 +1,9 @@
 import { createContext, useContext, useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import * as webllm from '@mlc-ai/web-llm';
-import { availableModels, defaultModelId, generateSystemPrompt, type ModelConfig } from '../config/chatbotConfig';
+import { availableModels, defaultModelId, generateSystemPrompt, generateRAGSystemPrompt, type ModelConfig } from '../config/chatbotConfig';
 import { extractTextFromPDF, isValidPDF, type PDFDocument } from '../utils/pdfParser';
-import { VectorStore, formatRAGContextNumbered, reverseSearchAnnotate, type SearchResult, type NumberedSource, type RAGDebugInfo } from '../utils/vectorStore';
+import { VectorStore, formatRAGContextNumbered, reverseSearchAnnotate, type SearchResult, type NumberedSource, type RAGDebugInfo, type RAGPipelineStatus } from '../utils/vectorStore';
 
 export interface Message {
   id: string;
@@ -70,6 +70,8 @@ interface WebLLMContextType {
   debugMode: boolean;
   setDebugMode: (enabled: boolean) => void;
   lastDebugInfo: RAGDebugInfo | null;
+  // Streaming
+  streamingText: string;
   // PDF Viewer
   pdfFiles: Map<string, PDFFileData>;
   activePdfFile: string | null;
@@ -104,6 +106,8 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
   // Debug
   const [debugMode, setDebugMode] = useState(false);
   const [lastDebugInfo, setLastDebugInfo] = useState<RAGDebugInfo | null>(null);
+  // Streaming
+  const [streamingText, setStreamingText] = useState('');
   // PDF Viewer states
   const [pdfFiles, setPdfFiles] = useState<Map<string, PDFFileData>>(new Map());
   const [activePdfFile, setActivePdfFile] = useState<string | null>(null);
@@ -264,13 +268,53 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        // Usar el system prompt personalizado basado en el idioma
-        let systemPrompt = generateSystemPrompt(currentLanguage);
+        // Limpiar streaming previo
+        setStreamingText('');
+
+        // Helper para actualizar debug info progresivamente
+        const updateDebug = (partial: Partial<RAGDebugInfo>) => {
+          setLastDebugInfo(prev => {
+            const base: RAGDebugInfo = prev ?? {
+              timestamp: new Date(),
+              status: 'searching',
+              query: message,
+              sources: [],
+              ragPrompt: '',
+              rawResponse: '',
+              reverseSearchDetails: [],
+              annotatedResponse: '',
+            };
+            return { ...base, ...partial };
+          });
+        };
+
+        // ─── Paso 1: Búsqueda BM25 ───
+        if (debugMode) {
+          updateDebug({
+            timestamp: new Date(),
+            status: 'searching',
+            query: message,
+            sources: [],
+            ragPrompt: '',
+            rawResponse: '',
+            reverseSearchDetails: [],
+            annotatedResponse: '',
+          });
+        }
+
+        // Yield al main thread antes de BM25
+        await new Promise(r => setTimeout(r, 0));
+
+        // Seleccionar system prompt según modo RAG
+        const isRAGActive = ragEnabled && vectorStoreRef.current.hasDocuments();
+        let systemPrompt = isRAGActive
+          ? generateRAGSystemPrompt(currentLanguage)
+          : generateSystemPrompt(currentLanguage);
 
         // RAG: Si hay documentos cargados y RAG está habilitado, buscar contexto con chunks adyacentes
         let numberedSources: NumberedSource[] = [];
         let ragPromptText = '';
-        if (ragEnabled && vectorStoreRef.current.hasDocuments()) {
+        if (isRAGActive) {
           numberedSources = vectorStoreRef.current.searchWithContext(message, 5);
           // Mantener lastSearchResults para compatibilidad (highlighted pages, etc.)
           setLastSearchResults(numberedSources.map(ns => ({
@@ -279,38 +323,10 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
             relevance: ns.relevance,
           })));
 
-          if (numberedSources.length > 0) {
-            ragPromptText = formatRAGContextNumbered(numberedSources, currentLanguage);
-            systemPrompt += '\n\n' + ragPromptText;
-          }
-        } else {
-          setLastSearchResults([]);
-        }
-
-        const chatMessages: webllm.ChatCompletionMessageParam[] = [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: message },
-        ];
-
-        const reply = await engineRef.current.chat.completions.create({
-          messages: chatMessages,
-          temperature: 0.7,
-          max_tokens: 1024,
-        });
-
-        const rawText = reply.choices[0]?.message?.content || 'Lo siento, no pude generar una respuesta.';
-
-        // Búsqueda inversa: anotar la respuesta con referencias inline [N]
-        let annotatedText = rawText;
-        if (numberedSources.length > 0) {
-          const reverseResult = reverseSearchAnnotate(rawText, numberedSources);
-          annotatedText = reverseResult.annotatedText;
-
-          // Guardar debug info si el modo debug está activo
+          // ─── Paso 2: Construir prompt RAG ───
           if (debugMode) {
-            setLastDebugInfo({
-              timestamp: new Date(),
-              query: message,
+            updateDebug({
+              status: 'prompting',
               sources: numberedSources.map(ns => ({
                 refId: ns.refId,
                 fileName: ns.chunk.fileName,
@@ -319,29 +335,99 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
                 mainChunkText: ns.chunk.text,
                 expandedText: ns.expandedText,
               })),
-              ragPrompt: ragPromptText,
-              rawResponse: rawText,
+            });
+          }
+
+          if (numberedSources.length > 0) {
+            ragPromptText = formatRAGContextNumbered(numberedSources, message, currentLanguage);
+            systemPrompt += '\n\n' + ragPromptText;
+          }
+
+          if (debugMode) {
+            updateDebug({ ragPrompt: ragPromptText });
+          }
+        } else {
+          setLastSearchResults([]);
+          if (debugMode) {
+            updateDebug({ status: 'prompting', ragPrompt: '' });
+          }
+        }
+
+        // ─── Paso 3: Streaming LLM ───
+        if (debugMode) {
+          updateDebug({ status: 'generating' });
+        }
+
+        const chatMessages: webllm.ChatCompletionMessageParam[] = [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: message },
+        ];
+
+        // Usar streaming para mostrar tokens progresivamente
+        const stream = await engineRef.current.chat.completions.create({
+          messages: chatMessages,
+          temperature: 0.7,
+          max_tokens: 1024,
+          stream: true,
+        });
+
+        let rawText = '';
+        for await (const chunk of stream) {
+          const delta = chunk.choices[0]?.delta?.content || '';
+          if (delta) {
+            rawText += delta;
+            setStreamingText(rawText);
+            if (debugMode) {
+              updateDebug({ rawResponse: rawText });
+            }
+          }
+        }
+
+        // Fallback si no se generó texto
+        if (!rawText) {
+          rawText = 'Lo siento, no pude generar una respuesta.';
+        }
+
+        // ─── Paso 4: Búsqueda inversa ───
+        let annotatedText = rawText;
+        if (numberedSources.length > 0) {
+          if (debugMode) {
+            updateDebug({ status: 'annotating' });
+          }
+          // Yield al main thread antes de la anotación
+          await new Promise(r => setTimeout(r, 0));
+
+          const reverseResult = reverseSearchAnnotate(rawText, numberedSources);
+          annotatedText = reverseResult.annotatedText;
+
+          if (debugMode) {
+            updateDebug({
+              status: 'complete',
               reverseSearchDetails: reverseResult.details,
               annotatedResponse: annotatedText,
             });
           }
         } else if (debugMode) {
-          setLastDebugInfo({
-            timestamp: new Date(),
-            query: message,
-            sources: [],
-            ragPrompt: '',
+          updateDebug({
+            status: 'complete',
             rawResponse: rawText,
-            reverseSearchDetails: [],
             annotatedResponse: rawText,
           });
         }
 
+        // Limpiar streaming text al terminar
+        setStreamingText('');
+
         return { text: annotatedText, sources: numberedSources };
       } catch (err) {
         console.error('Error sending message:', err);
+        setStreamingText('');
         const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
         
+        if (debugMode) {
+          setLastDebugInfo(prev => prev ? { ...prev, status: 'error' as RAGPipelineStatus } : null);
+        }
+
         // Detectar error de memoria GPU durante el chat
         if (errorMessage.includes('Device was lost') || errorMessage.includes('GPUDeviceLostInfo') || errorMessage.includes('insufficient memory')) {
           // Primero lanzar el error, luego resetear
@@ -389,6 +475,7 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
     setActivePdfFile(null);
     setActivePdfPage(1);
     setLastDebugInfo(null);
+    setStreamingText('');
   }, []);
 
   // PDF Viewer: Navegar directamente a un archivo + página
@@ -451,6 +538,8 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
       debugMode,
       setDebugMode,
       lastDebugInfo,
+      // Streaming
+      streamingText,
       // PDF Viewer
       pdfFiles,
       activePdfFile,
@@ -459,7 +548,7 @@ export const WebLLMProvider = ({ children }: { children: ReactNode }) => {
       setActivePdfPage,
       openPdfAtPage,
     }),
-    [isLoading, isInitialized, error, sendMessage, initProgress, initialize, reset, hasStarted, messages, addMessage, clearMessages, isLoadingResponse, selectedModelId, currentLanguage, loadPDF, removePDF, clearAllPDFs, loadedDocuments, isProcessingPDF, pdfError, ragEnabled, lastSearchResults, debugMode, lastDebugInfo, pdfFiles, activePdfFile, activePdfPage, openPdfAtPage]
+    [isLoading, isInitialized, error, sendMessage, initProgress, initialize, reset, hasStarted, messages, addMessage, clearMessages, isLoadingResponse, selectedModelId, currentLanguage, loadPDF, removePDF, clearAllPDFs, loadedDocuments, isProcessingPDF, pdfError, ragEnabled, lastSearchResults, debugMode, lastDebugInfo, streamingText, pdfFiles, activePdfFile, activePdfPage, openPdfAtPage]
   );
 
   return <WebLLMContext.Provider value={value}>{children}</WebLLMContext.Provider>;

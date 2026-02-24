@@ -248,5 +248,5 @@ export const getCompatibleModels = (capabilities: GPUCapabilities): (ModelConfig
  * 
  * @param language Idioma actual de la interfaz
  */
-export { generateSystemPrompt } from '../data/contextGenerator';
+export { generateSystemPrompt, generateRAGSystemPrompt } from '../data/contextGenerator';
 

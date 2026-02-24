@@ -38,8 +38,10 @@ const Chatbot = memo(() => {
     setRagEnabled,
     // Debug
     debugMode,
+    // Streaming
+    streamingText,
   } = useWebLLM();
-  const { openPdfPopup, closePdfPopup, openDebugPopup, closeDebugPopup } = usePopup();
+  const { openPdfPopup, closePdfPopup, openDebugPopup, closeDebugPopup, isMobile } = usePopup();
   const { language } = useLanguage();
   const t = useTranslations(language);
   
@@ -81,7 +83,7 @@ const Chatbot = memo(() => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, scrollToBottom]);
+  }, [messages, streamingText, scrollToBottom]);
 
   // Agregar mensaje de bienvenida cuando el modelo esté listo (solo una vez)
   useEffect(() => {
@@ -376,15 +378,17 @@ const Chatbot = memo(() => {
                 {ragEnabled ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
                 <span>{ragEnabled ? t.ragEnabled : t.ragDisabled}</span>
               </button>
-              <button 
-                className={`rag-toggle-button debug-toggle ${debugMode ? 'active' : ''}`}
-                onClick={() => debugMode ? closeDebugPopup() : openDebugPopup()}
-                title={t.debugToggle}
-              >
-                <Bug size={16} />
-                <span>{t.debugMode}</span>
-                {debugMode ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
-              </button>
+              {!isMobile && (
+                <button 
+                  className={`rag-toggle-button debug-toggle ${debugMode ? 'active' : ''}`}
+                  onClick={() => debugMode ? closeDebugPopup() : openDebugPopup()}
+                  title={t.debugToggle}
+                >
+                  <Bug size={16} />
+                  <span>{t.debugMode}</span>
+                  {debugMode ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+                </button>
+              )}
             </div>
             
             {/* Upload button */}
@@ -536,11 +540,18 @@ const Chatbot = memo(() => {
               <Bot size={20} />
             </div>
             <div className="message-content">
-              <div className="typing-indicator">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
+              {streamingText ? (
+                <div className="message-text-streaming">
+                  <p>{streamingText}</p>
+                  <span className="streaming-cursor" />
+                </div>
+              ) : (
+                <div className="typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              )}
             </div>
           </div>
         )}

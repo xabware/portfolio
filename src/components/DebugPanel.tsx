@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
-import { Bug, ChevronDown, ChevronRight, FileText, Search, MessageSquare, ArrowRightLeft, CheckCircle2, XCircle } from 'lucide-react';
-import type { RAGDebugInfo } from '../utils/vectorStore';
+import { Bug, ChevronDown, ChevronRight, FileText, Search, MessageSquare, ArrowRightLeft, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import type { RAGDebugInfo, RAGPipelineStatus } from '../utils/vectorStore';
 import './DebugPanel.css';
 
 interface DebugPanelProps {
@@ -25,6 +25,13 @@ interface DebugPanelProps {
     scores: string;
     coverage: string;
     distinctive: string;
+    // Pipeline status translations
+    statusSearching?: string;
+    statusPrompting?: string;
+    statusGenerating?: string;
+    statusAnnotating?: string;
+    statusComplete?: string;
+    statusError?: string;
   };
 }
 
@@ -57,6 +64,51 @@ const CollapsibleSection = memo(({
 });
 CollapsibleSection.displayName = 'CollapsibleSection';
 
+/**
+ * Indicador visual del progreso del pipeline RAG
+ */
+const PIPELINE_STEPS: RAGPipelineStatus[] = ['searching', 'prompting', 'generating', 'annotating', 'complete'];
+
+const PipelineStatus = memo(({ status, translations: t }: { status: RAGPipelineStatus; translations: DebugPanelProps['translations'] }) => {
+  const statusLabels: Record<RAGPipelineStatus, string> = {
+    searching: t.statusSearching ?? 'Buscando...',
+    prompting: t.statusPrompting ?? 'Construyendo prompt...',
+    generating: t.statusGenerating ?? 'Generando respuesta...',
+    annotating: t.statusAnnotating ?? 'Anotando referencias...',
+    complete: t.statusComplete ?? 'Completado',
+    error: t.statusError ?? 'Error',
+  };
+
+  const currentIdx = PIPELINE_STEPS.indexOf(status);
+
+  return (
+    <div className="debug-pipeline-status">
+      {PIPELINE_STEPS.map((step, idx) => {
+        const isActive = step === status;
+        const isDone = idx < currentIdx || status === 'complete';
+        const isPending = idx > currentIdx && status !== 'complete';
+
+        return (
+          <div
+            key={step}
+            className={`pipeline-step ${isActive ? 'active' : ''} ${isDone ? 'done' : ''} ${isPending ? 'pending' : ''} ${status === 'error' && isActive ? 'error' : ''}`}
+          >
+            {isActive && status !== 'complete' ? (
+              <Loader2 size={12} className="spinning" />
+            ) : isDone ? (
+              <CheckCircle2 size={12} />
+            ) : (
+              <span className="pipeline-step-dot" />
+            )}
+            <span className="pipeline-step-label">{statusLabels[step]}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+});
+PipelineStatus.displayName = 'PipelineStatus';
+
 const DebugPanel = memo(({ debugInfo, translations: t }: DebugPanelProps) => {
   if (!debugInfo) {
     return (
@@ -81,6 +133,9 @@ const DebugPanel = memo(({ debugInfo, translations: t }: DebugPanelProps) => {
           {debugInfo.timestamp.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
         </span>
       </div>
+
+      {/* Pipeline status bar */}
+      <PipelineStatus status={debugInfo.status} translations={t} />
 
       <div className="debug-panel-body">
         {/* 1. Query */}
