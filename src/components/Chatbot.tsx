@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, memo } from 'react';
-import { Send, Bot, User, AlertCircle, Sparkles, ChevronDown, Cpu, Monitor, Paperclip, FileText, X, ToggleLeft, ToggleRight, Loader2, BookOpen, Bug } from 'lucide-react';
+import { Send, Bot, User, AlertCircle, Sparkles, ChevronDown, Cpu, Monitor, Paperclip, FileText, X, ToggleLeft, ToggleRight, Loader2, BookOpen, Bug, ExternalLink } from 'lucide-react';
 import { useWebLLM, type Message } from '../hooks/useWebLLM';
+import { usePopup } from './PopupContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTranslations } from '../translations';
 import { detectGPUCapabilities, getCompatibleModels, type GPUCapabilities } from '../config/chatbotConfig';
@@ -37,10 +38,8 @@ const Chatbot = memo(() => {
     setRagEnabled,
     // Debug
     debugMode,
-    setDebugMode,
-    // PDF Viewer
-    openPdfAtPage,
   } = useWebLLM();
+  const { openPdfPopup, closePdfPopup, openDebugPopup, closeDebugPopup } = usePopup();
   const { language } = useLanguage();
   const t = useTranslations(language);
   
@@ -379,7 +378,7 @@ const Chatbot = memo(() => {
               </button>
               <button 
                 className={`rag-toggle-button debug-toggle ${debugMode ? 'active' : ''}`}
-                onClick={() => setDebugMode(!debugMode)}
+                onClick={() => debugMode ? closeDebugPopup() : openDebugPopup()}
                 title={t.debugToggle}
               >
                 <Bug size={16} />
@@ -422,7 +421,7 @@ const Chatbot = memo(() => {
                 <div className="rag-documents-header">
                   <span>{loadedDocuments.length} {loadedDocuments.length === 1 ? t.ragDocumentLoaded : t.ragDocumentsLoaded}</span>
                   {loadedDocuments.length > 1 && (
-                    <button className="rag-clear-all" onClick={clearAllPDFs}>
+                    <button className="rag-clear-all" onClick={() => { clearAllPDFs(); closePdfPopup(); }}>
                       {t.ragClearAll}
                     </button>
                   )}
@@ -436,7 +435,14 @@ const Chatbot = memo(() => {
                         {doc.totalPages} {t.ragPages} · {doc.chunkCount} {t.ragChunks} · {formatFileSize(doc.fileSize)}
                       </span>
                     </div>
-                    <button className="rag-document-remove" onClick={() => removePDF(doc.fileName)}>
+                    <button 
+                      className="rag-document-view" 
+                      onClick={() => openPdfPopup(doc.fileName, 1)}
+                      title={t.ragOpenViewer}
+                    >
+                      <ExternalLink size={12} />
+                    </button>
+                    <button className="rag-document-remove" onClick={() => { removePDF(doc.fileName); closePdfPopup(); }}>
                       <X size={12} />
                     </button>
                   </div>
@@ -480,7 +486,7 @@ const Chatbot = memo(() => {
                           <button
                             key={idx}
                             className="inline-ref"
-                            onClick={() => openPdfAtPage(source.fileName, source.pageNumber)}
+                            onClick={() => openPdfPopup(source.fileName, source.pageNumber)}
                             title={`${source.fileName} — ${t.ragPage} ${source.pageNumber}\n${source.excerpt}`}
                           >
                             {refId}
@@ -503,7 +509,7 @@ const Chatbot = memo(() => {
                       <button
                         key={source.refId}
                         className="ref-legend-item"
-                        onClick={() => openPdfAtPage(source.fileName, source.pageNumber)}
+                        onClick={() => openPdfPopup(source.fileName, source.pageNumber)}
                         title={source.excerpt}
                       >
                         <span className="ref-legend-id">[{source.refId}]</span>

@@ -331,3 +331,12 @@
     max-height: 120px;
   }
 }
+
+/* Standalone / Popup Window overrides */
+#portal-root .debug-panel,
+.mobile-modal-body .debug-panel {
+  border: none;
+  border-radius: 0;
+  max-height: none;
+  height: 100%;
+}

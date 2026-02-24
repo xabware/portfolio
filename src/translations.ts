@@ -139,6 +139,7 @@ export const translations = {
     ragFileTooLarge: 'El archivo es demasiado grande (máx. 20MB)',
     ragInvalidFile: 'Solo se permiten archivos PDF',
     ragExtractionFailed: 'No se pudo extraer texto del PDF',
+    ragOpenViewer: 'Abrir visor de PDF',
     debugMode: 'Debug',
     debugToggle: 'Activar/Desactivar modo debug',
     
@@ -285,6 +286,7 @@ export const translations = {
     ragFileTooLarge: 'File is too large (max 20MB)',
     ragInvalidFile: 'Only PDF files are allowed',
     ragExtractionFailed: 'Could not extract text from PDF',
+    ragOpenViewer: 'Open PDF viewer',
     debugMode: 'Debug',
     debugToggle: 'Enable/Disable debug mode',
     

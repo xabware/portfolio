@@ -1,0 +1,83 @@
+/* ============================
+   Mobile Modal - Modal para dispositivos móviles
+   ============================ */
+
+.mobile-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  animation: modal-fade-in 0.2s ease;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.mobile-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.mobile-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mobile-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.mobile-modal-close:hover {
+  background: var(--error-bg, rgba(231, 76, 60, 0.1));
+  color: var(--error-color, #e74c3c);
+}
+
+.mobile-modal-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--card-bg);
+}
+
+/* Dentro de la modal, el PDF viewer y debug panel deben llenar el espacio */
+.mobile-modal-body .pdf-viewer {
+  border: none;
+  border-left: none;
+  border-radius: 0;
+  height: 100%;
+}
+
+.mobile-modal-body .debug-panel {
+  border: none;
+  border-radius: 0;
+  height: 100%;
+  max-height: none;
+}

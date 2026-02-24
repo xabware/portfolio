@@ -38,15 +38,36 @@ const PDFViewer = memo(({ pdfFile, currentPage, onPageChange, onClose, highlight
   const [isRendering, setIsRendering] = useState(false);
   const pdfDocRef = useRef<pdfjsLib.PDFDocumentProxy | null>(null);
   const renderTaskRef = useRef<pdfjsLib.RenderTask | null>(null);
+  // Guardamos el ownerDocument del canvas para pasarlo a pdfjs (fix popup fonts)
+  const [canvasMounted, setCanvasMounted] = useState(false);
+  const ownerDocRef = useRef<Document>(document);
 
-  // Cargar el documento PDF
+  // Callback ref para detectar cuándo el canvas se monta y capturar su ownerDocument
+  const canvasCallbackRef = useCallback((node: HTMLCanvasElement | null) => {
+    (canvasRef as React.MutableRefObject<HTMLCanvasElement | null>).current = node;
+    if (node) {
+      ownerDocRef.current = node.ownerDocument;
+      setCanvasMounted(true);
+    } else {
+      setCanvasMounted(false);
+    }
+  }, []);
+
+  // Cargar el documento PDF, esperando a que el canvas esté montado
+  // para obtener el ownerDocument correcto (crucial para popup windows)
   useEffect(() => {
+    if (!canvasMounted) return;
     let cancelled = false;
     const loadPdf = async () => {
       try {
-        const doc = await pdfjsLib.getDocument({ data: pdfFile.data.slice(0) }).promise;
+        const doc = await pdfjsLib.getDocument({
+          data: pdfFile.data.slice(0),
+          ownerDocument: ownerDocRef.current as HTMLDocument,
+        }).promise;
         if (!cancelled) {
           pdfDocRef.current = doc;
+          // Trigger render
+          setIsRendering(false);
         }
       } catch (err) {
         console.error('Error loading PDF for viewer:', err);
@@ -56,7 +77,7 @@ const PDFViewer = memo(({ pdfFile, currentPage, onPageChange, onClose, highlight
     return () => {
       cancelled = true;
     };
-  }, [pdfFile.data]);
+  }, [pdfFile.data, canvasMounted]);
 
   // Renderizar la página actual
   const renderPage = useCallback(async () => {
@@ -115,7 +136,7 @@ const PDFViewer = memo(({ pdfFile, currentPage, onPageChange, onClose, highlight
       }
     }, 100);
     return () => clearInterval(interval);
-  }, [pdfFile.data]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfFile.data, canvasMounted]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const goToPrevPage = useCallback(() => {
     if (currentPage > 1) onPageChange(currentPage - 1);
@@ -188,7 +209,7 @@ const PDFViewer = memo(({ pdfFile, currentPage, onPageChange, onClose, highlight
 
       {/* Canvas container */}
       <div className="pdf-viewer-canvas-container" ref={containerRef}>
-        <canvas ref={canvasRef} className="pdf-viewer-canvas" />
+        <canvas ref={canvasCallbackRef} className="pdf-viewer-canvas" />
         {isRendering && (
           <div className="pdf-viewer-loading">
             <div className="loading-spinner small" />

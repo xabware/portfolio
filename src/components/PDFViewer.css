@@ -182,136 +182,19 @@
 }
 
 /* =====================================================
-   Chat + PDF Split Layout
+   Standalone / Popup Window overrides
    ===================================================== */
 
-.chat-split-layout {
-  display: flex;
+/* Cuando el PDF viewer está dentro de un popup window o modal, llenar todo el espacio */
+#portal-root .pdf-viewer,
+.mobile-modal-body .pdf-viewer {
+  border: none;
+  border-left: none;
+  border-radius: 0;
   height: 100%;
-  width: 100%;
-}
-
-.chat-split-layout .chatbot-container {
-  flex: 1;
-  min-width: 0;
-  border-right: none;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-/* Side panels container (PDF viewer + debug) */
-.chat-side-panels {
-  display: flex;
-  flex-direction: column;
-  width: 45%;
-  max-width: 550px;
-  min-width: 300px;
-  gap: 0;
-  overflow: hidden;
-}
-
-.chat-side-panels > :first-child {
-  border-top-right-radius: 12px;
-}
-
-.chat-side-panels > :last-child {
-  border-bottom-right-radius: 12px;
-}
-
-/* When only debug panel (no PDF viewer), take full height */
-.chat-side-panels > .debug-panel:only-child {
-  flex: 1;
-  border-top-right-radius: 12px;
-  border-bottom-right-radius: 12px;
-}
-
-/* When both PDF viewer and debug panel, split space */
-.chat-side-panels .pdf-viewer {
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-  max-width: none;
-  border-radius: 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.chat-side-panels .debug-panel {
-  flex: 1;
-  min-height: 0;
-  border-radius: 0;
-  border-left: 1px solid var(--border-color);
-}
-
-.chat-split-layout .pdf-viewer {
-  width: 45%;
-  max-width: 550px;
-  min-width: 300px;
-  border-top-right-radius: 12px;
-  border-bottom-right-radius: 12px;
-}
-
-/* Responsive: on small screens stack vertically or hide viewer */
-@media (max-width: 900px) {
-  .chat-split-layout {
-    flex-direction: column;
-  }
-
-  .chat-split-layout .chatbot-container {
-    flex: 1;
-    border-radius: 0;
-    border-right: none;
-    border-bottom: none;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-
-  .chat-side-panels {
-    width: 100%;
-    max-width: none;
-    min-width: 0;
-    height: 40%;
-    min-height: 200px;
-    flex-direction: row;
-  }
-
-  .chat-side-panels > :first-child {
-    border-top-right-radius: 0;
-  }
-
-  .chat-side-panels > :last-child {
-    border-bottom-right-radius: 0;
-  }
-
-  .chat-side-panels .pdf-viewer {
-    border-left: none;
-    border-top: 1px solid var(--border-color);
-    flex: 1;
-  }
-
-  .chat-side-panels .debug-panel {
-    border-left: 1px solid var(--border-color);
-    border-top: 1px solid var(--border-color);
-    flex: 1;
-  }
-
-  .chat-split-layout .pdf-viewer {
-    width: 100%;
-    max-width: none;
-    min-width: 0;
-    height: 40%;
-    min-height: 200px;
-    border-left: none;
-    border-top: 1px solid var(--border-color);
-    border-radius: 0;
-  }
 }
 
 @media (max-width: 480px) {
-  .chat-split-layout .pdf-viewer {
-    height: 35%;
-    min-height: 180px;
-  }
-
   .pdf-viewer-toolbar {
     padding: 0.35rem 0.5rem;
   }

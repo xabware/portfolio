@@ -819,6 +819,24 @@
   color: var(--text-secondary);
 }
 
+.rag-document-view {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.2rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.rag-document-view:hover {
+  color: var(--primary-color);
+  background: var(--primary-bg, rgba(99, 102, 241, 0.1));
+}
+
 .rag-document-remove {
   background: none;
   border: none;
