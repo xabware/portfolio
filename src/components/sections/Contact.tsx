@@ -1,7 +1,7 @@
 import { memo, useMemo, useState } from 'react';
 import Card from '../Card';
 import { Mail } from 'lucide-react';
-import { LinkedinIcon, GithubIcon, TwitterIcon } from '../BrandIcons';
+import { LinkedinIcon, GithubIcon } from '../BrandIcons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
 import emailjs from '@emailjs/browser';
@@ -65,15 +65,9 @@ const Contact = memo(() => {
     {
       icon: GithubIcon,
       title: 'GitHub',
-      value: 'github.com/tuusuario',
-      link: 'https://github.com',
-    },
-    {
-      icon: TwitterIcon,
-      title: 'X',
-      value: '@tuusuario',
-      link: 'https://twitter.com',
-    },
+      value: 'github.com/xabware',
+      link: 'https://github.com/xabware',
+    }
   ], [t]);
   
   return (
