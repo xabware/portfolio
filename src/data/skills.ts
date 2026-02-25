@@ -14,11 +14,9 @@
  *     en: 'Category in English',
  *   },
  *   skills: [
- *     { name: 'Nombre de la habilidad', level: 85 },
+ *     { name: 'Nombre', description: { es: '...', en: '...' } },
  *   ],
  * }
- * 
- * El nivel (level) debe ser un número entre 0 y 100.
  * 
  * =====================================================
  */
@@ -28,7 +26,10 @@ import type { Language } from '../contexts/LanguageContext';
 // Interfaz para una habilidad individual
 export interface Skill {
   name: string;
-  level: number;
+  description: {
+    es: string;
+    en: string;
+  };
 }
 
 // Interfaz para una categoría de habilidades
@@ -41,9 +42,14 @@ export interface SkillCategory {
 }
 
 // Interfaz para categoría con idioma resuelto
+export interface ResolvedSkill {
+  name: string;
+  description: string;
+}
+
 export interface ResolvedSkillCategory {
   title: string;
-  skills: Skill[];
+  skills: ResolvedSkill[];
 }
 
 /**
@@ -60,10 +66,34 @@ export const skillCategories: SkillCategory[] = [
       en: 'Frontend',
     },
     skills: [
-      { name: 'React', level: 95 },
-      { name: 'ASP', level: 90 },
-      { name: 'CSS', level: 70 },
-      { name: 'Angular.js', level: 90 },
+      {
+        name: 'React',
+        description: {
+          es: 'Desarrollo de SPAs y componentes reutilizables con hooks, Context API y gestión de estado avanzada.',
+          en: 'SPA development and reusable components with hooks, Context API and advanced state management.',
+        },
+      },
+      {
+        name: 'ASP',
+        description: {
+          es: 'Aplicaciones web con ASP.NET MVC y Razor Pages, integración con servicios backend .NET.',
+          en: 'Web applications with ASP.NET MVC and Razor Pages, integration with .NET backend services.',
+        },
+      },
+      {
+        name: 'CSS',
+        description: {
+          es: 'Maquetación responsive con Flexbox y Grid, animaciones, custom properties y diseño adaptativo.',
+          en: 'Responsive layouts with Flexbox and Grid, animations, custom properties and adaptive design.',
+        },
+      },
+      {
+        name: 'Angular.js',
+        description: {
+          es: 'Desarrollo de aplicaciones SPA con data binding bidireccional, directivas y servicios inyectables.',
+          en: 'SPA development with two-way data binding, directives and injectable services.',
+        },
+      },
     ],
   },
   {
@@ -72,10 +102,34 @@ export const skillCategories: SkillCategory[] = [
       en: 'Backend',
     },
     skills: [
-      { name: '.NET', level: 90 },
-      { name: 'Python', level: 85 },
-      { name: 'Java', level: 75 },
-      { name: 'PHP', level: 80 },
+      {
+        name: '.NET',
+        description: {
+          es: 'APIs REST y servicios con .NET Core/6+, arquitectura limpia, middlewares y autenticación JWT.',
+          en: 'REST APIs and services with .NET Core/6+, clean architecture, middlewares and JWT authentication.',
+        },
+      },
+      {
+        name: 'Python',
+        description: {
+          es: 'Scripts de automatización, procesamiento de datos, machine learning y desarrollo de APIs con FastAPI/Flask.',
+          en: 'Automation scripts, data processing, machine learning and API development with FastAPI/Flask.',
+        },
+      },
+      {
+        name: 'Java',
+        description: {
+          es: 'Aplicaciones empresariales con Spring Boot, patrones de diseño y programación orientada a objetos.',
+          en: 'Enterprise applications with Spring Boot, design patterns and object-oriented programming.',
+        },
+      },
+      {
+        name: 'PHP',
+        description: {
+          es: 'Desarrollo web con Laravel y WordPress, gestión de bases de datos y APIs RESTful.',
+          en: 'Web development with Laravel and WordPress, database management and RESTful APIs.',
+        },
+      },
     ],
   },
   {
@@ -84,10 +138,34 @@ export const skillCategories: SkillCategory[] = [
       en: 'Databases',
     },
     skills: [
-      { name: 'Microsoft SQL Server', level: 95 },
-      { name: 'SQL', level: 95 },
-      { name: 'Entity Framework', level: 90 },
-      { name: 'T-SQL', level: 90 },
+      {
+        name: 'Microsoft SQL Server',
+        description: {
+          es: 'Administración de instancias, optimización de consultas, índices y planes de ejecución.',
+          en: 'Instance administration, query optimization, indexes and execution plans.',
+        },
+      },
+      {
+        name: 'SQL',
+        description: {
+          es: 'Consultas complejas con JOINs, subconsultas, CTEs, funciones de ventana y agregaciones.',
+          en: 'Complex queries with JOINs, subqueries, CTEs, window functions and aggregations.',
+        },
+      },
+      {
+        name: 'Entity Framework',
+        description: {
+          es: 'ORM con Code First y Database First, migraciones, lazy/eager loading y optimización de queries.',
+          en: 'ORM with Code First and Database First, migrations, lazy/eager loading and query optimization.',
+        },
+      },
+      {
+        name: 'T-SQL',
+        description: {
+          es: 'Stored procedures, triggers, funciones escalares y de tabla, cursores y transacciones.',
+          en: 'Stored procedures, triggers, scalar and table-valued functions, cursors and transactions.',
+        },
+      },
     ],
   },
   {
@@ -96,11 +174,41 @@ export const skillCategories: SkillCategory[] = [
       en: 'DevOps & Tools',
     },
     skills: [
-      { name: 'Git', level: 100 },
-      { name: 'Docker', level: 70 },
-      { name: 'Azure DevOps', level: 70 },
-      { name: 'AWS', level: 60 },
-      { name: 'CI/CD', level: 80 },
+      {
+        name: 'Git',
+        description: {
+          es: 'Control de versiones avanzado, branching strategies (GitFlow), rebases, cherry-picks y resolución de conflictos.',
+          en: 'Advanced version control, branching strategies (GitFlow), rebases, cherry-picks and conflict resolution.',
+        },
+      },
+      {
+        name: 'Docker',
+        description: {
+          es: 'Contenerización de aplicaciones, Docker Compose para entornos multi-servicio y optimización de imágenes.',
+          en: 'Application containerization, Docker Compose for multi-service environments and image optimization.',
+        },
+      },
+      {
+        name: 'Azure DevOps',
+        description: {
+          es: 'Gestión de proyectos, repos, pipelines de CI/CD, artifacts y boards para metodologías ágiles.',
+          en: 'Project management, repos, CI/CD pipelines, artifacts and boards for agile methodologies.',
+        },
+      },
+      {
+        name: 'AWS',
+        description: {
+          es: 'Despliegue en EC2, S3, Lambda y RDS. Configuración de VPCs y gestión de servicios cloud.',
+          en: 'Deployment on EC2, S3, Lambda and RDS. VPC configuration and cloud services management.',
+        },
+      },
+      {
+        name: 'CI/CD',
+        description: {
+          es: 'Automatización de builds, tests y despliegues con Azure Pipelines, GitHub Actions y Jenkins.',
+          en: 'Build, test and deployment automation with Azure Pipelines, GitHub Actions and Jenkins.',
+        },
+      },
     ],
   },
 ];
@@ -146,7 +254,10 @@ export const additionalSkills = {
 export function getSkillCategories(language: Language): ResolvedSkillCategory[] {
   return skillCategories.map(category => ({
     title: category.title[language],
-    skills: category.skills,
+    skills: category.skills.map(skill => ({
+      name: skill.name,
+      description: skill.description[language],
+    })),
   }));
 }
 

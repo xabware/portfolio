@@ -1,6 +1,6 @@
 import { useMemo, memo, useState } from 'react';
 import Card from '../Card';
-import { ExternalLink, ArrowRight } from 'lucide-react';
+import { ExternalLink, ArrowRight, Play } from 'lucide-react';
 import { GithubIcon } from '../BrandIcons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
@@ -8,7 +8,11 @@ import { getProjects } from '../../data/projects';
 import ProjectDetail from './ProjectDetail';
 import './Projects.css';
 
-const Projects = memo(() => {
+interface ProjectsProps {
+  onNavigate?: (section: string) => void;
+}
+
+const Projects = memo(({ onNavigate }: ProjectsProps) => {
   const { language } = useLanguage();
   const t = useTranslations(language);
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
@@ -47,10 +51,20 @@ const Projects = memo(() => {
                 <GithubIcon size={18} />
                 {t.code}
               </a>
-              <a href={project.demo} target="_blank" rel="noopener noreferrer">
-                <ExternalLink size={18} />
-                {t.demo}
-              </a>
+              {project.demo.startsWith('#') ? (
+                <button
+                  className="demo-internal-button"
+                  onClick={() => onNavigate?.(project.demo.slice(1))}
+                >
+                  <Play size={18} />
+                  {t.tryIt}
+                </button>
+              ) : (
+                <a href={project.demo} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink size={18} />
+                  {t.demo}
+                </a>
+              )}
             </div>
           </Card>
         ))}

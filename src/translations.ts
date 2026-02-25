@@ -42,6 +42,7 @@ export const translations = {
     demo: 'Demo',
     learnMore: 'Leer más',
     close: 'Cerrar',
+    tryIt: 'Probar',
     viewCode: 'Ver Código',
     viewDemo: 'Ver Demo',
     projectOverview: 'Descripción General',
@@ -146,6 +147,15 @@ export const translations = {
     // Sidebar
     sidebarExpandLabel: 'Expandir sidebar',
     sidebarCollapseLabel: 'Colapsar sidebar',
+    
+    // Experience counter
+    experienceCounter: 'Experiencia profesional',
+    counterYears: 'Años',
+    counterMonths: 'Meses',
+    counterDays: 'Días',
+    counterHours: 'Horas',
+    counterMinutes: 'Min',
+    counterSeconds: 'Seg',
   },
   en: {
     // Header
@@ -189,6 +199,7 @@ export const translations = {
     demo: 'Demo',
     learnMore: 'Learn More',
     close: 'Close',
+    tryIt: 'Try it',
     viewCode: 'View Code',
     viewDemo: 'View Demo',
     projectOverview: 'Overview',
@@ -293,6 +304,15 @@ export const translations = {
     // Sidebar
     sidebarExpandLabel: 'Expand sidebar',
     sidebarCollapseLabel: 'Collapse sidebar',
+    
+    // Experience counter
+    experienceCounter: 'Professional experience',
+    counterYears: 'Years',
+    counterMonths: 'Months',
+    counterDays: 'Days',
+    counterHours: 'Hours',
+    counterMinutes: 'Min',
+    counterSeconds: 'Sec',
   },
 } as const;
 

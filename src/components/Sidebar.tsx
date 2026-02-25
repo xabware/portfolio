@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, memo, useCallback } from 'react';
-import { Home, User, MessageSquare, Briefcase, Rocket, Mail, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, MessageSquare, Briefcase, Rocket, Mail, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTranslations } from '../translations';
 import './Sidebar.css';
@@ -23,8 +23,7 @@ const Sidebar = memo(({ activeSection, onSectionChange }: SidebarProps) => {
   }, [isCollapsed]);
   
   const menuItems = useMemo(() => [
-    { id: 'home', label: t.home, icon: Home },
-    { id: 'about', label: t.about, icon: User },
+    { id: 'portfolio', label: t.portfolio, icon: Home },
     { id: 'projects', label: t.projects, icon: Briefcase },
     { id: 'space', label: t.space, icon: Rocket },
     { id: 'chat', label: t.chatbot, icon: MessageSquare },
@@ -38,7 +37,13 @@ const Sidebar = memo(({ activeSection, onSectionChange }: SidebarProps) => {
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        <h2>{t.portfolio}</h2>
+        <button
+          className="sidebar-logo-btn"
+          onClick={() => onSectionChange('portfolio')}
+          aria-label="Home"
+        >
+          <img src="/logo.svg" alt="Logo" className="sidebar-logo" />
+        </button>
       </div>
       <nav className="sidebar-nav">
         {menuItems.map((item) => {

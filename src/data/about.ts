@@ -54,6 +54,10 @@ export interface Experience {
     es: string;
     en: string;
   };
+  /** Fecha de inicio de la experiencia (ISO string o formato Date-compatible) */
+  startDate: string;
+  /** Fecha de fin de la experiencia. Si no se indica, se considera que sigue activa */
+  endDate?: string;
 }
 
 // Interfaz para educación
@@ -139,6 +143,7 @@ export const experiences: Experience[] = [
       es: '2021 - Presente',
       en: '2021 - Present',
     },
+    startDate: '2021-08-01',
   },
   {
     title: {
@@ -150,13 +155,15 @@ export const experiences: Experience[] = [
       en: 'Veridas',
     },
     description: {
-      es: 'Preparación de conjuntos de datos para entrenar modelos de reconocimiento facial. Diseño de aplicaciones móviles con android studio y java.',
+      es: 'Preparación de conjuntos de datos para entrenar modelos de reconocimiento facial. Diseño de aplicaciones móviles con Android Studio y Java.',
       en: 'Preparation of datasets to train facial recognition models. Design of mobile applications with Android Studio and Java.',
     },
     period: {
       es: '2020',
       en: '2020',
     },
+    startDate: '2020-06-01',
+    endDate: '2020-07-31',
   },
   {
     title: {
@@ -175,6 +182,8 @@ export const experiences: Experience[] = [
       es: '2019',
       en: '2019',
     },
+    startDate: '2019-06-01',
+    endDate: '2019-07-31',
   },
 ];
 
@@ -223,6 +232,19 @@ export const education: Education[] = [
     },
   },
 ];
+
+/**
+ * Calcula el total de milisegundos de experiencia profesional acumulada.
+ * Para experiencias sin endDate, se usa la fecha actual (experiencia activa).
+ */
+export function getTotalExperienceMs(): number {
+  const now = Date.now();
+  return experiences.reduce((total, exp) => {
+    const start = new Date(exp.startDate).getTime();
+    const end = exp.endDate ? new Date(exp.endDate).getTime() : now;
+    return total + (end - start);
+  }, 0);
+}
 
 /**
  * Resuelve la información personal al idioma especificado

@@ -4285,7 +4285,7 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
         cat.skills.slice(0, 3).map(skill => ({
           id: `skill-${skill.name}`,
           title: skill.name,
-          subtitle: `${skill.level}%`,
+          subtitle: cat.title,
           description: cat.title,
         }))
       ),

@@ -77,16 +77,8 @@ const About = memo(() => {
               <div className="skills-list">
                 {category.skills.map((skill, index) => (
                   <div key={index} className="skill-item">
-                    <div className="skill-info">
-                      <span className="skill-name">{skill.name}</span>
-                      <span className="skill-level">{skill.level}%</span>
-                    </div>
-                    <div className="skill-bar">
-                      <div
-                        className="skill-progress"
-                        style={{ width: `${skill.level}%` }}
-                      ></div>
-                    </div>
+                    <span className="skill-name">{skill.name}</span>
+                    <p className="skill-description">{skill.description}</p>
                   </div>
                 ))}
               </div>

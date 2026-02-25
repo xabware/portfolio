@@ -1,11 +1,10 @@
 import { useState, lazy, Suspense, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import Home from './components/sections/Home';
+import Portfolio from './components/sections/Portfolio';
 import './App.css';
 
 // Lazy load non-critical sections
-const About = lazy(() => import('./components/sections/About'));
 const Projects = lazy(() => import('./components/sections/Projects'));
 const Space = lazy(() => import('./components/sections/Space'));
 const Contact = lazy(() => import('./components/sections/Contact'));
@@ -15,7 +14,7 @@ const Chat = lazy(() => import('./components/sections/Chat'));
 const WebLLMProvider = lazy(() => import('./contexts/WebLLMContext').then(module => ({ default: module.WebLLMProvider })));
 
 function App() {
-  const [activeSection, setActiveSection] = useState('home');
+  const [activeSection, setActiveSection] = useState('portfolio');
   const [chatMounted, setChatMounted] = useState(false);
 
   const handleSectionChange = useCallback((section: string) => {
@@ -30,18 +29,16 @@ function App() {
 
   const renderSection = () => {
     switch (activeSection) {
-      case 'home':
-        return <Home onNavigate={handleSectionChange} />;
-      case 'about':
-        return <About />;
+      case 'portfolio':
+        return <Portfolio onNavigate={handleSectionChange} />;
       case 'projects':
-        return <Projects />;
+        return <Projects onNavigate={handleSectionChange} />;
       case 'space':
         return <Space />;
       case 'contact':
         return <Contact />;
       default:
-        return <Home onNavigate={handleSectionChange} />;
+        return <Portfolio onNavigate={handleSectionChange} />;
     }
   };
 

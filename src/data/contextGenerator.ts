@@ -218,19 +218,25 @@ export function generateSearchableContent(language: Language, translations: Reco
   // Construir contenido searchable por sección
   const content: SearchableItem[] = [];
 
-  // About - con información real
-  const aboutContent = [
+  // Portfolio - información personal y del dashboard
+  const portfolioContent = [
     toStr(translations.aboutMe),
     ...personalInfo,
     ...experiences.map(exp => `${exp.title} ${exp.company} ${exp.description}`),
     ...education.map(edu => `${edu.degree} ${edu.institution} ${edu.description}`),
+    toStr(translations.welcomeTitle),
+    toStr(translations.welcomeSubtitle),
+    toStr(translations.yearsExperience),
+    toStr(translations.projectsCompleted),
+    toStr(translations.aboutDashboard),
+    toStr(translations.dashboardDescription),
     'desarrollador', 'full-stack', 'developer'
   ].join(' ');
 
   content.push({
-    section: 'about',
-    title: toStr(translations.about),
-    content: aboutContent,
+    section: 'portfolio',
+    title: toStr(translations.portfolio),
+    content: portfolioContent,
   });
 
   // Projects - con proyectos reales
@@ -272,12 +278,7 @@ export function generateSearchableContent(language: Language, translations: Reco
     content: skillsContent,
   });
 
-  // Home
-  content.push({
-    section: 'home',
-    title: toStr(translations.home),
-    content: `${toStr(translations.welcomeTitle)} ${toStr(translations.welcomeSubtitle)} ${toStr(translations.yearsExperience)} ${toStr(translations.projectsCompleted)} ${toStr(translations.aboutDashboard)} ${toStr(translations.dashboardDescription)}`,
-  });
+
 
   // Chat
   content.push({
