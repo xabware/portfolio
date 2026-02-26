@@ -69,29 +69,29 @@ export const skillCategories: SkillCategory[] = [
       {
         name: 'React',
         description: {
-          es: 'Desarrollo de SPAs y componentes reutilizables con hooks, Context API y gestión de estado avanzada.',
-          en: 'SPA development and reusable components with hooks, Context API and advanced state management.',
+          es: 'Empecé a usar React migrando pantallas antiguas en ASP y angular de nuestra aplicacion. Actualmente uso React vite para la mayoría de mis proyectos personales, por su versatilidad y caracter multiplataforma.',
+          en: 'I started using React by migrating old screens in ASP and Angular of our application. Currently, I use React Vite for most of my personal projects, due to its versatility and cross-platform nature.',
         },
       },
       {
         name: 'ASP',
         description: {
-          es: 'Aplicaciones web con ASP.NET MVC y Razor Pages, integración con servicios backend .NET.',
-          en: 'Web applications with ASP.NET MVC and Razor Pages, integration with .NET backend services.',
+          es: 'He trabajado durante años con dos aplicaciones web basadas en ASP.NET, una de ellas en C#, la otra en Visual Basic, en los últimos años ha sido principalmente corrección de bugs, mantenimiento del sistema, e integración del mismo con otras tecnologías.',
+          en: 'I have worked for years with two web applications based on ASP.NET, one in C# and the other in Visual Basic, in the last years it has been mainly bug fixing, system maintenance, and integration of the system with other technologies.',
         },
       },
       {
         name: 'CSS',
         description: {
-          es: 'Maquetación responsive con Flexbox y Grid, animaciones, custom properties y diseño adaptativo.',
-          en: 'Responsive layouts with Flexbox and Grid, animations, custom properties and adaptive design.',
+          es: 'A lo largo de toda mi trayectoria he usado CSS en múltiples frameworks y tecnologías. He usado flexbox, tailwind y scss',
+          en: 'Throughout my career, I have used CSS in multiple frameworks and technologies. I have used Flexbox, Tailwind, and SCSS.',
         },
       },
       {
         name: 'Angular.js',
         description: {
-          es: 'Desarrollo de aplicaciones SPA con data binding bidireccional, directivas y servicios inyectables.',
-          en: 'SPA development with two-way data binding, directives and injectable services.',
+          es: 'He trabajado extensamente en frontend Angular a lo largo de mi trayectoria profesional. El enfoque no ha sido tanto orientado a SPA, sino a aplicaciones de múltiples ventanas, aunque también hemos hecho módulos en SPA.',
+          en: 'I have worked extensively with Angular.js throughout my professional career. The focus has not been so much on SPA development, but on multi-window applications, although we have also created SPA modules.',
         },
       },
     ],
@@ -105,29 +105,22 @@ export const skillCategories: SkillCategory[] = [
       {
         name: '.NET',
         description: {
-          es: 'APIs REST y servicios con .NET Core/6+, arquitectura limpia, middlewares y autenticación JWT.',
-          en: 'REST APIs and services with .NET Core/6+, clean architecture, middlewares and JWT authentication.',
+          es: '.NET es el framework con el que más experiencia tengo, lo he usado durante años en aplicaciones empresariales de gran escala. He trabajado con .NET Framework, .NET Core y .NET 6+, haciendo web services para arquitecturas modernas y mantenimiento y desarrollo de aplicaciones monolíticas antiguas.',
+          en: '.NET is the framework I have the most experience with, having used it for years in large-scale enterprise applications. I have worked with .NET Framework, .NET Core, and .NET 6+, developing web services for modern architectures and maintaining and developing legacy monolithic applications.',
         },
       },
       {
         name: 'Python',
         description: {
-          es: 'Scripts de automatización, procesamiento de datos, machine learning y desarrollo de APIs con FastAPI/Flask.',
-          en: 'Automation scripts, data processing, machine learning and API development with FastAPI/Flask.',
+          es: 'Me siento muy cómodo usando python, es el lenguaje que más he usado en mi formación, principalmente lo he usado para scripts, para sistemas de inteligencia artificial, y alguna vez a nivel profesional para pequeñas apis y para webs con django.',
+          en: 'I feel very comfortable using Python, it is the language I have used the most in my training. I have mainly used it for scripts, artificial intelligence systems, and occasionally at a professional level for small APIs and websites with Django.',
         },
       },
       {
         name: 'Java',
         description: {
-          es: 'Aplicaciones empresariales con Spring Boot, patrones de diseño y programación orientada a objetos.',
-          en: 'Enterprise applications with Spring Boot, design patterns and object-oriented programming.',
-        },
-      },
-      {
-        name: 'PHP',
-        description: {
-          es: 'Desarrollo web con Laravel y WordPress, gestión de bases de datos y APIs RESTful.',
-          en: 'Web development with Laravel and WordPress, database management and RESTful APIs.',
+          es: 'He usado Java mucho durante mi etapa académica, y aunque no tengo una amplia experiencia profesional, conozco muy bien el lenguaje, y he desarrollado una app android con Java como proyecto académico. Usé Java en mi trabajo de fin de master para aplicaciones de computación distribuida e internet de las cosas',
+          en: 'I have used Java a lot during my academic stage, and although I do not have extensive professional experience, I know the language very well, and I developed an Android app with Java as an academic project. I used Java in my master thesis for distributed computing and Internet of Things applications.',
         },
       },
     ],
@@ -148,22 +141,22 @@ export const skillCategories: SkillCategory[] = [
       {
         name: 'SQL',
         description: {
-          es: 'Consultas complejas con JOINs, subconsultas, CTEs, funciones de ventana y agregaciones.',
-          en: 'Complex queries with JOINs, subqueries, CTEs, window functions and aggregations.',
+          es: 'Gran experiencia en cualquier ámbito de SQL, desde la parte más matemática del funcionamiento de una base de datos a la aplicación práctica',
+          en: 'Extensive experience in any area of SQL, from the most mathematical part of database functioning to practical application.',
         },
       },
       {
         name: 'Entity Framework',
         description: {
-          es: 'ORM con Code First y Database First, migraciones, lazy/eager loading y optimización de queries.',
-          en: 'ORM with Code First and Database First, migrations, lazy/eager loading and query optimization.',
+          es: 'Uso de entity framework cómodo a diferentes escalas, comprensión de su funcionamiento interno, optimización de consultas, manejo de relaciones complejas, y uso avanzado de LINQ.',
+          en: 'Comfortable use of Entity Framework at different scales, understanding of its internal workings, query optimization, handling of complex relationships, and advanced use of LINQ.',
         },
       },
       {
         name: 'T-SQL',
         description: {
-          es: 'Stored procedures, triggers, funciones escalares y de tabla, cursores y transacciones.',
-          en: 'Stored procedures, triggers, scalar and table-valued functions, cursors and transactions.',
+          es: 'Amplia experiencia en el uso de stored procedures, triggers, funciones escalares y de tabla, cursores y transacciones.',
+          en: 'Extensive experience in the use of stored procedures, triggers, scalar and table-valued functions, cursors and transactions.',
         },
       },
     ],
@@ -177,8 +170,8 @@ export const skillCategories: SkillCategory[] = [
       {
         name: 'Git',
         description: {
-          es: 'Control de versiones avanzado, branching strategies (GitFlow), rebases, cherry-picks y resolución de conflictos.',
-          en: 'Advanced version control, branching strategies (GitFlow), rebases, cherry-picks and conflict resolution.',
+          es: 'Comprensión total de git',
+          en: 'Comprehensive understanding of Git',
         },
       },
       {
