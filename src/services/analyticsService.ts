@@ -173,27 +173,27 @@ function getConnectionInfo() {
 
 async function getGeoData(): Promise<VisitorData['geo']> {
   try {
-    // Usamos ip-api.com (gratis, sin API key, hasta 45 req/min)
-    const response = await fetch('http://ip-api.com/json/?fields=status,message,country,countryCode,region,regionName,city,lat,lon,isp,org,as,query');
-    if (!response.ok) return null;
+    // ipwho.is: gratis, HTTPS, sin API key, sin límite estricto
+    const response = await fetch('https://ipwho.is/');
+    if (!response.ok) throw new Error('ipwho.is failed');
 
     const data = await response.json();
-    if (data.status !== 'success') return null;
+    if (!data.success) throw new Error('ipwho.is returned error');
 
     return {
-      ip: data.query,
-      country: data.country,
-      countryCode: data.countryCode,
-      region: data.regionName,
-      city: data.city,
-      lat: data.lat,
-      lon: data.lon,
-      isp: data.isp,
-      org: data.org,
-      as: data.as,
+      ip: data.ip || '',
+      country: data.country || '',
+      countryCode: data.country_code || '',
+      region: data.region || '',
+      city: data.city || '',
+      lat: data.latitude || 0,
+      lon: data.longitude || 0,
+      isp: data.connection?.isp || '',
+      org: data.connection?.org || '',
+      as: data.connection?.asn ? `AS${data.connection.asn}` : '',
     };
   } catch {
-    // Si falla (adblocker, CORS, etc.), intentar alternativa
+    // Fallback: ipapi.co (gratis, HTTPS, 1000 req/día)
     try {
       const response = await fetch('https://ipapi.co/json/');
       if (!response.ok) return null;
@@ -209,7 +209,7 @@ async function getGeoData(): Promise<VisitorData['geo']> {
         lon: data.longitude || 0,
         isp: data.org || '',
         org: data.org || '',
-        as: data.asn || '',
+        as: data.asn ? String(data.asn) : '',
       };
     } catch {
       return null;
