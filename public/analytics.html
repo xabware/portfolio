@@ -200,9 +200,10 @@
   <div class="login-overlay" id="loginOverlay">
     <div class="login-box">
       <h2>Analytics</h2>
-      <p>Introduce el PIN para acceder al dashboard</p>
-      <input type="password" id="pinInput" placeholder="••••" maxlength="20" autocomplete="off">
-      <button onclick="checkPin()">Acceder</button>
+      <p>Inicia sesión con tu cuenta de administrador</p>
+      <input type="email" id="emailInput" placeholder="Email" autocomplete="email" style="margin-bottom:12px;">
+      <input type="password" id="passwordInput" placeholder="Contraseña" autocomplete="current-password">
+      <button onclick="signIn()">Acceder</button>
       <div class="login-error" id="loginError"></div>
     </div>
   </div>
@@ -219,6 +220,7 @@
           <option value="all">Todo</option>
         </select>
         <button class="btn-refresh" onclick="loadAllData()">↻ Actualizar</button>
+        <button onclick="logOut()" style="background:var(--red)!important;border:none!important;">Cerrar sesión</button>
       </div>
     </div>
 
@@ -299,8 +301,9 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js';
     import { getFirestore, collection, getDocs, query, orderBy, limit, where, Timestamp } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js';
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js';
 
-    // Config — mismos valores que tu app
+    // Config
     const firebaseConfig = {
       apiKey: "AIzaSyCwF2Rn_a4d8fyQd8rteG1Cf3U99OrtSzI",
       authDomain: "portfolio-fac26.firebaseapp.com",
@@ -312,24 +315,46 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
 
-    // --- PIN Protection ---
-    // Cambia este PIN por el que quieras
-    const DASHBOARD_PIN = 'admin1234';
-
-    window.checkPin = function() {
-      const input = document.getElementById('pinInput').value;
-      if (input === DASHBOARD_PIN) {
+    // --- Firebase Auth ---
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('dashboard').classList.add('visible');
         loadAllData();
       } else {
-        document.getElementById('loginError').textContent = 'PIN incorrecto';
+        document.getElementById('loginOverlay').style.display = 'flex';
+        document.getElementById('dashboard').classList.remove('visible');
+      }
+    });
+
+    window.signIn = async function() {
+      const email = document.getElementById('emailInput').value;
+      const password = document.getElementById('passwordInput').value;
+      const errorEl = document.getElementById('loginError');
+      errorEl.textContent = '';
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        const messages = {
+          'auth/invalid-credential': 'Email o contraseña incorrectos',
+          'auth/invalid-email': 'Email no válido',
+          'auth/too-many-requests': 'Demasiados intentos. Espera un momento.',
+          'auth/user-not-found': 'Usuario no encontrado',
+          'auth/wrong-password': 'Contraseña incorrecta',
+        };
+        errorEl.textContent = messages[err.code] || 'Error de autenticación';
       }
     };
 
-    document.getElementById('pinInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') window.checkPin();
+    window.logOut = async function() {
+      await signOut(auth);
+    };
+
+    document.getElementById('passwordInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') window.signIn();
     });
 
     // --- Time filter ---

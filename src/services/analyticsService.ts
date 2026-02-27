@@ -1,5 +1,5 @@
 import { db } from '../config/firebaseConfig';
-import { collection, addDoc, serverTimestamp, doc, updateDoc, increment, setDoc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, increment, setDoc } from 'firebase/firestore';
 
 // ==========================================
 // Tipos
@@ -353,30 +353,19 @@ class AnalyticsService {
 
   /**
    * Lleva un conteo de visitantes únicos por fingerprint.
+   * Usa setDoc con merge para no necesitar leer antes de escribir.
    */
   private async updateUniqueVisitorCount(): Promise<void> {
     try {
       const visitorRef = doc(db, 'unique_visitors', this.fingerprint);
-      const visitorSnap = await getDoc(visitorRef);
-
-      if (visitorSnap.exists()) {
-        // Visitante recurrente: incrementar contador de visitas
-        await updateDoc(visitorRef, {
-          visitCount: increment(1),
-          lastVisit: serverTimestamp(),
-          lastLocalTime: new Date().toISOString(),
-        });
-      } else {
-        // Nuevo visitante
-        await setDoc(visitorRef, {
-          fingerprint: this.fingerprint,
-          firstVisit: serverTimestamp(),
-          firstLocalTime: new Date().toISOString(),
-          lastVisit: serverTimestamp(),
-          lastLocalTime: new Date().toISOString(),
-          visitCount: 1,
-        });
-      }
+      // merge: true crea el doc si no existe, o actualiza si ya existe
+      // increment() funciona tanto para crear (valor inicial 1) como para incrementar
+      await setDoc(visitorRef, {
+        fingerprint: this.fingerprint,
+        lastVisit: serverTimestamp(),
+        lastLocalTime: new Date().toISOString(),
+        visitCount: increment(1),
+      }, { merge: true });
     } catch (error) {
       console.warn('[Analytics] Error updating unique visitor count:', error);
     }
