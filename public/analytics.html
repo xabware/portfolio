@@ -187,10 +187,80 @@
     .timeline-bar:hover .tooltip { display: block; }
     .timeline-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text2); }
 
+    /* Unique visitors table */
+    .uv-name-input {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; padding: 4px 8px; color: var(--text);
+      font-size: 13px; width: 140px; outline: none;
+    }
+    .uv-name-input:focus { border-color: var(--accent); }
+    .uv-name-input::placeholder { color: var(--text2); }
+    .btn-save-name {
+      background: var(--accent); color: white; border: none;
+      border-radius: 4px; padding: 3px 8px; font-size: 11px;
+      cursor: pointer; margin-left: 4px;
+    }
+    .btn-save-name:hover { opacity: 0.85; }
+    .btn-detail {
+      background: var(--surface2); color: var(--accent); border: 1px solid var(--border);
+      border-radius: 6px; padding: 4px 12px; font-size: 12px;
+      cursor: pointer; white-space: nowrap;
+    }
+    .btn-detail:hover { border-color: var(--accent); background: var(--accent); color: white; }
+    .name-saved { color: var(--green); font-size: 11px; margin-left: 6px; opacity: 0; transition: opacity 0.3s; }
+    .name-saved.show { opacity: 1; }
+
+    /* Detail modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2000; padding: 24px;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; max-width: 900px; width: 100%;
+      max-height: 85vh; overflow-y: auto; padding: 32px;
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 24px;
+    }
+    .modal-header h2 { color: var(--accent); font-size: 20px; }
+    .btn-close {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); border-radius: 8px; padding: 6px 14px;
+      cursor: pointer; font-size: 14px;
+    }
+    .btn-close:hover { border-color: var(--red); color: var(--red); }
+    .detail-section { margin-bottom: 24px; }
+    .detail-section h4 { color: var(--text2); font-size: 13px; text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 12px; }
+    .detail-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+    }
+    .detail-item { background: var(--surface2); border-radius: 8px; padding: 10px 14px; }
+    .detail-item .dlabel { font-size: 11px; color: var(--text2); text-transform: uppercase; }
+    .detail-item .dvalue { font-size: 14px; margin-top: 2px; word-break: break-all; }
+    .activity-item {
+      display: flex; gap: 12px; padding: 8px 0;
+      border-bottom: 1px solid var(--border); font-size: 13px; align-items: center;
+    }
+    .activity-time { color: var(--text2); min-width: 140px; }
+    .activity-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .dot-visit { background: var(--accent); }
+    .dot-page { background: var(--green); }
+    .dot-event { background: var(--orange); }
+
     @media (max-width: 768px) {
       .charts-grid { grid-template-columns: 1fr; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .bar-label { width: 80px; }
+      .modal { padding: 20px; }
+      .detail-grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
@@ -268,6 +338,7 @@
           <thead>
             <tr>
               <th>Fecha</th>
+              <th>Nombre</th>
               <th>País / Ciudad</th>
               <th>Dispositivo</th>
               <th>Navegador</th>
@@ -277,6 +348,24 @@
             </tr>
           </thead>
           <tbody id="visitorsTable"></tbody>
+        </table>
+      </div>
+
+      <!-- Unique visitors with names -->
+      <div class="table-card">
+        <h3>🧑 Visitantes únicos</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Fingerprint</th>
+              <th>Visitas</th>
+              <th>Primera visita</th>
+              <th>Última visita</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody id="uniqueVisitorsTable"></tbody>
         </table>
       </div>
 
@@ -297,10 +386,21 @@
     </div>
   </div>
 
+  <!-- Visitor detail modal -->
+  <div class="modal-overlay hidden" id="detailModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="detailTitle">Detalle del visitante</h2>
+        <button class="btn-close" onclick="closeDetail()">✕ Cerrar</button>
+      </div>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js';
-    import { getFirestore, collection, getDocs, query, orderBy, limit, where, Timestamp } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js';
+    import { getFirestore, collection, getDocs, query, orderBy, limit, where, Timestamp, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js';
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js';
 
     // Config
@@ -377,6 +477,12 @@
     document.getElementById('timeFilter').addEventListener('change', () => loadAllData());
 
     // --- Data loading ---
+    // Global data store for cross-referencing
+    let allVisitors = [];
+    let allPageviews = [];
+    let allEvents = [];
+    let allUniqueVisitors = [];
+
     async function fetchCollection(name, limitCount = 5000) {
       const timeFilter = getTimeFilter();
       let q;
@@ -394,25 +500,26 @@
       document.getElementById('content').style.display = 'none';
 
       try {
-        const [visitors, pageviews, events, uniqueVisitors] = await Promise.all([
+        [allVisitors, allPageviews, allEvents, allUniqueVisitors] = await Promise.all([
           fetchCollection('visitors'),
           fetchCollection('pageviews'),
           fetchCollection('events'),
           getDocs(collection(db, 'unique_visitors')).then(s => s.docs.map(d => ({ id: d.id, ...d.data() }))),
         ]);
 
-        renderStats(visitors, pageviews, events, uniqueVisitors);
-        renderTimeline(visitors);
-        renderBarChart('countriesChart', countBy(visitors, v => v.geo ? `${countryFlag(v.geo.countryCode)} ${v.geo.country}` : '🌐 Desconocido'), var_accent());
-        renderBarChart('browsersChart', countBy(visitors, v => v.browser || 'Desconocido'), var_blue());
-        renderBarChart('devicesChart', countBy(visitors, v => v.deviceType || 'Desconocido'), var_orange());
-        renderBarChart('pagesChart', countBy(pageviews, v => v.page || '/'), var_green());
-        renderBarChart('referrersChart', countBy(visitors, v => {
+        renderStats(allVisitors, allPageviews, allEvents, allUniqueVisitors);
+        renderTimeline(allVisitors);
+        renderBarChart('countriesChart', countBy(allVisitors, v => v.geo ? `${countryFlag(v.geo.countryCode)} ${v.geo.country}` : '🌐 Desconocido'), var_accent());
+        renderBarChart('browsersChart', countBy(allVisitors, v => v.browser || 'Desconocido'), var_blue());
+        renderBarChart('devicesChart', countBy(allVisitors, v => v.deviceType || 'Desconocido'), var_orange());
+        renderBarChart('pagesChart', countBy(allPageviews, v => v.page || '/'), var_green());
+        renderBarChart('referrersChart', countBy(allVisitors, v => {
           const r = v.referrer || 'direct';
           try { return r === 'direct' ? '🔗 Directo' : new URL(r).hostname; } catch { return r; }
         }), var_accent2());
-        renderVisitorsTable(visitors);
-        renderEventsTable(events);
+        renderVisitorsTable(allVisitors);
+        renderUniqueVisitorsTable(allUniqueVisitors, allVisitors);
+        renderEventsTable(allEvents);
       } catch (err) {
         console.error('Error loading analytics:', err);
       }
@@ -538,6 +645,10 @@
     }
 
     function renderVisitorsTable(visitors) {
+      // Build a fingerprint→name lookup from unique visitors
+      const nameMap = {};
+      allUniqueVisitors.forEach(uv => { if (uv.name) nameMap[uv.fingerprint] = uv.name; });
+
       const rows = visitors.slice(0, 50).map(v => {
         const date = v.localTime ? new Date(v.localTime).toLocaleString('es-ES') : '-';
         const location = v.geo ? `${countryFlag(v.geo.countryCode)} ${v.geo.city}, ${v.geo.country}` : '-';
@@ -546,9 +657,12 @@
         const screen = v.screenWidth ? `${v.screenWidth}×${v.screenHeight}` : '-';
         const referrer = v.referrer === 'direct' ? 'Directo' : v.referrer || '-';
         const shortRef = referrer.length > 30 ? referrer.substring(0, 30) + '...' : referrer;
+        const name = nameMap[v.fingerprint] || '';
+        const nameDisplay = name ? `<span style="color:var(--accent);font-weight:600;">${name}</span>` : `<span style="color:var(--text2);font-size:11px;">—</span>`;
 
-        return `<tr>
+        return `<tr style="cursor:pointer;" onclick="openDetail('${v.fingerprint}')">
           <td>${date}</td>
+          <td>${nameDisplay}</td>
           <td>${location}</td>
           <td><span class="badge ${badgeClass}">${device}</span></td>
           <td>${v.browser || '-'} ${v.browserVersion ? v.browserVersion.split('.')[0] : ''}</td>
@@ -558,7 +672,7 @@
         </tr>`;
       }).join('');
 
-      document.getElementById('visitorsTable').innerHTML = rows || '<tr><td colspan="7" style="text-align:center;color:var(--text2)">Sin datos</td></tr>';
+      document.getElementById('visitorsTable').innerHTML = rows || '<tr><td colspan="8" style="text-align:center;color:var(--text2)">Sin datos</td></tr>';
     }
 
     function renderEventsTable(events) {
@@ -575,7 +689,190 @@
       document.getElementById('eventsTable').innerHTML = rows || '<tr><td colspan="3" style="text-align:center;color:var(--text2)">Sin eventos</td></tr>';
     }
 
+    // --- Unique visitors table with name tagging ---
+
+    function renderUniqueVisitorsTable(uniqueVisitors, visitors) {
+      // Enrich unique visitors with info from their latest visit
+      const enriched = uniqueVisitors.map(uv => {
+        const visits = visitors.filter(v => v.fingerprint === uv.fingerprint);
+        const latest = visits[0] || {};
+        return { ...uv, visits: visits.length, latestVisit: latest };
+      }).sort((a, b) => (b.visitCount || 0) - (a.visitCount || 0));
+
+      const rows = enriched.map(uv => {
+        const name = uv.name || '';
+        const fp = uv.fingerprint || uv.id;
+        const firstVisit = uv.firstLocalTime ? new Date(uv.firstLocalTime).toLocaleDateString('es-ES') : (uv.lastLocalTime ? new Date(uv.lastLocalTime).toLocaleDateString('es-ES') : '-');
+        const lastVisit = uv.lastLocalTime ? new Date(uv.lastLocalTime).toLocaleString('es-ES') : '-';
+        const location = uv.latestVisit?.geo ? `${countryFlag(uv.latestVisit.geo.countryCode)} ${uv.latestVisit.geo.city || ''}` : '';
+
+        return `<tr>
+          <td>
+            <input class="uv-name-input" id="name-${fp}" value="${escHtml(name)}" placeholder="Sin nombre..."
+              onkeydown="if(event.key==='Enter')saveName('${fp}')">
+            <button class="btn-save-name" onclick="saveName('${fp}')">💾</button>
+            <span class="name-saved" id="saved-${fp}">✓</span>
+          </td>
+          <td style="font-family:monospace;font-size:12px;color:var(--text2);" title="${fp}">${fp.substring(0, 10)}… ${location}</td>
+          <td style="text-align:center;font-weight:600;color:var(--accent);">${uv.visitCount || uv.visits || 1}</td>
+          <td>${firstVisit}</td>
+          <td>${lastVisit}</td>
+          <td><button class="btn-detail" onclick="openDetail('${fp}')">Ver actividad →</button></td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('uniqueVisitorsTable').innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:var(--text2)">Sin datos</td></tr>';
+    }
+
+    // --- Save visitor name ---
+    window.saveName = async function(fingerprint) {
+      const input = document.getElementById(`name-${fingerprint}`);
+      const savedSpan = document.getElementById(`saved-${fingerprint}`);
+      const name = input.value.trim();
+
+      try {
+        const visitorRef = doc(db, 'unique_visitors', fingerprint);
+        await updateDoc(visitorRef, { name });
+
+        // Update local data
+        const uv = allUniqueVisitors.find(u => (u.fingerprint || u.id) === fingerprint);
+        if (uv) uv.name = name;
+
+        // Flash saved indicator
+        savedSpan.classList.add('show');
+        setTimeout(() => savedSpan.classList.remove('show'), 2000);
+
+        // Re-render visitors table to update names
+        renderVisitorsTable(allVisitors);
+      } catch (err) {
+        console.error('Error saving name:', err);
+        alert('Error al guardar el nombre');
+      }
+    };
+
+    // --- Visitor detail modal ---
+    window.openDetail = function(fingerprint) {
+      const uv = allUniqueVisitors.find(u => (u.fingerprint || u.id) === fingerprint);
+      const visits = allVisitors.filter(v => v.fingerprint === fingerprint);
+      const sessionIds = new Set(visits.map(v => v.sessionId));
+      const pageviews = allPageviews.filter(pv => sessionIds.has(pv.sessionId));
+      const events = allEvents.filter(ev => sessionIds.has(ev.sessionId));
+
+      const name = uv?.name || 'Sin nombre';
+      document.getElementById('detailTitle').textContent = `👤 ${name}`;
+
+      // Build detail content
+      let html = '';
+
+      // --- Visitor info from latest visit ---
+      const latest = visits[0];
+      if (latest) {
+        html += `<div class="detail-section">
+          <h4>ℹ️ Información del visitante</h4>
+          <div class="detail-grid">
+            <div class="detail-item"><div class="dlabel">Fingerprint</div><div class="dvalue" style="font-family:monospace;font-size:12px;">${fingerprint}</div></div>
+            <div class="detail-item"><div class="dlabel">Total visitas</div><div class="dvalue" style="color:var(--accent);font-size:20px;font-weight:700;">${uv?.visitCount || visits.length}</div></div>
+            <div class="detail-item"><div class="dlabel">Dispositivo</div><div class="dvalue">${latest.deviceType || '-'}</div></div>
+            <div class="detail-item"><div class="dlabel">Navegador</div><div class="dvalue">${latest.browser || '-'} ${latest.browserVersion || ''}</div></div>
+            <div class="detail-item"><div class="dlabel">Pantalla</div><div class="dvalue">${latest.screenWidth || '?'}×${latest.screenHeight || '?'} @${latest.devicePixelRatio || 1}x</div></div>
+            <div class="detail-item"><div class="dlabel">SO / Plataforma</div><div class="dvalue">${latest.platform || '-'}</div></div>
+            <div class="detail-item"><div class="dlabel">Idioma</div><div class="dvalue">${latest.language || '-'}</div></div>
+            <div class="detail-item"><div class="dlabel">Timezone</div><div class="dvalue">${latest.timezone || '-'}</div></div>
+            ${latest.geo ? `
+              <div class="detail-item"><div class="dlabel">Ubicación</div><div class="dvalue">${countryFlag(latest.geo.countryCode)} ${latest.geo.city}, ${latest.geo.region}, ${latest.geo.country}</div></div>
+              <div class="detail-item"><div class="dlabel">IP</div><div class="dvalue" style="font-family:monospace;">${latest.geo.ip}</div></div>
+              <div class="detail-item"><div class="dlabel">ISP</div><div class="dvalue">${latest.geo.isp || '-'}</div></div>
+              <div class="detail-item"><div class="dlabel">Coordenadas</div><div class="dvalue">${latest.geo.lat}, ${latest.geo.lon}</div></div>
+            ` : ''}
+            <div class="detail-item"><div class="dlabel">Conexión</div><div class="dvalue">${latest.connectionEffectiveType || '-'} (${latest.connectionDownlink || 0} Mbps)</div></div>
+            <div class="detail-item"><div class="dlabel">CPU Cores</div><div class="dvalue">${latest.hardwareConcurrency || '-'}</div></div>
+            <div class="detail-item"><div class="dlabel">RAM</div><div class="dvalue">${latest.deviceMemory ? latest.deviceMemory + ' GB' : '-'}</div></div>
+            <div class="detail-item"><div class="dlabel">Touch</div><div class="dvalue">${latest.touchSupport ? 'Sí (' + latest.maxTouchPoints + ' puntos)' : 'No'}</div></div>
+            <div class="detail-item"><div class="dlabel">Referrer</div><div class="dvalue">${latest.referrer || 'direct'}</div></div>
+          </div>
+        </div>`;
+      }
+
+      // --- Sessions timeline ---
+      html += `<div class="detail-section"><h4>📋 Historial de sesiones (${visits.length} visitas)</h4>`;
+
+      // Group by session
+      const sessionsMap = {};
+      visits.forEach(v => {
+        if (!sessionsMap[v.sessionId]) sessionsMap[v.sessionId] = { visit: v, pages: [], events: [] };
+      });
+      pageviews.forEach(pv => {
+        if (sessionsMap[pv.sessionId]) sessionsMap[pv.sessionId].pages.push(pv);
+      });
+      events.forEach(ev => {
+        if (sessionsMap[ev.sessionId]) sessionsMap[ev.sessionId].events.push(ev);
+      });
+
+      const sessionsArr = Object.entries(sessionsMap).sort((a, b) => {
+        const ta = a[1].visit.localTime || '';
+        const tb = b[1].visit.localTime || '';
+        return tb.localeCompare(ta);
+      });
+
+      sessionsArr.forEach(([sessionId, session], idx) => {
+        const visitDate = session.visit.localTime ? new Date(session.visit.localTime).toLocaleString('es-ES') : '-';
+        const location = session.visit.geo ? `${countryFlag(session.visit.geo.countryCode)} ${session.visit.geo.city || ''}, ${session.visit.geo.country || ''}` : '';
+
+        html += `<div style="background:var(--surface2);border-radius:12px;padding:16px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <div>
+              <strong style="color:var(--accent);">Sesión ${sessionsArr.length - idx}</strong>
+              <span style="color:var(--text2);margin-left:8px;">${visitDate}</span>
+              <span style="margin-left:8px;">${location}</span>
+            </div>
+            <div style="font-size:12px;color:var(--text2);">
+              ${session.pages.length} páginas · ${session.events.length} eventos
+            </div>
+          </div>`;
+
+        // Merge pages and events into a timeline, sorted by time
+        const timeline = [
+          ...session.pages.map(p => ({ type: 'page', time: p.localTime, label: `📄 Visitó: <strong>${p.page}</strong>`, extra: p.timeOnPreviousPage ? `(${p.timeOnPreviousPage}s en página anterior)` : '' })),
+          ...session.events.map(e => ({ type: 'event', time: e.localTime, label: `⚡ ${e.eventName}`, extra: e.eventData ? JSON.stringify(e.eventData) : '' })),
+        ].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+        if (timeline.length > 0) {
+          timeline.forEach(item => {
+            const time = item.time ? new Date(item.time).toLocaleTimeString('es-ES') : '';
+            const dotClass = item.type === 'page' ? 'dot-page' : 'dot-event';
+            html += `<div class="activity-item">
+              <span class="activity-time">${time}</span>
+              <span class="activity-dot ${dotClass}"></span>
+              <span>${item.label} <span style="color:var(--text2);font-size:12px;">${item.extra}</span></span>
+            </div>`;
+          });
+        } else {
+          html += `<div style="color:var(--text2);font-size:13px;">Sin actividad registrada en esta sesión</div>`;
+        }
+
+        html += `</div>`;
+      });
+
+      html += `</div>`;
+
+      document.getElementById('detailContent').innerHTML = html;
+      document.getElementById('detailModal').classList.remove('hidden');
+    };
+
+    window.closeDetail = function() {
+      document.getElementById('detailModal').classList.add('hidden');
+    };
+
+    // Close modal on overlay click
+    document.getElementById('detailModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('detailModal')) closeDetail();
+    });
+
     // --- Utilities ---
+
+    function escHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
 
     function countBy(arr, keyFn) {
       const counts = {};
