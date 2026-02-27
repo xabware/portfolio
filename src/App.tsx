@@ -2,6 +2,7 @@ import { useState, lazy, Suspense, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Portfolio from './components/sections/Portfolio';
+import { useAnalytics } from './hooks/useAnalytics';
 import './App.css';
 
 // Lazy load non-critical sections
@@ -16,16 +17,20 @@ const WebLLMProvider = lazy(() => import('./contexts/WebLLMContext').then(module
 function App() {
   const [activeSection, setActiveSection] = useState('portfolio');
   const [chatMounted, setChatMounted] = useState(false);
+  const { trackPageView, trackEvent } = useAnalytics();
 
   const handleSectionChange = useCallback((section: string) => {
     setActiveSection(section);
+    // Trackear cambio de sección
+    trackPageView(section);
     // Montar el chat la primera vez que se accede
     if (section === 'chat' && !chatMounted) {
       setChatMounted(true);
+      trackEvent('chat_first_open');
     }
     // Scroll al inicio cuando cambia de sección
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [chatMounted]);
+  }, [chatMounted, trackPageView, trackEvent]);
 
   const renderSection = () => {
     switch (activeSection) {
