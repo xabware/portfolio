@@ -17,11 +17,11 @@ export const translations = {
     
     // Home
     welcomeTitle: 'Xabier Cía Valencia',
-    welcomeSubtitle: 'Desarrollador Full-Stack y AI | Arquitectura de cloud',
+    welcomeSubtitle: 'Desarrollador Full-Stack e IA | Arquitectura Cloud',
     yearsExperience: 'Años de experiencia',
     projectsCompleted: 'Proyectos',
     aboutDashboard: 'Sobre este Dashboard',
-    dashboardDescription: 'Este dashboard es un proyecto que he creado para compartir y unificar en un sitio todos los otros proyectos que vaya desarrollando. En mi repositorio de github tengo una rama con la plantilla sin mis datos personales que animo a cualquiera que esté leyendo esto a utilizar como base para su propio portfolio.',
+    dashboardDescription: 'Este dashboard es un proyecto que he creado para compartir y unificar en un sitio todos los otros proyectos que vaya desarrollando. En mi repositorio de GitHub tengo una rama con la plantilla sin mis datos personales, y animo a cualquiera que esté leyendo esto a utilizarla como base para su propio portfolio.',
     features: 'Características',
     modernDesign: '✨ Diseño moderno de dashboard',
     darkModeSupport: '🌓 Soporte de tema claro/oscuro',
@@ -93,7 +93,7 @@ export const translations = {
     chatbotWelcomeDescription: 'Chat con IA ejecutándose localmente en tu navegador. Pregúntame sobre mi experiencia, proyectos y habilidades.',
     chatbotStartButton: 'Iniciar Chatbot',
     chatbotDownloadNote: '- Se descargará el modelo. Puede tardar unos minutos.',
-    chatbotResourceWarning: '⚠️ La ejecución local consume recursos del dispositivo y podría ralentizarlo durante su uso.',
+    chatbotResourceWarning: '⚠️ La ejecución local consume recursos del dispositivo y podría ralentizarlo durante el uso.',
     chatbotLoadingTitle: 'Cargando modelo de IA...',
     chatbotLoadingNote: 'Esto puede tardar unos minutos la primera vez. El modelo se descarga y ejecuta completamente en tu navegador.',
     chatbotErrorTitle: 'Error al cargar el modelo',

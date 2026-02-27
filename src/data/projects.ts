@@ -115,8 +115,8 @@ export const projects: Project[] = [
       en: 'Portfolio Dashboard',
     },
     description: {
-      es: 'Plantilla moderna y elegante para crear tu portfolio profesional como desarrollador',
-      en: 'Modern and elegant template to create your professional developer portfolio',
+      es: 'Plantilla moderna y elegante para crear tu portfolio profesional como desarrollador.',
+      en: 'Modern and elegant template to create your professional developer portfolio.',
     },
     tech: ['React', 'TypeScript', 'Vite', 'CSS3', 'WebLLM'],
     github: 'https://github.com/xabware/portfolio',
@@ -171,17 +171,17 @@ export const projects: Project[] = [
       en: 'Root Measurement Tool',
     },
     description: {
-      es: 'Herramienta web para la medición de objetos en imágenes',
-      en: 'Web tool for measuring objects in images',
+      es: 'Herramienta web para la medición de objetos en imágenes.',
+      en: 'Web tool for measuring objects in images.',
     },
-    tech: ['React', 'Vite', 'ArUco', 'Visión artificial', 'Redes convolucionales'],
+    tech: ['React', 'Vite', 'ArUco', 'Visión Artificial', 'Redes Convolucionales'],
     github: 'https://github.com/xabware/medidor',
     demo: 'https://xabware.github.io/medidor/',
     details: {
       es: {
-        overview: ['Herramienta web para la medición de objetos en imágenes, fue planteada para simplificar la medición de raices en experimentos biológicos. Utiliza visión por computadora con OpenCV y marcadores ArUco para establecer una referencia de escala automática, permitiendo mediciones más rápidas y fiables que las manuales, además de sintetizar esta información en una hoja de excel.'],
-        challenge: ['Muchos expedimentos relacionados con el desarrollo de productos agrícolas o pesticidas, requieren la medición de raices para evaluar los efectos de compuestos sobre el desarrollo de las plantas. Esto supone un proceso en el cual se cultivan cientos de plantas con diferentes extractos, y luego se miden y se anotan manualmente raiz a raiz. Este proceso es lento, y además se tiene que hacer en un plazo de tiempo corto, ya que si se deja pasar tiempo entre mediciones, las condiciones en las que se han desarrollado las raices cambian mucho, y por tanto el experimento deja de servir'],
-        solution: ['El concepto de solución es simple. cultivar las semillas en bolsas zip planas con los extractos, y tomar fotografías de las mismas a contraluz, de forma que en las fotografías se distinga claramente las raices del sustrato translúcido sobre el que crecen. La herramienta web debe cargar esas fotografías, y una vez cargadas, una cómoda interfaz permite al usuario dibujar líneas sobre cada imagen. Cada línea es una medición, y se muestra a la derecha en un panel de mediciones.',' El usuario puede eliminar mediciones erróneas, modificar las existentes de este modo sobre una imagen con raices, acabará dibujando una línea que siga la trayectoria de cada raiz. además, en cada imagen, debe proporcionar una linea recta de referencia, marcando la referencia para esa imagen, e indicando el tamaño real de esta recta. En nuestro caso usamos el borde superior del rectángulo de sustrato, que siempre mide 12 cm. La web utiliza esta referencia, para determinar exactamente cuanto mide cada una de las líneas dibujadas, y al final, con un botón, descarga un excel con todas las mediciones estructuradas y etiquetadas acorde a los nombres de las imágenes.'],
+        overview: ['Herramienta web para la medición de objetos en imágenes, planteada para simplificar la medición de raíces en experimentos biológicos. Utiliza visión por computadora con OpenCV y marcadores ArUco para establecer una referencia de escala automática, permitiendo mediciones más rápidas y fiables que las manuales, además de sintetizar esta información en una hoja de Excel.'],
+        challenge: ['Muchos experimentos relacionados con el desarrollo de productos agrícolas o pesticidas requieren la medición de raíces para evaluar los efectos de compuestos sobre el desarrollo de las plantas. Esto supone un proceso en el cual se cultivan cientos de plantas con diferentes extractos, y luego se miden y se anotan manualmente raíz a raíz. Este proceso es lento y, además, se tiene que hacer en un plazo de tiempo corto, ya que si se deja pasar tiempo entre mediciones, las condiciones en las que se han desarrollado las raíces cambian mucho y, por tanto, el experimento deja de servir.'],
+        solution: ['El concepto de solución es simple: cultivar las semillas en bolsas zip planas con los extractos y tomar fotografías de las mismas a contraluz, de forma que en las fotografías se distingan claramente las raíces del sustrato translúcido sobre el que crecen. La herramienta web carga esas fotografías y, una vez cargadas, una cómoda interfaz permite al usuario dibujar líneas sobre cada imagen. Cada línea es una medición y se muestra a la derecha en un panel de mediciones.', 'El usuario puede eliminar mediciones erróneas y modificar las existentes; de este modo, sobre una imagen con raíces, acabará dibujando una línea que siga la trayectoria de cada raíz. Además, en cada imagen debe proporcionar una línea recta de referencia, marcando la referencia para esa imagen e indicando el tamaño real de dicha recta. En nuestro caso usamos el borde superior del rectángulo de sustrato, que siempre mide 12 cm. La web utiliza esta referencia para determinar exactamente cuánto mide cada una de las líneas dibujadas y, al final, con un botón, descarga un Excel con todas las mediciones estructuradas y etiquetadas acorde a los nombres de las imágenes.'],
         features: [
         ],
         techDetails: '',
@@ -191,8 +191,8 @@ export const projects: Project[] = [
       },
       en: {
         overview: ['Web tool for measuring objects in images, designed to simplify root measurement in biological experiments. It uses computer vision with OpenCV and ArUco markers to establish an automatic scale reference, enabling faster and more reliable measurements than manual methods, while also compiling this information into an Excel sheet.'],
-        challenge: ['Many experiments related to the development of agricultural products or pesticides require root measurement to evaluate the effects of compounds on plant development. This involves growing hundreds of plants with different extracts, then measuring and recording each root manually. This process is slow, and it must also be done within a short time frame, because if too much time passes between measurements, the conditions in which the roots developed change significantly, making the experiment unusable.'],
-        solution: ['The solution concept is simple: grow the seeds in flat zip bags with the extracts, and take backlit photos so the roots can be clearly distinguished from the translucent substrate where they grow. The web tool must load these photos, and once loaded, a comfortable interface allows the user to draw lines on each image. Each line is one measurement and is shown on the right in a measurements panel.', 'The user can delete incorrect measurements and modify existing ones. In this way, on an image with roots, they end up drawing one line that follows the path of each root. In addition, in each image, they must provide a straight reference line, marking the reference for that image and indicating the real size of that line. In our case, we used the upper edge of the substrate rectangle, which always measures 12 cm. The web tool uses this reference to determine exactly the length of each drawn line, and finally, with one button, it downloads an Excel file with all measurements structured and labeled according to the image names.'],
+        challenge: ['Many experiments related to the development of agricultural products or pesticides require root measurement to evaluate the effects of compounds on plant development. This involves growing hundreds of plants with different extracts, then measuring and recording each root manually. This process is slow, and it must be completed within a short time frame, because if too much time passes between measurements, the conditions in which the roots developed change significantly, rendering the experiment unusable.'],
+        solution: ['The solution concept is simple: grow the seeds in flat zip bags with the extracts and take backlit photos so the roots can be clearly distinguished from the translucent substrate on which they grow. The web tool loads these photos, and once loaded, a user-friendly interface allows the user to draw lines on each image. Each line represents a measurement and is displayed on the right in a measurements panel.', 'The user can delete incorrect measurements and modify existing ones. In this way, on an image with roots, they end up drawing a line that follows the path of each root. Additionally, for each image, a straight reference line must be provided, marking the reference and indicating its actual size. In our case, we use the upper edge of the substrate rectangle, which always measures 12 cm. The web tool uses this reference to determine the exact length of each drawn line, and finally, with one button, downloads an Excel file with all measurements structured and labeled according to the image names.'],
         features: [
         ],
         techDetails: '',
@@ -209,17 +209,17 @@ export const projects: Project[] = [
       en: 'Infinite Procedural Map',
     },
     description: {
-      es: 'En construcción, carece de demo online',
-      en: 'Under construction, no online demo available',
+      es: 'En construcción. No dispone de demo online.',
+      en: 'Under construction. No online demo available.',
     },
     tech: ['React', 'TypeScript', 'Vite', 'Perlin Noise'],
     github: 'https://github.com/xabware/mapa-procedural',
     demo: 'https://github.com/xabware/mapa-procedural',
     details: {
       es: {
-        overview: ['En construcción ...'],
-        challenge: ['En construcción ...'],
-        solution: ['En construcción ...'],
+        overview: ['En construcción...'],
+        challenge: ['En construcción...'],
+        solution: ['En construcción...'],
         features: [
         ],
         techDetails: '',
@@ -228,7 +228,7 @@ export const projects: Project[] = [
         team: 'Proyecto personal',
       },
       en: {
-        overview: ['Under construction ...'],
+        overview: ['Under construction...'],
         challenge: ['Under construction...'],
         solution: ['Under construction...'],
         features: [
@@ -247,15 +247,15 @@ export const projects: Project[] = [
       en: 'RTS Browser Game',
     },
     description: {
-      es: 'Videojuego de navegador de estrategia en tiempo real (RTS)',
-      en: 'Real-time strategy (RTS) browser game',
+      es: 'Videojuego de navegador de estrategia en tiempo real (RTS).',
+      en: 'Real-time strategy (RTS) browser game.',
     },
     tech: ['React', 'Vite', 'Three js'],
     github: 'https://github.com/xabware/RTENavegador',
     demo: 'https://xabware.github.io/RTENavegador/',
     details: {
       es: {
-        overview: ['En construcción ...'],
+        overview: ['En construcción...'],
         challenge: ['En construcción...'],
         solution: ['En construcción...'],
         features: [
@@ -266,7 +266,7 @@ export const projects: Project[] = [
         team: 'Proyecto personal',
       },
       en: {
-        overview: ['Under construction ...'],
+        overview: ['Under construction...'],
         challenge: ['Under construction...'],
         solution: ['Under construction...'],
         features: [
@@ -285,10 +285,10 @@ export const projects: Project[] = [
       en: 'Interactive Solar System',
     },
     description: {
-      es: 'Visualización 3D interactiva de un sistema solar con planetas procedurales que representan las secciones del portfolio',
-      en: 'Interactive 3D visualization of a solar system with procedural planets representing the portfolio sections',
+      es: 'Visualización 3D interactiva de un sistema solar con planetas procedurales que representan las secciones del portfolio.',
+      en: 'Interactive 3D visualization of a solar system with procedural planets representing the portfolio sections.',
     },
-    tech: ['React', 'Three.js', 'React Three Fiber', 'WebGL', 'Generación procedural'],
+    tech: ['React', 'Three.js', 'React Three Fiber', 'WebGL', 'Generación Procedural'],
     github: 'https://github.com/xabware/portfolio',
     demo: '#space',
     details: {
@@ -337,8 +337,8 @@ export const projects: Project[] = [
       en: 'RAG Chatbot with WebLLM',
     },
     description: {
-      es: 'Chatbot con IA que se ejecuta localmente en el navegador usando RAG para responder preguntas sobre documentos PDF',
-      en: 'AI chatbot running locally in the browser using RAG to answer questions about PDF documents',
+      es: 'Chatbot con IA que se ejecuta localmente en el navegador usando RAG para responder preguntas sobre documentos PDF.',
+      en: 'AI chatbot running locally in the browser using RAG to answer questions about PDF documents.',
     },
     tech: ['WebLLM', 'WebGPU', 'RAG', 'Embeddings', 'React', 'TypeScript'],
     github: 'https://github.com/xabware/portfolio',

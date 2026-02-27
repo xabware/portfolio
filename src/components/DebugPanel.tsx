@@ -25,6 +25,7 @@ interface DebugPanelProps {
     scores: string;
     coverage: string;
     distinctive: string;
+    noSources?: string;
     // Pipeline status translations
     statusSearching?: string;
     statusPrompting?: string;
@@ -71,11 +72,11 @@ const PIPELINE_STEPS: RAGPipelineStatus[] = ['searching', 'prompting', 'generati
 
 const PipelineStatus = memo(({ status, translations: t }: { status: RAGPipelineStatus; translations: DebugPanelProps['translations'] }) => {
   const statusLabels: Record<RAGPipelineStatus, string> = {
-    searching: t.statusSearching ?? 'Buscando...',
-    prompting: t.statusPrompting ?? 'Construyendo prompt...',
-    generating: t.statusGenerating ?? 'Generando respuesta...',
-    annotating: t.statusAnnotating ?? 'Anotando referencias...',
-    complete: t.statusComplete ?? 'Completado',
+    searching: t.statusSearching ?? 'Searching...',
+    prompting: t.statusPrompting ?? 'Building prompt...',
+    generating: t.statusGenerating ?? 'Generating response...',
+    annotating: t.statusAnnotating ?? 'Annotating references...',
+    complete: t.statusComplete ?? 'Complete',
     error: t.statusError ?? 'Error',
   };
 
@@ -155,7 +156,7 @@ const DebugPanel = memo(({ debugInfo, translations: t }: DebugPanelProps) => {
           badge={`${debugInfo.sources.length}`}
         >
           {debugInfo.sources.length === 0 ? (
-            <p className="debug-muted">No sources found</p>
+            <p className="debug-muted">{t.noSources ?? 'No sources found'}</p>
           ) : (
             debugInfo.sources.map((source) => (
               <div key={source.refId} className="debug-source">

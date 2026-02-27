@@ -90,7 +90,8 @@ const Chat = memo(() => {
     reason: language === 'es' ? 'Razón' : 'Reason',
     scores: language === 'es' ? 'Puntuaciones' : 'Scores',
     coverage: language === 'es' ? 'Cobert.' : 'Cover.',
-    distinctive: language === 'es' ? 'Distint.' : 'Distint.',
+    distinctive: language === 'es' ? 'Distint.' : 'Distinct.',
+    noSources: language === 'es' ? 'No se encontraron fuentes' : 'No sources found',
     // Pipeline status
     statusSearching: language === 'es' ? 'Buscando...' : 'Searching...',
     statusPrompting: language === 'es' ? 'Prompt...' : 'Prompting...',
@@ -146,7 +147,7 @@ const Chat = memo(() => {
 
         {/* Desktop: renderizar en ventanas popup via createPortal */}
         {!isMobile && pdfPopup.container && activePdf && createPortal(
-          <Suspense fallback={<div className="loading">Loading PDF viewer...</div>}>
+          <Suspense fallback={<div className="loading">{t.chatLoading}</div>}>
             <PDFViewer
               pdfFile={activePdf}
               currentPage={activePdfPage}
@@ -160,7 +161,7 @@ const Chat = memo(() => {
         )}
 
         {!isMobile && debugPopup.container && debugMode && createPortal(
-          <Suspense fallback={<div className="loading">Loading debug panel...</div>}>
+          <Suspense fallback={<div className="loading">{t.chatLoading}</div>}>
             <DebugPanel
               debugInfo={lastDebugInfo}
               translations={debugPanelTranslations}

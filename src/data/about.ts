@@ -105,14 +105,14 @@ export interface ResolvedEducation {
 export const personalInfo: PersonalInfo = {
   description: {
     es: [
-      'Soy una persona curiosa e implicada. Elegí como carrera la ingeniería de software porque estaba dudando entre demasiadas carreras, física, biología, matemáticas... Y sentí que la ingeniería de software, por su caracter transversal, me permitiría explorar muchas áreas y llegar a encontrar qué era lo que más me apasionaba en la vida.',
-      'A día de hoy, soy consciente de que lo que me llamó de la informática, es su capacidad para transformar cada área del mundo de una forma distinta, y de impactar en tantas vidas de una forma positiva. Me gusta estar al día con los últimos avances tecnológicos, y encontrar formas de las que pueden mejorar la calidad de vida de las personas.',
-      'A lo largo de los últimos 5 años, el mundo ha cambiado radicalmente, y todavía parece que va a cambiar mucho más. Los avances de todo tipo en inteligencia artificial me resultan extremadamente atractivos, disfruto planteando formas de las que la IA puede solucionar problemas que antes eran irresolubles o requerían muchísimos recursos. Los últimos avances en agentes e IA generativa me están permitiendo desarrollar proyectos a un ritmo que hasta ahora nunca habría podido imaginar',
+      'Soy una persona curiosa e implicada. Elegí como carrera la ingeniería de software porque estaba dudando entre demasiadas carreras: física, biología, matemáticas... Y sentí que la ingeniería de software, por su carácter transversal, me permitiría explorar muchas áreas y llegar a encontrar qué era lo que más me apasionaba en la vida.',
+      'A día de hoy, soy consciente de que lo que me llamó de la informática es su capacidad para transformar cada área del mundo de una forma distinta e impactar en tantas vidas de forma positiva. Me gusta estar al día con los últimos avances tecnológicos y encontrar formas en las que pueden mejorar la calidad de vida de las personas.',
+      'A lo largo de los últimos 5 años, el mundo ha cambiado radicalmente, y todavía parece que va a cambiar mucho más. Los avances de todo tipo en inteligencia artificial me resultan extremadamente atractivos; disfruto planteando formas en las que la IA puede solucionar problemas que antes eran irresolubles o requerían muchísimos recursos. Los últimos avances en agentes e IA generativa me están permitiendo desarrollar proyectos a un ritmo que hasta ahora nunca habría podido imaginar.',
     ],
     en: [
-      'I am a curious and engaged person. I chose software engineering as a career because I was torn between too many fields—physics, biology, mathematics... And I felt that software engineering, due to its cross-cutting nature, would allow me to explore many areas and eventually discover what I was most passionate about in life.',
-      'Nowadays, I am aware that what drew me to computer science is its ability to transform every area of the world in a different way, and to positively impact so many lives. I like to stay up to date with the latest technological advances, and to find ways they can improve people’s quality of life.',
-      'Over the last 5 years, the world has changed radically, and it still seems likely to change much more. Advances of all kinds in artificial intelligence are extremely attractive to me; I enjoy exploring ways in which AI can solve problems that were previously unsolvable or required huge amounts of resources. The latest advances in agents and generative AI are allowing me to develop projects at a pace I could never have imagined until now.',
+      'I am a curious and engaged person. I chose software engineering as a career because I was torn between too many fields—physics, biology, mathematics… And I felt that software engineering, due to its cross-cutting nature, would allow me to explore many areas and eventually discover what I was most passionate about in life.',
+      'Today, I am aware that what drew me to computer science is its ability to transform every area of the world in a unique way and to positively impact so many lives. I like to stay up to date with the latest technological advances and to find ways in which they can improve people’s quality of life.',
+      'Over the last 5 years, the world has changed radically, and it still seems likely to change much more. Advances of all kinds in artificial intelligence are extremely attractive to me; I enjoy exploring ways in which AI can solve problems that were previously unsolvable or required enormous resources. The latest advances in agents and generative AI are allowing me to develop projects at a pace I could never have imagined before.',
     ],
   },
 };
@@ -136,7 +136,7 @@ export const experiences: Experience[] = [
       en: 'Tracasa Instrumental',
     },
     description: {
-      es: 'Desarrollo de aplicaciones gubernamentales utilizando principalmente .NET, angular, react y T-SQL. Implementación de arquitectura y planificación de proyectos, integración de sistemas de inteligencia artificial.',
+      es: 'Desarrollo de aplicaciones gubernamentales utilizando principalmente .NET, Angular, React y T-SQL. Implementación de arquitectura y planificación de proyectos, integración de sistemas de inteligencia artificial.',
       en: 'Development of government applications using mainly .NET, Angular, React and T-SQL. Architecture implementation and project planning, integration of artificial intelligence systems.',
     },
     period: {
@@ -197,16 +197,16 @@ export const experiences: Experience[] = [
 export const education: Education[] = [
   {
     degree: {
-      es: 'Master en Ingeniería informática',
-      en: 'Master in Computer Engineering',
+      es: 'Máster en Ingeniería Informática',
+      en: 'Master\'s in Computer Engineering',
     },
     institution: {
-      es: 'Universidad pública de Navarra',
+      es: 'Universidad Pública de Navarra',
       en: 'Public University of Navarre',
     },
     description: {
-      es: 'Master generalista que cubre los contenidos que se quedan fuera del grado.',
-      en: 'Generalist master covering contents that are outside the undergraduate degree.',
+      es: 'Máster generalista que cubre los contenidos que quedan fuera del grado.',
+      en: 'Generalist master\'s program covering content that falls outside the undergraduate degree.',
     },
     period: {
       es: '2021 - 2024',
@@ -215,16 +215,16 @@ export const education: Education[] = [
   },
   {
     degree: {
-      es: 'Ingeniería informática',
+      es: 'Ingeniería Informática',
       en: 'Computer Engineering',
     },
     institution: {
-      es: 'Universidad pública de Navarra',
+      es: 'Universidad Pública de Navarra',
       en: 'Public University of Navarre',
     },
     description: {
-      es: 'Especialización en Computación y sistemas inteligentes y en Tecnologías de la información.',
-      en: 'Specialization in Computing and intelligent systems and in Information Technology.',
+      es: 'Especialización en Computación y Sistemas Inteligentes y en Tecnologías de la Información.',
+      en: 'Specialization in Computing and Intelligent Systems and in Information Technology.',
     },
     period: {
       es: '2017 - 2021',

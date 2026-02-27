@@ -69,22 +69,22 @@ export const skillCategories: SkillCategory[] = [
       {
         name: 'React',
         description: {
-          es: 'Empecé a usar React migrando pantallas antiguas en ASP y angular de nuestra aplicacion. Actualmente uso React vite para la mayoría de mis proyectos personales, por su versatilidad y caracter multiplataforma.',
-          en: 'I started using React by migrating old screens in ASP and Angular of our application. Currently, I use React Vite for most of my personal projects, due to its versatility and cross-platform nature.',
+          es: 'Empecé a usar React migrando pantallas antiguas en ASP y Angular de nuestra aplicación. Actualmente uso React con Vite para la mayoría de mis proyectos personales, por su versatilidad y carácter multiplataforma.',
+          en: 'I started using React by migrating old screens in ASP and Angular from our application. Currently, I use React with Vite for most of my personal projects, due to its versatility and cross-platform nature.'
         },
       },
       {
         name: 'ASP',
         description: {
-          es: 'He trabajado durante años con dos aplicaciones web basadas en ASP.NET, una de ellas en C#, la otra en Visual Basic, en los últimos años ha sido principalmente corrección de bugs, mantenimiento del sistema, e integración del mismo con otras tecnologías.',
-          en: 'I have worked for years with two web applications based on ASP.NET, one in C# and the other in Visual Basic, in the last years it has been mainly bug fixing, system maintenance, and integration of the system with other technologies.',
+          es: 'He trabajado durante años con dos aplicaciones web basadas en ASP.NET, una de ellas en C# y la otra en Visual Basic. En los últimos años ha sido principalmente corrección de bugs, mantenimiento del sistema e integración del mismo con otras tecnologías.',
+          en: 'I have worked for years with two web applications based on ASP.NET, one in C# and the other in Visual Basic. In recent years, it has been mainly bug fixing, system maintenance, and integration with other technologies.'
         },
       },
       {
         name: 'CSS',
         description: {
-          es: 'A lo largo de toda mi trayectoria he usado CSS en múltiples frameworks y tecnologías. He usado flexbox, tailwind y scss',
-          en: 'Throughout my career, I have used CSS in multiple frameworks and technologies. I have used Flexbox, Tailwind, and SCSS.',
+          es: 'A lo largo de toda mi trayectoria he usado CSS en múltiples frameworks y tecnologías. He usado Flexbox, Tailwind y SCSS.',
+          en: 'Throughout my career, I have used CSS in multiple frameworks and technologies. I have used Flexbox, Tailwind, and SCSS.'
         },
       },
       {
@@ -112,15 +112,15 @@ export const skillCategories: SkillCategory[] = [
       {
         name: 'Python',
         description: {
-          es: 'Me siento muy cómodo usando python, es el lenguaje que más he usado en mi formación, principalmente lo he usado para scripts, para sistemas de inteligencia artificial, y alguna vez a nivel profesional para pequeñas apis y para webs con django.',
-          en: 'I feel very comfortable using Python, it is the language I have used the most in my training. I have mainly used it for scripts, artificial intelligence systems, and occasionally at a professional level for small APIs and websites with Django.',
+          es: 'Me siento muy cómodo usando Python; es el lenguaje que más he usado en mi formación. Principalmente lo he usado para scripts, para sistemas de inteligencia artificial y, alguna vez, a nivel profesional para pequeñas APIs y webs con Django.',
+          en: 'I feel very comfortable using Python; it is the language I have used the most during my education. I have mainly used it for scripts, artificial intelligence systems, and occasionally at a professional level for small APIs and websites with Django.'
         },
       },
       {
         name: 'Java',
         description: {
-          es: 'He usado Java mucho durante mi etapa académica, y aunque no tengo una amplia experiencia profesional, conozco muy bien el lenguaje, y he desarrollado una app android con Java como proyecto académico. Usé Java en mi trabajo de fin de master para aplicaciones de computación distribuida e internet de las cosas',
-          en: 'I have used Java a lot during my academic stage, and although I do not have extensive professional experience, I know the language very well, and I developed an Android app with Java as an academic project. I used Java in my master thesis for distributed computing and Internet of Things applications.',
+          es: 'He usado Java mucho durante mi etapa académica y, aunque no tengo una amplia experiencia profesional, conozco muy bien el lenguaje. He desarrollado una app Android con Java como proyecto académico. Usé Java en mi trabajo de fin de máster para aplicaciones de computación distribuida e Internet de las Cosas.',
+          en: 'I used Java extensively during my academic years and, although I do not have broad professional experience, I know the language very well. I developed an Android app with Java as an academic project. I used Java in my master\'s thesis for distributed computing and Internet of Things applications.'
         },
       },
     ],
@@ -141,15 +141,15 @@ export const skillCategories: SkillCategory[] = [
       {
         name: 'SQL',
         description: {
-          es: 'Gran experiencia en cualquier ámbito de SQL, desde la parte más matemática del funcionamiento de una base de datos a la aplicación práctica',
-          en: 'Extensive experience in any area of SQL, from the most mathematical part of database functioning to practical application.',
+          es: 'Gran experiencia en cualquier ámbito de SQL, desde la parte más matemática del funcionamiento de una base de datos hasta la aplicación práctica.',
+          en: 'Extensive experience in all areas of SQL, from the theoretical and mathematical aspects of database internals to practical application.'
         },
       },
       {
         name: 'Entity Framework',
         description: {
-          es: 'Uso de entity framework cómodo a diferentes escalas, comprensión de su funcionamiento interno, optimización de consultas, manejo de relaciones complejas, y uso avanzado de LINQ.',
-          en: 'Comfortable use of Entity Framework at different scales, understanding of its internal workings, query optimization, handling of complex relationships, and advanced use of LINQ.',
+          es: 'Uso cómodo de Entity Framework a diferentes escalas, comprensión de su funcionamiento interno, optimización de consultas, manejo de relaciones complejas y uso avanzado de LINQ.',
+          en: 'Comfortable use of Entity Framework at different scales, understanding of its internal workings, query optimization, handling of complex relationships, and advanced use of LINQ.'
         },
       },
       {
@@ -170,8 +170,8 @@ export const skillCategories: SkillCategory[] = [
       {
         name: 'Git',
         description: {
-          es: 'Comprensión total de git',
-          en: 'Comprehensive understanding of Git',
+          es: 'Comprensión total de Git.',
+          en: 'Comprehensive understanding of Git.'
         },
       },
       {
