@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 import Card from '../Card';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
-import { projects } from '../../data/projects';
+import { getProjectCount } from '../../data/projects';
 import './Home.css';
 
 interface HomeProps {
@@ -15,7 +15,7 @@ const Home = memo(({ onNavigate }: HomeProps) => {
   
   const stats = useMemo(() => [
     { number: '5+', label: t.yearsExperience, clickable: false },
-    { number: `${projects.length}`, label: t.projectsCompleted, clickable: true, navigateTo: 'projects' },
+    { number: `${getProjectCount()}`, label: t.projectsCompleted, clickable: true, navigateTo: 'projects' },
   ], [t]);
 
   return (

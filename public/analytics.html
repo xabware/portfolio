@@ -261,7 +261,181 @@
       .bar-label { width: 80px; }
       .modal { padding: 20px; }
       .detail-grid { grid-template-columns: 1fr 1fr; }
+      .main-tabs { flex-direction: column; }
+      .cms-sub-tabs { flex-direction: column; }
+      .cms-bilingual { grid-template-columns: 1fr; }
+      .cms-project-card { grid-template-columns: 1fr; }
     }
+
+    /* ============ TABS ============ */
+    .main-tabs {
+      display: flex; gap: 0; margin-bottom: 28px;
+      border-bottom: 2px solid var(--border);
+    }
+    .main-tab {
+      padding: 12px 28px; background: none; border: none; border-bottom: 2px solid transparent;
+      color: var(--text2); font-size: 15px; font-weight: 600; cursor: pointer;
+      margin-bottom: -2px; transition: all 0.2s;
+    }
+    .main-tab:hover { color: var(--text); }
+    .main-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ============ CMS ============ */
+    .cms-sub-tabs {
+      display: flex; gap: 8px; margin-bottom: 24px;
+    }
+    .cms-sub-tab {
+      padding: 8px 18px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text2); font-size: 14px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .cms-sub-tab:hover { border-color: var(--accent); color: var(--text); }
+    .cms-sub-tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+    .cms-pane { display: none; }
+    .cms-pane.active { display: block; }
+
+    .cms-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+    }
+    .cms-header h3 { font-size: 18px; color: var(--text); }
+
+    .cms-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-cms {
+      padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-size: 13px; cursor: pointer;
+      transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+    }
+    .btn-cms:hover { border-color: var(--accent); }
+    .btn-cms-primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-cms-primary:hover { opacity: 0.85; }
+    .btn-cms-danger { color: var(--red); }
+    .btn-cms-danger:hover { border-color: var(--red); background: #ff6b6b18; }
+    .btn-cms-success { background: var(--green); color: #111; border-color: var(--green); }
+    .btn-cms-success:hover { opacity: 0.85; }
+
+    /* Project list */
+    .cms-project-list { display: flex; flex-direction: column; gap: 12px; }
+    .cms-project-card {
+      display: grid; grid-template-columns: 1fr auto;
+      align-items: center; gap: 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px 20px;
+      transition: border-color 0.2s;
+    }
+    .cms-project-card:hover { border-color: var(--accent); }
+    .cms-project-card.featured { border-left: 3px solid var(--accent); }
+    .cms-proj-info h4 { font-size: 15px; margin-bottom: 4px; }
+    .cms-proj-info .cms-proj-meta { font-size: 12px; color: var(--text2); display: flex; gap: 12px; flex-wrap: wrap; }
+    .cms-proj-info .cms-badge-featured {
+      display: inline-block; background: var(--accent); color: white;
+      padding: 1px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    }
+    .cms-proj-actions { display: flex; gap: 8px; }
+
+    /* Editor modal */
+    .editor-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      display: flex; align-items: flex-start; justify-content: center;
+      z-index: 3000; padding: 24px; overflow-y: auto;
+    }
+    .editor-overlay.hidden { display: none; }
+    .editor-box {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 16px; max-width: 960px; width: 100%;
+      padding: 0; margin: 20px 0;
+    }
+    .editor-titlebar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 24px; border-bottom: 1px solid var(--border);
+    }
+    .editor-titlebar h2 { font-size: 18px; color: var(--accent); }
+    .editor-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+    .editor-footer {
+      display: flex; justify-content: flex-end; gap: 8px;
+      padding: 16px 24px; border-top: 1px solid var(--border);
+    }
+
+    /* Form elements */
+    .form-section { margin-bottom: 24px; }
+    .form-section-title {
+      font-size: 14px; font-weight: 600; color: var(--accent);
+      margin-bottom: 12px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block; font-size: 12px; color: var(--text2);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="url"],
+    .form-group input[type="date"],
+    .form-group input[type="number"],
+    .form-group textarea,
+    .form-group select {
+      width: 100%; padding: 10px 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 14px;
+      font-family: inherit; outline: none; resize: vertical;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus { border-color: var(--accent); }
+    .form-group textarea { min-height: 80px; }
+
+    .form-check {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+    }
+    .form-check input[type="checkbox"] {
+      width: 18px; height: 18px; accent-color: var(--accent);
+    }
+    .form-check label { margin-bottom: 0; font-size: 14px; color: var(--text); text-transform: none; letter-spacing: 0; }
+
+    .cms-bilingual {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    .lang-col { position: relative; }
+    .lang-col .lang-flag {
+      position: absolute; top: 0; right: 0; font-size: 11px; color: var(--text2);
+      background: var(--surface2); padding: 2px 8px; border-radius: 0 8px 0 8px;
+    }
+
+    /* Item list (experiences, education, skills) */
+    .cms-item-list { display: flex; flex-direction: column; gap: 12px; }
+    .cms-item-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px;
+    }
+    .cms-item-card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px; cursor: pointer;
+    }
+    .cms-item-card-header h4 { font-size: 14px; }
+    .cms-item-card-body { display: none; }
+    .cms-item-card.expanded .cms-item-card-body { display: block; }
+    .cms-item-card.expanded .cms-item-card-header .toggle-icon { transform: rotate(180deg); }
+    .toggle-icon { transition: transform 0.2s; color: var(--text2); }
+
+    .cms-toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--green); color: #111; padding: 12px 24px;
+      border-radius: 10px; font-weight: 600; font-size: 14px;
+      z-index: 5000; opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .cms-toast.show { opacity: 1; }
+    .cms-toast.error { background: var(--red); color: white; }
+
+    .cms-empty {
+      text-align: center; padding: 48px 24px; color: var(--text2);
+    }
+    .cms-empty p { margin-bottom: 16px; }
   </style>
 </head>
 <body>
@@ -281,25 +455,36 @@
   <!-- Dashboard -->
   <div class="dashboard" id="dashboard">
     <div class="dashboard-header">
-      <h1>📊 Portfolio Analytics</h1>
+      <h1>📊 Panel de Control</h1>
       <div class="header-controls">
+        <button onclick="logOut()" style="background:var(--red)!important;border:none!important;">Cerrar sesión</button>
+      </div>
+    </div>
+
+    <!-- Main tabs -->
+    <div class="main-tabs">
+      <button class="main-tab active" onclick="switchMainTab('analytics')">📊 Analytics</button>
+      <button class="main-tab" onclick="switchMainTab('content')">📝 Gestor de Contenido</button>
+    </div>
+
+    <!-- ==================== ANALYTICS TAB ==================== -->
+    <div class="tab-pane active" id="pane-analytics">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
         <select id="timeFilter">
           <option value="today">Hoy</option>
           <option value="7d" selected>Últimos 7 días</option>
           <option value="30d">Últimos 30 días</option>
           <option value="all">Todo</option>
         </select>
-        <button class="btn-refresh" onclick="loadAllData()">↻ Actualizar</button>
-        <button onclick="logOut()" style="background:var(--red)!important;border:none!important;">Cerrar sesión</button>
+        <button class="btn-refresh" onclick="loadAllData()" style="padding:8px 16px;background:var(--accent);border:none;border-radius:8px;color:white;cursor:pointer;">↻ Actualizar</button>
       </div>
-    </div>
 
-    <div class="loading-spinner" id="loading">
-      <div class="spinner"></div>
-      Cargando datos...
-    </div>
+      <div class="loading-spinner" id="loading">
+        <div class="spinner"></div>
+        Cargando datos...
+      </div>
 
-    <div id="content" style="display:none;">
+      <div id="content" style="display:none;">
       <!-- Stats -->
       <div class="stats-grid" id="statsGrid"></div>
 
@@ -384,6 +569,72 @@
         </table>
       </div>
     </div>
+    </div><!-- /pane-analytics -->
+
+    <!-- ==================== CMS TAB ==================== -->
+    <div class="tab-pane" id="pane-content">
+
+      <div class="cms-sub-tabs">
+        <button class="cms-sub-tab active" onclick="switchCmsTab('projects')">🚀 Proyectos</button>
+        <button class="cms-sub-tab" onclick="switchCmsTab('about')">👤 Sobre mí</button>
+        <button class="cms-sub-tab" onclick="switchCmsTab('skills')">🛠️ Habilidades</button>
+      </div>
+
+      <!-- Projects CMS -->
+      <div class="cms-pane active" id="cms-projects">
+        <div class="cms-header">
+          <h3>Gestión de Proyectos</h3>
+          <div class="cms-actions">
+            <button class="btn-cms" onclick="seedDefaults('projects')">📥 Importar datos locales</button>
+            <button class="btn-cms btn-cms-primary" onclick="openProjectEditor()">➕ Nuevo proyecto</button>
+          </div>
+        </div>
+        <div id="cmsProjectsList"></div>
+      </div>
+
+      <!-- About CMS -->
+      <div class="cms-pane" id="cms-about">
+        <div class="cms-header">
+          <h3>Información Personal, Experiencia y Educación</h3>
+          <div class="cms-actions">
+            <button class="btn-cms" onclick="seedDefaults('about')">📥 Importar datos locales</button>
+            <button class="btn-cms btn-cms-success" onclick="saveAboutData()">💾 Guardar todo</button>
+          </div>
+        </div>
+        <div id="cmsAboutContent"></div>
+      </div>
+
+      <!-- Skills CMS -->
+      <div class="cms-pane" id="cms-skills">
+        <div class="cms-header">
+          <h3>Habilidades Técnicas</h3>
+          <div class="cms-actions">
+            <button class="btn-cms" onclick="seedDefaults('skills')">📥 Importar datos locales</button>
+            <button class="btn-cms btn-cms-success" onclick="saveSkillsData()">💾 Guardar todo</button>
+          </div>
+        </div>
+        <div id="cmsSkillsContent"></div>
+      </div>
+
+    </div><!-- /pane-content -->
+  </div><!-- /dashboard -->
+
+  <!-- Toast notification -->
+  <div class="cms-toast" id="cmsToast"></div>
+
+  <!-- Project editor modal -->
+  <div class="editor-overlay hidden" id="editorOverlay">
+    <div class="editor-box">
+      <div class="editor-titlebar">
+        <h2 id="editorTitle">Editar Proyecto</h2>
+        <button class="btn-close" onclick="closeProjectEditor()">✕</button>
+      </div>
+      <div class="editor-body" id="editorBody"></div>
+      <div class="editor-footer">
+        <button class="btn-cms" onclick="closeProjectEditor()">Cancelar</button>
+        <button class="btn-cms btn-cms-success" onclick="saveProject()">💾 Guardar proyecto</button>
+      </div>
+    </div>
   </div>
 
   <!-- Visitor detail modal -->
@@ -400,7 +651,7 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js';
-    import { getFirestore, collection, getDocs, query, orderBy, limit, where, Timestamp, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js';
+    import { getFirestore, collection, getDocs, query, orderBy, limit, where, Timestamp, doc, updateDoc, getDoc, setDoc, deleteField } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js';
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js';
 
     // Config
@@ -895,6 +1146,620 @@
     function var_orange() { return '#ffa726'; }
     function var_green() { return '#4ecdc4'; }
     function var_accent2() { return '#9c88ff'; }
+
+    // ================================================================
+    //  CMS — GESTOR DE CONTENIDO
+    // ================================================================
+
+    const CMS_COL = 'portfolio_content';
+    let cmsProjects = [];
+    let cmsAbout = { personalInfo: { description: { es: [], en: [] } }, experiences: [], education: [] };
+    let cmsSkills = { categories: [], additionalSkills: { es: [], en: [] } };
+    let editingProjectIndex = -1; // -1 = new
+
+    // ---- Tab switching ----
+    window.switchMainTab = function(tab) {
+      document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelector(`.main-tab[onclick*="${tab}"]`).classList.add('active');
+      document.getElementById('pane-' + tab).classList.add('active');
+      if (tab === 'content') loadCMSContent();
+    };
+
+    window.switchCmsTab = function(tab) {
+      document.querySelectorAll('.cms-sub-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.cms-pane').forEach(p => p.classList.remove('active'));
+      document.querySelector(`.cms-sub-tab[onclick*="${tab}"]`).classList.add('active');
+      document.getElementById('cms-' + tab).classList.add('active');
+    };
+
+    // ---- Toast ----
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('cmsToast');
+      t.textContent = msg;
+      t.className = 'cms-toast show' + (isError ? ' error' : '');
+      setTimeout(() => t.className = 'cms-toast', 3000);
+    }
+
+    // ---- Load CMS data ----
+    async function loadCMSContent() {
+      try {
+        const [projSnap, aboutSnap, skillsSnap] = await Promise.all([
+          getDoc(doc(db, CMS_COL, 'projects')),
+          getDoc(doc(db, CMS_COL, 'about')),
+          getDoc(doc(db, CMS_COL, 'skills')),
+        ]);
+        if (projSnap.exists()) cmsProjects = projSnap.data().items || [];
+        else cmsProjects = [];
+        if (aboutSnap.exists()) cmsAbout = aboutSnap.data();
+        else cmsAbout = { personalInfo: { description: { es: [], en: [] } }, experiences: [], education: [] };
+        if (skillsSnap.exists()) cmsSkills = skillsSnap.data();
+        else cmsSkills = { categories: [], additionalSkills: { es: [], en: [] } };
+      } catch (e) {
+        console.error('CMS load error:', e);
+      }
+      renderProjectsList();
+      renderAboutEditor();
+      renderSkillsEditor();
+    }
+
+    // ---- Save full document ----
+    async function saveCmsDoc(docId, data) {
+      try {
+        await setDoc(doc(db, CMS_COL, docId), data);
+        showToast('✅ Guardado correctamente');
+      } catch (e) {
+        console.error('Save error:', e);
+        showToast('❌ Error al guardar', true);
+      }
+    }
+
+    // ================================================================
+    //  PROJECTS
+    // ================================================================
+
+    function renderProjectsList() {
+      const el = document.getElementById('cmsProjectsList');
+      if (!cmsProjects.length) {
+        el.innerHTML = '<div class="cms-empty"><p>No hay proyectos en la base de datos.</p><p>Usa "Importar datos locales" para cargar los datos actuales o crea uno nuevo.</p></div>';
+        return;
+      }
+      el.innerHTML = '<div class="cms-project-list">' + cmsProjects.map((p, i) => `
+        <div class="cms-project-card ${p.featured ? 'featured' : ''}">
+          <div class="cms-proj-info">
+            <h4>${p.featured ? '<span class="cms-badge-featured">★ Destacado</span> ' : ''}${esc(p.title.es)}</h4>
+            <div class="cms-proj-meta">
+              <span>ID: ${p.id}</span>
+              <span>${(p.tech || []).join(', ')}</span>
+              <span>${p.details?.es?.date || ''}</span>
+            </div>
+          </div>
+          <div class="cms-proj-actions">
+            <button class="btn-cms" onclick="openProjectEditor(${i})">✏️ Editar</button>
+            <button class="btn-cms btn-cms-danger" onclick="deleteProject(${i})">🗑️</button>
+          </div>
+        </div>
+      `).join('') + '</div>';
+    }
+
+    window.openProjectEditor = function(index) {
+      editingProjectIndex = index !== undefined && index !== null ? index : -1;
+      const isNew = editingProjectIndex === -1;
+      const p = isNew ? makeEmptyProject() : JSON.parse(JSON.stringify(cmsProjects[editingProjectIndex]));
+
+      document.getElementById('editorTitle').textContent = isNew ? 'Nuevo Proyecto' : 'Editar: ' + p.title.es;
+
+      const body = document.getElementById('editorBody');
+      body.innerHTML = `
+        <div class="form-section">
+          <div class="form-section-title">General</div>
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:12px;">
+            <div class="form-group"><label>ID</label><input type="number" id="ep-id" value="${p.id}" ${isNew ? '' : 'readonly'} style="background:${isNew ? 'var(--surface)' : 'var(--surface2)'}"></div>
+            <div class="form-group"><label>GitHub</label><input type="url" id="ep-github" value="${esc(p.github)}"></div>
+            <div class="form-group"><label>Demo</label><input type="text" id="ep-demo" value="${esc(p.demo)}"></div>
+          </div>
+          <div class="form-check"><input type="checkbox" id="ep-featured" ${p.featured ? 'checked' : ''}><label for="ep-featured">Proyecto destacado</label></div>
+          <div class="form-group"><label>Tecnologías (separadas por coma)</label><input type="text" id="ep-tech" value="${esc((p.tech||[]).join(', '))}"></div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Título y Descripción</div>
+          <div class="cms-bilingual">
+            <div class="lang-col"><span class="lang-flag">🇪🇸 ES</span>
+              <div class="form-group"><label>Título</label><input type="text" id="ep-title-es" value="${esc(p.title.es)}"></div>
+              <div class="form-group"><label>Descripción</label><textarea id="ep-desc-es" rows="3">${esc(p.description.es)}</textarea></div>
+            </div>
+            <div class="lang-col"><span class="lang-flag">🇬🇧 EN</span>
+              <div class="form-group"><label>Title</label><input type="text" id="ep-title-en" value="${esc(p.title.en)}"></div>
+              <div class="form-group"><label>Description</label><textarea id="ep-desc-en" rows="3">${esc(p.description.en)}</textarea></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Detalles — Español 🇪🇸</div>
+          <div class="form-group"><label>Overview (un párrafo por línea)</label><textarea id="ep-overview-es" rows="4">${esc((p.details.es.overview||[]).join('\n'))}</textarea></div>
+          <div class="form-group"><label>Desafío (un párrafo por línea)</label><textarea id="ep-challenge-es" rows="3">${esc((p.details.es.challenge||[]).join('\n'))}</textarea></div>
+          <div class="form-group"><label>Solución (un párrafo por línea)</label><textarea id="ep-solution-es" rows="3">${esc((p.details.es.solution||[]).join('\n'))}</textarea></div>
+          <div class="form-group"><label>Features (una por línea)</label><textarea id="ep-features-es" rows="4">${esc((p.details.es.features||[]).join('\n'))}</textarea></div>
+          <div class="form-group"><label>Detalles técnicos</label><textarea id="ep-techdetails-es" rows="3">${esc(p.details.es.techDetails||'')}</textarea></div>
+          <div class="form-group"><label>Resultados</label><textarea id="ep-results-es" rows="2">${esc(p.details.es.results||'')}</textarea></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group"><label>Fecha</label><input type="text" id="ep-date-es" value="${esc(p.details.es.date||'')}"></div>
+            <div class="form-group"><label>Equipo</label><input type="text" id="ep-team-es" value="${esc(p.details.es.team||'')}"></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Details — English 🇬🇧</div>
+          <div class="form-group"><label>Overview (one paragraph per line)</label><textarea id="ep-overview-en" rows="4">${esc((p.details.en.overview||[]).join('\n'))}</textarea></div>
+          <div class="form-group"><label>Challenge (one paragraph per line)</label><textarea id="ep-challenge-en" rows="3">${esc((p.details.en.challenge||[]).join('\n'))}</textarea></div>
+          <div class="form-group"><label>Solution (one paragraph per line)</label><textarea id="ep-solution-en" rows="3">${esc((p.details.en.solution||[]).join('\n'))}</textarea></div>
+          <div class="form-group"><label>Features (one per line)</label><textarea id="ep-features-en" rows="4">${esc((p.details.en.features||[]).join('\n'))}</textarea></div>
+          <div class="form-group"><label>Technical details</label><textarea id="ep-techdetails-en" rows="3">${esc(p.details.en.techDetails||'')}</textarea></div>
+          <div class="form-group"><label>Results</label><textarea id="ep-results-en" rows="2">${esc(p.details.en.results||'')}</textarea></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group"><label>Date</label><input type="text" id="ep-date-en" value="${esc(p.details.en.date||'')}"></div>
+            <div class="form-group"><label>Team</label><input type="text" id="ep-team-en" value="${esc(p.details.en.team||'')}"></div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('editorOverlay').classList.remove('hidden');
+    };
+
+    window.closeProjectEditor = function() {
+      document.getElementById('editorOverlay').classList.add('hidden');
+    };
+
+    // Close on overlay click
+    document.getElementById('editorOverlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('editorOverlay')) closeProjectEditor();
+    });
+
+    function textToArray(id) {
+      return document.getElementById(id).value.split('\n').map(s => s.trim()).filter(Boolean);
+    }
+    function val(id) { return document.getElementById(id).value; }
+
+    window.saveProject = async function() {
+      const p = {
+        id: parseInt(val('ep-id')) || Date.now(),
+        featured: document.getElementById('ep-featured').checked,
+        title: { es: val('ep-title-es'), en: val('ep-title-en') },
+        description: { es: val('ep-desc-es'), en: val('ep-desc-en') },
+        tech: val('ep-tech').split(',').map(s => s.trim()).filter(Boolean),
+        github: val('ep-github'),
+        demo: val('ep-demo'),
+        details: {
+          es: {
+            overview: textToArray('ep-overview-es'),
+            challenge: textToArray('ep-challenge-es'),
+            solution: textToArray('ep-solution-es'),
+            features: textToArray('ep-features-es'),
+            techDetails: val('ep-techdetails-es'),
+            results: val('ep-results-es'),
+            date: val('ep-date-es'),
+            team: val('ep-team-es'),
+          },
+          en: {
+            overview: textToArray('ep-overview-en'),
+            challenge: textToArray('ep-challenge-en'),
+            solution: textToArray('ep-solution-en'),
+            features: textToArray('ep-features-en'),
+            techDetails: val('ep-techdetails-en'),
+            results: val('ep-results-en'),
+            date: val('ep-date-en'),
+            team: val('ep-team-en'),
+          },
+        },
+      };
+
+      if (editingProjectIndex >= 0) {
+        cmsProjects[editingProjectIndex] = p;
+      } else {
+        cmsProjects.push(p);
+      }
+
+      await saveCmsDoc('projects', { items: cmsProjects });
+      renderProjectsList();
+      closeProjectEditor();
+    };
+
+    window.deleteProject = async function(index) {
+      if (!confirm('¿Eliminar el proyecto "' + cmsProjects[index].title.es + '"?')) return;
+      cmsProjects.splice(index, 1);
+      await saveCmsDoc('projects', { items: cmsProjects });
+      renderProjectsList();
+    };
+
+    function makeEmptyProject() {
+      const maxId = cmsProjects.length ? Math.max(...cmsProjects.map(p => p.id)) + 1 : 1;
+      const empty = { overview: [], challenge: [], solution: [], features: [], techDetails: '', results: '', date: new Date().getFullYear().toString(), team: 'Proyecto personal' };
+      return {
+        id: maxId, featured: false,
+        title: { es: '', en: '' }, description: { es: '', en: '' },
+        tech: [], github: '', demo: '',
+        details: { es: { ...empty }, en: { ...empty, team: 'Personal project' } },
+      };
+    }
+
+    // ================================================================
+    //  ABOUT
+    // ================================================================
+
+    function renderAboutEditor() {
+      const el = document.getElementById('cmsAboutContent');
+      const pi = cmsAbout.personalInfo || { description: { es: [], en: [] } };
+      const exps = cmsAbout.experiences || [];
+      const edus = cmsAbout.education || [];
+
+      let html = `
+        <div class="form-section">
+          <div class="form-section-title">Información personal</div>
+          <div class="cms-bilingual">
+            <div class="lang-col"><span class="lang-flag">🇪🇸 ES</span>
+              <div class="form-group"><label>Descripción (un párrafo por línea en blanco)</label>
+                <textarea id="about-desc-es" rows="6">${esc((pi.description?.es||[]).join('\n\n'))}</textarea>
+              </div>
+            </div>
+            <div class="lang-col"><span class="lang-flag">🇬🇧 EN</span>
+              <div class="form-group"><label>Description (one paragraph per blank line)</label>
+                <textarea id="about-desc-en" rows="6">${esc((pi.description?.en||[]).join('\n\n'))}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Experiencia Profesional
+            <button class="btn-cms btn-cms-primary" style="float:right;font-size:12px;padding:4px 12px;" onclick="addExperience()">➕ Añadir</button>
+          </div>
+          <div class="cms-item-list" id="about-exp-list">
+            ${exps.map((exp, i) => renderExperienceCard(exp, i)).join('')}
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Educación
+            <button class="btn-cms btn-cms-primary" style="float:right;font-size:12px;padding:4px 12px;" onclick="addEducation()">➕ Añadir</button>
+          </div>
+          <div class="cms-item-list" id="about-edu-list">
+            ${edus.map((edu, i) => renderEducationCard(edu, i)).join('')}
+          </div>
+        </div>
+      `;
+      el.innerHTML = html;
+    }
+
+    function renderExperienceCard(exp, i) {
+      return `
+        <div class="cms-item-card expanded" id="exp-card-${i}">
+          <div class="cms-item-card-header" onclick="toggleCard('exp-card-${i}')">
+            <h4>${esc(exp.title?.es||'Nueva experiencia')} — ${esc(exp.company?.es||'')}</h4>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span style="font-size:12px;color:var(--text2)">${esc(exp.period?.es||'')}</span>
+              <span class="toggle-icon">▼</span>
+              <button class="btn-cms btn-cms-danger" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();removeExperience(${i})">🗑️</button>
+            </div>
+          </div>
+          <div class="cms-item-card-body">
+            <div class="cms-bilingual">
+              <div class="lang-col"><span class="lang-flag">🇪🇸 ES</span>
+                <div class="form-group"><label>Título</label><input type="text" id="exp-title-es-${i}" value="${esc(exp.title?.es||'')}"></div>
+                <div class="form-group"><label>Empresa</label><input type="text" id="exp-company-es-${i}" value="${esc(exp.company?.es||'')}"></div>
+                <div class="form-group"><label>Descripción</label><textarea id="exp-desc-es-${i}" rows="2">${esc(exp.description?.es||'')}</textarea></div>
+                <div class="form-group"><label>Periodo</label><input type="text" id="exp-period-es-${i}" value="${esc(exp.period?.es||'')}"></div>
+              </div>
+              <div class="lang-col"><span class="lang-flag">🇬🇧 EN</span>
+                <div class="form-group"><label>Title</label><input type="text" id="exp-title-en-${i}" value="${esc(exp.title?.en||'')}"></div>
+                <div class="form-group"><label>Company</label><input type="text" id="exp-company-en-${i}" value="${esc(exp.company?.en||'')}"></div>
+                <div class="form-group"><label>Description</label><textarea id="exp-desc-en-${i}" rows="2">${esc(exp.description?.en||'')}</textarea></div>
+                <div class="form-group"><label>Period</label><input type="text" id="exp-period-en-${i}" value="${esc(exp.period?.en||'')}"></div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="form-group"><label>Fecha inicio (YYYY-MM-DD)</label><input type="date" id="exp-start-${i}" value="${esc(exp.startDate||'')}"></div>
+              <div class="form-group"><label>Fecha fin (vacío = activo)</label><input type="date" id="exp-end-${i}" value="${esc(exp.endDate||'')}"></div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderEducationCard(edu, i) {
+      return `
+        <div class="cms-item-card expanded" id="edu-card-${i}">
+          <div class="cms-item-card-header" onclick="toggleCard('edu-card-${i}')">
+            <h4>${esc(edu.degree?.es||'Nueva formación')} — ${esc(edu.institution?.es||'')}</h4>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span style="font-size:12px;color:var(--text2)">${esc(edu.period?.es||'')}</span>
+              <span class="toggle-icon">▼</span>
+              <button class="btn-cms btn-cms-danger" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();removeEducation(${i})">🗑️</button>
+            </div>
+          </div>
+          <div class="cms-item-card-body">
+            <div class="cms-bilingual">
+              <div class="lang-col"><span class="lang-flag">🇪🇸 ES</span>
+                <div class="form-group"><label>Título</label><input type="text" id="edu-degree-es-${i}" value="${esc(edu.degree?.es||'')}"></div>
+                <div class="form-group"><label>Institución</label><input type="text" id="edu-inst-es-${i}" value="${esc(edu.institution?.es||'')}"></div>
+                <div class="form-group"><label>Descripción</label><textarea id="edu-desc-es-${i}" rows="2">${esc(edu.description?.es||'')}</textarea></div>
+                <div class="form-group"><label>Periodo</label><input type="text" id="edu-period-es-${i}" value="${esc(edu.period?.es||'')}"></div>
+              </div>
+              <div class="lang-col"><span class="lang-flag">🇬🇧 EN</span>
+                <div class="form-group"><label>Degree</label><input type="text" id="edu-degree-en-${i}" value="${esc(edu.degree?.en||'')}"></div>
+                <div class="form-group"><label>Institution</label><input type="text" id="edu-inst-en-${i}" value="${esc(edu.institution?.en||'')}"></div>
+                <div class="form-group"><label>Description</label><textarea id="edu-desc-en-${i}" rows="2">${esc(edu.description?.en||'')}</textarea></div>
+                <div class="form-group"><label>Period</label><input type="text" id="edu-period-en-${i}" value="${esc(edu.period?.en||'')}"></div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    window.toggleCard = function(id) {
+      document.getElementById(id).classList.toggle('expanded');
+    };
+
+    window.addExperience = function() {
+      cmsAbout.experiences.push({
+        title: { es: '', en: '' }, company: { es: '', en: '' },
+        description: { es: '', en: '' }, period: { es: '', en: '' },
+        startDate: '',
+      });
+      renderAboutEditor();
+    };
+
+    window.removeExperience = function(i) {
+      if (!confirm('¿Eliminar esta experiencia?')) return;
+      collectAboutData();
+      cmsAbout.experiences.splice(i, 1);
+      renderAboutEditor();
+    };
+
+    window.addEducation = function() {
+      cmsAbout.education.push({
+        degree: { es: '', en: '' }, institution: { es: '', en: '' },
+        description: { es: '', en: '' }, period: { es: '', en: '' },
+      });
+      renderAboutEditor();
+    };
+
+    window.removeEducation = function(i) {
+      if (!confirm('¿Eliminar esta formación?')) return;
+      collectAboutData();
+      cmsAbout.education.splice(i, 1);
+      renderAboutEditor();
+    };
+
+    function collectAboutData() {
+      // Personal info
+      const esDesc = (document.getElementById('about-desc-es')?.value || '').split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
+      const enDesc = (document.getElementById('about-desc-en')?.value || '').split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
+      cmsAbout.personalInfo = { description: { es: esDesc, en: enDesc } };
+
+      // Experiences
+      cmsAbout.experiences = cmsAbout.experiences.map((_, i) => {
+        const startEl = document.getElementById(`exp-start-${i}`);
+        if (!startEl) return _;
+        const obj = {
+          title: { es: val(`exp-title-es-${i}`), en: val(`exp-title-en-${i}`) },
+          company: { es: val(`exp-company-es-${i}`), en: val(`exp-company-en-${i}`) },
+          description: { es: val(`exp-desc-es-${i}`), en: val(`exp-desc-en-${i}`) },
+          period: { es: val(`exp-period-es-${i}`), en: val(`exp-period-en-${i}`) },
+          startDate: val(`exp-start-${i}`),
+        };
+        const endVal = val(`exp-end-${i}`);
+        if (endVal) obj.endDate = endVal;
+        return obj;
+      });
+
+      // Education
+      cmsAbout.education = cmsAbout.education.map((_, i) => {
+        const degEl = document.getElementById(`edu-degree-es-${i}`);
+        if (!degEl) return _;
+        return {
+          degree: { es: val(`edu-degree-es-${i}`), en: val(`edu-degree-en-${i}`) },
+          institution: { es: val(`edu-inst-es-${i}`), en: val(`edu-inst-en-${i}`) },
+          description: { es: val(`edu-desc-es-${i}`), en: val(`edu-desc-en-${i}`) },
+          period: { es: val(`edu-period-es-${i}`), en: val(`edu-period-en-${i}`) },
+        };
+      });
+    }
+
+    window.saveAboutData = async function() {
+      collectAboutData();
+      await saveCmsDoc('about', cmsAbout);
+    };
+
+    // ================================================================
+    //  SKILLS
+    // ================================================================
+
+    function renderSkillsEditor() {
+      const el = document.getElementById('cmsSkillsContent');
+      const cats = cmsSkills.categories || [];
+      const addSkills = cmsSkills.additionalSkills || { es: [], en: [] };
+
+      let html = `
+        <div class="form-section">
+          <div class="form-section-title">Categorías de Habilidades
+            <button class="btn-cms btn-cms-primary" style="float:right;font-size:12px;padding:4px 12px;" onclick="addCategory()">➕ Categoría</button>
+          </div>
+          <div class="cms-item-list" id="skills-cats-list">
+            ${cats.map((cat, ci) => renderCategoryCard(cat, ci)).join('')}
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Habilidades Adicionales</div>
+          <div class="cms-bilingual">
+            <div class="lang-col"><span class="lang-flag">🇪🇸 ES</span>
+              <div class="form-group"><label>Una por línea</label>
+                <textarea id="addskills-es" rows="6">${esc((addSkills.es||[]).join('\n'))}</textarea>
+              </div>
+            </div>
+            <div class="lang-col"><span class="lang-flag">🇬🇧 EN</span>
+              <div class="form-group"><label>One per line</label>
+                <textarea id="addskills-en" rows="6">${esc((addSkills.en||[]).join('\n'))}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      el.innerHTML = html;
+    }
+
+    function renderCategoryCard(cat, ci) {
+      const skills = cat.skills || [];
+      return `
+        <div class="cms-item-card expanded" id="cat-card-${ci}">
+          <div class="cms-item-card-header" onclick="toggleCard('cat-card-${ci}')">
+            <h4>${esc(cat.title?.es||'Nueva categoría')}</h4>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span style="font-size:12px;color:var(--text2)">${skills.length} skills</span>
+              <span class="toggle-icon">▼</span>
+              <button class="btn-cms btn-cms-danger" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();removeCategory(${ci})">🗑️</button>
+            </div>
+          </div>
+          <div class="cms-item-card-body">
+            <div class="cms-bilingual" style="margin-bottom:16px;">
+              <div class="form-group"><label>🇪🇸 Título categoría</label><input type="text" id="cat-title-es-${ci}" value="${esc(cat.title?.es||'')}"></div>
+              <div class="form-group"><label>🇬🇧 Category title</label><input type="text" id="cat-title-en-${ci}" value="${esc(cat.title?.en||'')}"></div>
+            </div>
+            <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+              <strong style="font-size:13px;color:var(--text2);">Skills</strong>
+              <button class="btn-cms btn-cms-primary" style="font-size:11px;padding:3px 10px;" onclick="addSkillToCategory(${ci})">➕</button>
+            </div>
+            ${skills.map((sk, si) => `
+              <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <div class="form-group" style="margin-bottom:0;flex:1;margin-right:12px;">
+                    <label>Nombre</label><input type="text" id="sk-name-${ci}-${si}" value="${esc(sk.name||'')}">
+                  </div>
+                  <button class="btn-cms btn-cms-danger" style="padding:3px 8px;font-size:11px;margin-top:12px;" onclick="removeSkill(${ci},${si})">🗑️</button>
+                </div>
+                <div class="cms-bilingual">
+                  <div class="form-group"><label>🇪🇸 Descripción</label><textarea id="sk-desc-es-${ci}-${si}" rows="2">${esc(sk.description?.es||'')}</textarea></div>
+                  <div class="form-group"><label>🇬🇧 Description</label><textarea id="sk-desc-en-${ci}-${si}" rows="2">${esc(sk.description?.en||'')}</textarea></div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+    }
+
+    window.addCategory = function() {
+      collectSkillsData();
+      cmsSkills.categories.push({ title: { es: '', en: '' }, skills: [] });
+      renderSkillsEditor();
+    };
+
+    window.removeCategory = function(ci) {
+      if (!confirm('¿Eliminar esta categoría y todas sus skills?')) return;
+      collectSkillsData();
+      cmsSkills.categories.splice(ci, 1);
+      renderSkillsEditor();
+    };
+
+    window.addSkillToCategory = function(ci) {
+      collectSkillsData();
+      cmsSkills.categories[ci].skills.push({ name: '', description: { es: '', en: '' } });
+      renderSkillsEditor();
+    };
+
+    window.removeSkill = function(ci, si) {
+      collectSkillsData();
+      cmsSkills.categories[ci].skills.splice(si, 1);
+      renderSkillsEditor();
+    };
+
+    function collectSkillsData() {
+      cmsSkills.categories = cmsSkills.categories.map((cat, ci) => {
+        const titleEsEl = document.getElementById(`cat-title-es-${ci}`);
+        if (!titleEsEl) return cat;
+        const skills = (cat.skills||[]).map((sk, si) => {
+          const nameEl = document.getElementById(`sk-name-${ci}-${si}`);
+          if (!nameEl) return sk;
+          return {
+            name: nameEl.value,
+            description: { es: val(`sk-desc-es-${ci}-${si}`), en: val(`sk-desc-en-${ci}-${si}`) },
+          };
+        });
+        return {
+          title: { es: titleEsEl.value, en: val(`cat-title-en-${ci}`) },
+          skills,
+        };
+      });
+      cmsSkills.additionalSkills = {
+        es: (document.getElementById('addskills-es')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean),
+        en: (document.getElementById('addskills-en')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean),
+      };
+    }
+
+    window.saveSkillsData = async function() {
+      collectSkillsData();
+      await saveCmsDoc('skills', cmsSkills);
+    };
+
+    // ================================================================
+    //  SEED FROM DEFAULTS
+    // ================================================================
+
+    const DEFAULT_PROJECTS = [
+      {id:1,featured:true,title:{es:'Portfolio Dashboard',en:'Portfolio Dashboard'},description:{es:'Plantilla moderna y elegante para crear tu portfolio profesional como desarrollador.',en:'Modern and elegant template to create your professional developer portfolio.'},tech:['React','TypeScript','Vite','CSS3','WebLLM'],github:'https://github.com/xabware/portfolio',demo:'https://xabware.github.io/portfolio',details:{es:{overview:['Este proyecto es una plantilla de portfolio diseñada para desarrolladores que buscan destacar en el mercado laboral.'],challenge:['Crear un portfolio que no sea solo una página estática, sino una experiencia interactiva.'],solution:['Implementé una arquitectura modular con React y TypeScript.'],features:['Chatbot con IA local','Diseño dashboard moderno','Tema claro/oscuro','Sistema multilingüe','Búsqueda global','Optimizado con Vite','Responsive','Animaciones elegantes'],techDetails:'React 18 + TypeScript + Vite + WebLLM + CSS Variables.',results:'Plantilla personalizable en minutos.',date:'2026',team:'Proyecto personal'},en:{overview:['A portfolio template designed for developers looking to stand out.'],challenge:['Create an interactive portfolio that demonstrates real technical skills.'],solution:['Modular architecture with React and TypeScript.'],features:['Local AI chatbot','Modern dashboard','Light/dark theme','Multilingual system','Global search','Vite optimized','Responsive','Elegant animations'],techDetails:'React 18 + TypeScript + Vite + WebLLM + CSS Variables.',results:'A customizable template any developer can use.',date:'2026',team:'Personal project'}}},
+      {id:2,featured:true,title:{es:'Medidor de Raíces',en:'Root Measurement Tool'},description:{es:'Herramienta web para la medición de objetos en imágenes.',en:'Web tool for measuring objects in images.'},tech:['React','Vite','ArUco','Visión Artificial'],github:'https://github.com/xabware/medidor',demo:'https://xabware.github.io/medidor/',details:{es:{overview:['Herramienta web para la medición de objetos en imágenes.'],challenge:['Proceso lento de medición manual de raíces.'],solution:['Fotografías a contraluz + interfaz de dibujo de líneas + referencia de escala.'],features:[],techDetails:'',results:'',date:'2026',team:'Proyecto personal'},en:{overview:['Web tool for measuring objects in images.'],challenge:['Slow manual root measurement process.'],solution:['Backlit photos + line drawing interface + scale reference.'],features:[],techDetails:'',results:'',date:'2026',team:'Personal project'}}},
+      {id:5,featured:true,title:{es:'Sistema Solar Interactivo',en:'Interactive Solar System'},description:{es:'Visualización 3D interactiva de un sistema solar.',en:'Interactive 3D solar system visualization.'},tech:['React','Three.js','React Three Fiber','WebGL'],github:'https://github.com/xabware/portfolio',demo:'#space',details:{es:{overview:['Sistema solar 3D interactivo.'],challenge:['Experiencia 3D fluida en el navegador.'],solution:['React Three Fiber + ruido Simplex 3D.'],features:['Planetas procedurales','Atmósferas volumétricas','Navegación 3D','Paneles informativos'],techDetails:'React Three Fiber + Three.js + GLSL shaders.',results:'Experiencia visual impactante.',date:'2026',team:'Proyecto personal'},en:{overview:['Interactive 3D solar system.'],challenge:['Smooth 3D experience in the browser.'],solution:['React Three Fiber + 3D Simplex noise.'],features:['Procedural planets','Volumetric atmospheres','3D navigation','Info panels'],techDetails:'React Three Fiber + Three.js + GLSL shaders.',results:'Stunning visual experience.',date:'2026',team:'Personal project'}}},
+      {id:6,featured:true,title:{es:'Chatbot RAG con WebLLM',en:'RAG Chatbot with WebLLM'},description:{es:'Chatbot con IA local usando RAG.',en:'AI chatbot with local RAG.'},tech:['WebLLM','WebGPU','RAG','React','TypeScript'],github:'https://github.com/xabware/portfolio',demo:'#chat',details:{es:{overview:['Chatbot IA en el navegador con RAG.'],challenge:['Ejecutar LLM + RAG en el navegador.'],solution:['WebLLM + vector store + similitud coseno.'],features:['IA 100% local','RAG semántico','Carga de PDFs','Múltiples modelos','Panel debug'],techDetails:'WebLLM + WebGPU + pdf.js + embeddings.',results:'Asistente IA sin costes de infraestructura.',date:'2026',team:'Proyecto personal'},en:{overview:['AI chatbot in the browser with RAG.'],challenge:['Run LLM + RAG in the browser.'],solution:['WebLLM + vector store + cosine similarity.'],features:['100% local AI','Semantic RAG','PDF loading','Multiple models','Debug panel'],techDetails:'WebLLM + WebGPU + pdf.js + embeddings.',results:'AI assistant with no infrastructure costs.',date:'2026',team:'Personal project'}}},
+    ];
+
+    const DEFAULT_ABOUT = {
+      personalInfo:{description:{es:['Soy una persona curiosa e implicada. Elegí como carrera la ingeniería de software por su carácter transversal.','A día de hoy, soy consciente de que lo que me llamó de la informática es su capacidad para transformar cada área del mundo.','Los avances en inteligencia artificial me resultan extremadamente atractivos.'],en:['I am a curious and engaged person. I chose software engineering for its cross-cutting nature.','Today, what drew me to computer science is its ability to transform every area of the world.','Advances in artificial intelligence are extremely attractive to me.']}},
+      experiences:[
+        {title:{es:'Full-Stack Developer',en:'Full-Stack Developer'},company:{es:'Tracasa Instrumental',en:'Tracasa Instrumental'},description:{es:'Desarrollo de aplicaciones gubernamentales.',en:'Government application development.'},period:{es:'2021 - Presente',en:'2021 - Present'},startDate:'2021-08-01'},
+        {title:{es:'Prácticas extracurriculares',en:'Extracurricular Internship'},company:{es:'Veridas',en:'Veridas'},description:{es:'Preparación de datasets para reconocimiento facial.',en:'Dataset preparation for facial recognition.'},period:{es:'2020',en:'2020'},startDate:'2020-06-01',endDate:'2020-07-31'},
+      ],
+      education:[
+        {degree:{es:'Máster en Ingeniería Informática',en:"Master's in Computer Engineering"},institution:{es:'Universidad Pública de Navarra',en:'Public University of Navarre'},description:{es:'Máster generalista.',en:"Generalist master's program."},period:{es:'2021 - 2024',en:'2021 - 2024'}},
+        {degree:{es:'Ingeniería Informática',en:'Computer Engineering'},institution:{es:'Universidad Pública de Navarra',en:'Public University of Navarre'},description:{es:'Especialización en Computación y Sistemas Inteligentes.',en:'Specialization in Computing and Intelligent Systems.'},period:{es:'2017 - 2021',en:'2017 - 2021'}},
+      ],
+    };
+
+    const DEFAULT_SKILLS = {
+      categories:[
+        {title:{es:'Frontend',en:'Frontend'},skills:[{name:'React',description:{es:'React con Vite para proyectos personales.',en:'React with Vite for personal projects.'}},{name:'CSS',description:{es:'Flexbox, Tailwind, SCSS.',en:'Flexbox, Tailwind, SCSS.'}}]},
+        {title:{es:'Backend',en:'Backend'},skills:[{name:'.NET',description:{es:'Framework con más experiencia.',en:'Most experienced framework.'}},{name:'Python',description:{es:'Scripts, IA, APIs.',en:'Scripts, AI, APIs.'}}]},
+        {title:{es:'Bases de Datos',en:'Databases'},skills:[{name:'SQL Server',description:{es:'Administración, optimización.',en:'Administration, optimization.'}},{name:'T-SQL',description:{es:'Stored procedures, triggers.',en:'Stored procedures, triggers.'}}]},
+        {title:{es:'DevOps y Herramientas',en:'DevOps & Tools'},skills:[{name:'Git',description:{es:'Comprensión total.',en:'Comprehensive understanding.'}},{name:'Docker',description:{es:'Contenerización.',en:'Containerization.'}}]},
+      ],
+      additionalSkills:{es:['Metodologías Ágiles / Scrum','APIs REST','Arquitectura de Microservicios','Testing Automatizado','Diseño UI/UX','Responsive','Optimización de Rendimiento','Seguridad','Liderazgo de Equipos'],en:['Agile / Scrum','REST APIs','Microservices Architecture','Automated Testing','UI/UX Design','Responsive','Performance Optimization','Security','Team Leadership']},
+    };
+
+    window.seedDefaults = async function(section) {
+      if (!confirm('Esto reemplazará los datos actuales de "' + section + '" en la base de datos con los datos por defecto. ¿Continuar?')) return;
+      try {
+        if (section === 'projects') {
+          cmsProjects = JSON.parse(JSON.stringify(DEFAULT_PROJECTS));
+          await saveCmsDoc('projects', { items: cmsProjects });
+          renderProjectsList();
+        } else if (section === 'about') {
+          cmsAbout = JSON.parse(JSON.stringify(DEFAULT_ABOUT));
+          await saveCmsDoc('about', cmsAbout);
+          renderAboutEditor();
+        } else if (section === 'skills') {
+          cmsSkills = JSON.parse(JSON.stringify(DEFAULT_SKILLS));
+          await saveCmsDoc('skills', cmsSkills);
+          renderSkillsEditor();
+        }
+      } catch (e) {
+        console.error('Seed error:', e);
+        showToast('❌ Error al importar', true);
+      }
+    };
+
+    function esc(s) {
+      if (!s) return '';
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
   </script>
 </body>
 </html>

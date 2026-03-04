@@ -27,6 +27,7 @@
  */
 
 import type { Language } from '../contexts/LanguageContext';
+import { cmsStore } from '../stores/cmsDataStore';
 
 // Interfaz para información personal
 export interface PersonalInfo {
@@ -238,8 +239,9 @@ export const education: Education[] = [
  * Para experiencias sin endDate, se usa la fecha actual (experiencia activa).
  */
 export function getTotalExperienceMs(): number {
+  const data = cmsStore.experiences ?? experiences;
   const now = Date.now();
-  return experiences.reduce((total, exp) => {
+  return data.reduce((total, exp) => {
     const start = new Date(exp.startDate).getTime();
     const end = exp.endDate ? new Date(exp.endDate).getTime() : now;
     return total + (end - start);
@@ -250,14 +252,16 @@ export function getTotalExperienceMs(): number {
  * Resuelve la información personal al idioma especificado
  */
 export function getPersonalInfo(language: Language): string[] {
-  return personalInfo.description[language];
+  const info = cmsStore.personalInfo ?? personalInfo;
+  return info.description[language];
 }
 
 /**
  * Obtiene las experiencias profesionales en el idioma especificado
  */
 export function getExperiences(language: Language): ResolvedExperience[] {
-  return experiences.map(exp => ({
+  const data = cmsStore.experiences ?? experiences;
+  return data.map(exp => ({
     title: exp.title[language],
     company: exp.company[language],
     description: exp.description[language],
@@ -269,7 +273,8 @@ export function getExperiences(language: Language): ResolvedExperience[] {
  * Obtiene la educación en el idioma especificado
  */
 export function getEducation(language: Language): ResolvedEducation[] {
-  return education.map(edu => ({
+  const data = cmsStore.education ?? education;
+  return data.map(edu => ({
     degree: edu.degree[language],
     institution: edu.institution[language],
     description: edu.description[language],

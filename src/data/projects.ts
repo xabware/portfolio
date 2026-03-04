@@ -55,6 +55,7 @@
  */
 
 import type { Language } from '../contexts/LanguageContext';
+import { cmsStore } from '../stores/cmsDataStore';
 
 // Interfaz para el contenido detallado de un proyecto
 export interface ProjectDetails {
@@ -302,8 +303,8 @@ export const projects: Project[] = [
     details: {
       es: {
         overview: ['Un sistema solar 3D completamente interactivo donde cada planeta representa una sección del portfolio. Los planetas se generan proceduralmente con terrenos únicos usando ruido Simplex 3D, atmósferas volumétricas y anillos. El usuario puede navegar libremente por el espacio, hacer zoom, rotar la cámara y hacer clic en los planetas para ver información detallada.'],
-        challenge: ['Crear una experiencia 3D inmersiva que funcione de forma fluida en el navegador sin requerir hardware gráfico potente, manteniendo al mismo tiempo un nivel alto de detalle visual con planetas procedurales, iluminación realista y efectos atmosféricos.'],
-        solution: ['Se utilizó React Three Fiber para integrar Three.js con React de forma declarativa. Los planetas se generan proceduralmente con funciones de ruido Simplex 3D, creando terrenos únicos con océanos, montañas, nieve y vegetación. Se implementaron shaders personalizados para atmósferas volumétricas, anillos con sombras, y un sistema de cámara orbital suave con inercia.'],
+        challenge: ['Cree el proyecto de forma experimental para probar la librería de Three.js. Mi intención fue crear una experiencia 3D inmersiva que funcione de forma fluida en el navegador sin requerir hardware gráfico potente, de forma que resulte entretenido controlar la nave y navegar por los diferentes planetas, todavía está en constante desarrollo.'],
+        solution: ['Utilicé React Three Fiber para integrar Three.js con React de forma declarativa. Los planetas se generan proceduralmente con funciones de ruido Simplex 3D, creando terrenos únicos con océanos, montañas, nieve y vegetación.'],
         features: [
           'Planetas generados proceduralmente con terrenos únicos',
           'Atmósferas volumétricas con shaders personalizados',
@@ -320,8 +321,8 @@ export const projects: Project[] = [
       },
       en: {
         overview: ['A fully interactive 3D solar system where each planet represents a portfolio section. Planets are procedurally generated with unique terrains using 3D Simplex noise, volumetric atmospheres and rings. The user can freely navigate through space, zoom, rotate the camera and click on planets to see detailed information.'],
-        challenge: ['Create an immersive 3D experience that runs smoothly in the browser without requiring powerful graphics hardware, while maintaining a high level of visual detail with procedural planets, realistic lighting and atmospheric effects.'],
-        solution: ['React Three Fiber was used to integrate Three.js with React declaratively. Planets are procedurally generated with 3D Simplex noise functions, creating unique terrains with oceans, mountains, snow and vegetation. Custom shaders were implemented for volumetric atmospheres, rings with shadows, and a smooth orbital camera system with inertia.'],
+        challenge: ['I created this project experimentally to try out the Three.js library. My intention was to build an immersive 3D experience that runs smoothly in the browser without requiring powerful graphics hardware, making it fun to control the ship and navigate through the different planets. It is still under constant development.'],
+        solution: ['I used React Three Fiber to integrate Three.js with React declaratively. Planets are procedurally generated with 3D Simplex noise functions, creating unique terrains with oceans, mountains, snow and vegetation.'],
         features: [
           'Procedurally generated planets with unique terrains',
           'Volumetric atmospheres with custom shaders',
@@ -356,7 +357,7 @@ export const projects: Project[] = [
       es: {
         overview: ['Un chatbot con inteligencia artificial que se ejecuta completamente en el navegador del usuario, sin necesidad de servidores externos ni APIs de pago. Utiliza tecnología RAG (Retrieval-Augmented Generation) para responder preguntas basándose en documentos PDF que el usuario puede subir en tiempo real. El modelo de lenguaje se descarga y ejecuta localmente aprovechando WebGPU.'],
         challenge: ['Ejecutar un modelo de lenguaje lo suficientemente potente para mantener conversaciones coherentes directamente en el navegador del usuario, sin depender de APIs externas, y combinarlo con un sistema RAG que permita hacer preguntas sobre documentos PDF personalizados con respuestas precisas y referenciadas.'],
-        solution: ['Se utilizó WebLLM para ejecutar modelos de lenguaje (Llama/Qwen) directamente en el navegador mediante WebGPU. Se implementó un sistema RAG completo que incluye: parsing de PDFs, chunking inteligente del texto, generación de embeddings vectoriales, almacenamiento en un vector store en memoria, y búsqueda semántica por similitud coseno para recuperar los fragmentos más relevantes antes de generar la respuesta.'],
+        solution: ['Utilicé WebLLM para ejecutar modelos de lenguaje (Llama/Qwen) directamente en el navegador mediante WebGPU. Implementé un sistema RAG completo que incluye: parsing de PDFs, chunking inteligente del texto, generación de embeddings vectoriales, almacenamiento en un vector store en memoria, y búsqueda semántica por similitud coseno para recuperar los fragmentos más relevantes antes de generar la respuesta.'],
         features: [
           'IA ejecutándose 100% en el navegador sin APIs externas',
           'Sistema RAG completo con búsqueda semántica',
@@ -375,7 +376,7 @@ export const projects: Project[] = [
       en: {
         overview: ['An AI chatbot that runs entirely in the user\'s browser, without the need for external servers or paid APIs. It uses RAG (Retrieval-Augmented Generation) technology to answer questions based on PDF documents that the user can upload in real-time. The language model is downloaded and executed locally using WebGPU.'],
         challenge: ['Run a language model powerful enough to maintain coherent conversations directly in the user\'s browser, without relying on external APIs, and combine it with a RAG system that allows asking questions about custom PDF documents with precise and referenced answers.'],
-        solution: ['WebLLM was used to run language models (Llama/Qwen) directly in the browser via WebGPU. A complete RAG system was implemented including: PDF parsing, intelligent text chunking, vector embedding generation, in-memory vector store, and cosine similarity semantic search to retrieve the most relevant fragments before generating the response.'],
+        solution: ['I used WebLLM to run language models (Llama/Qwen) directly in the browser via WebGPU. I implemented a complete RAG system including: PDF parsing, intelligent text chunking, vector embedding generation, in-memory vector store, and cosine similarity semantic search to retrieve the most relevant fragments before generating the response.'],
         features: [
           'AI running 100% in the browser without external APIs',
           'Complete RAG system with semantic search',
@@ -412,16 +413,27 @@ export function resolveProject(project: Project, language: Language): ResolvedPr
 }
 
 /**
- * Obtiene todos los proyectos resueltos para un idioma
+ * Obtiene todos los proyectos resueltos para un idioma.
+ * Si hay datos CMS cargados, los usa; si no, cae a los estáticos.
  */
 export function getProjects(language: Language): ResolvedProject[] {
-  return projects.map(project => resolveProject(project, language));
+  const data = cmsStore.projects ?? projects;
+  return data.map(project => resolveProject(project, language));
+}
+
+/**
+ * Obtiene el número total de proyectos (CMS o estáticos)
+ */
+export function getProjectCount(): number {
+  const data = cmsStore.projects ?? projects;
+  return data.length;
 }
 
 /**
  * Obtiene el siguiente ID disponible para un nuevo proyecto
  */
 export function getNextProjectId(): number {
-  if (projects.length === 0) return 1;
-  return Math.max(...projects.map(p => p.id)) + 1;
+  const data = cmsStore.projects ?? projects;
+  if (data.length === 0) return 1;
+  return Math.max(...data.map(p => p.id)) + 1;
 }

@@ -2,6 +2,7 @@ import { useState, lazy, Suspense, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Portfolio from './components/sections/Portfolio';
+import { CMSLoader } from './components/CMSLoader';
 import { useAnalytics } from './hooks/useAnalytics';
 import './App.css';
 
@@ -48,29 +49,31 @@ function App() {
   };
 
   return (
-    <div className="app">
-      <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
-      <div className="main-content">
-        <Header onNavigate={handleSectionChange} />
-        <main className={`content-area ${activeSection === 'chat' ? 'chat-active' : ''} ${activeSection === 'space' ? 'space-active' : ''}`}>
-          {activeSection !== 'chat' && (
-            <Suspense fallback={<div className="loading">Cargando...</div>}>
-              {renderSection()}
-            </Suspense>
-          )}
-          {/* Chat con WebLLM cargado solo cuando se accede por primera vez */}
-          {chatMounted && (
-            <Suspense fallback={<div className="loading">Cargando chat y modelo de IA...</div>}>
-              <WebLLMProvider>
-                <div style={{ display: activeSection === 'chat' ? 'block' : 'none' }}>
-                  <Chat />
-                </div>
-              </WebLLMProvider>
-            </Suspense>
-          )}
-        </main>
+    <CMSLoader>
+      <div className="app">
+        <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
+        <div className="main-content">
+          <Header onNavigate={handleSectionChange} />
+          <main className={`content-area ${activeSection === 'chat' ? 'chat-active' : ''} ${activeSection === 'space' ? 'space-active' : ''}`}>
+            {activeSection !== 'chat' && (
+              <Suspense fallback={<div className="loading">Cargando...</div>}>
+                {renderSection()}
+              </Suspense>
+            )}
+            {/* Chat con WebLLM cargado solo cuando se accede por primera vez */}
+            {chatMounted && (
+              <Suspense fallback={<div className="loading">Cargando chat y modelo de IA...</div>}>
+                <WebLLMProvider>
+                  <div style={{ display: activeSection === 'chat' ? 'block' : 'none' }}>
+                    <Chat />
+                  </div>
+                </WebLLMProvider>
+              </Suspense>
+            )}
+          </main>
+        </div>
       </div>
-    </div>
+    </CMSLoader>
   );
 }
 

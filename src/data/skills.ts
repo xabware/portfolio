@@ -22,6 +22,7 @@
  */
 
 import type { Language } from '../contexts/LanguageContext';
+import { cmsStore } from '../stores/cmsDataStore';
 
 // Interfaz para una habilidad individual
 export interface Skill {
@@ -245,7 +246,8 @@ export const additionalSkills = {
  * Resuelve las categorías al idioma especificado
  */
 export function getSkillCategories(language: Language): ResolvedSkillCategory[] {
-  return skillCategories.map(category => ({
+  const data = cmsStore.skillCategories ?? skillCategories;
+  return data.map(category => ({
     title: category.title[language],
     skills: category.skills.map(skill => ({
       name: skill.name,
@@ -258,5 +260,6 @@ export function getSkillCategories(language: Language): ResolvedSkillCategory[] 
  * Obtiene las habilidades adicionales en el idioma especificado
  */
 export function getAdditionalSkills(language: Language): string[] {
-  return additionalSkills[language];
+  const data = cmsStore.additionalSkills ?? additionalSkills;
+  return data[language];
 }
