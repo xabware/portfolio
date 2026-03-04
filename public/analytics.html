@@ -585,7 +585,7 @@
         <div class="cms-header">
           <h3>Gestión de Proyectos</h3>
           <div class="cms-actions">
-            <button class="btn-cms" onclick="seedDefaults('projects')">📥 Importar datos locales</button>
+            <button class="btn-cms" onclick="seedDefaults('projects')">� Restaurar datos plantilla</button>
             <button class="btn-cms btn-cms-primary" onclick="openProjectEditor()">➕ Nuevo proyecto</button>
           </div>
         </div>
@@ -597,7 +597,7 @@
         <div class="cms-header">
           <h3>Información Personal, Experiencia y Educación</h3>
           <div class="cms-actions">
-            <button class="btn-cms" onclick="seedDefaults('about')">📥 Importar datos locales</button>
+            <button class="btn-cms" onclick="seedDefaults('about')">� Restaurar datos plantilla</button>
             <button class="btn-cms btn-cms-success" onclick="saveAboutData()">💾 Guardar todo</button>
           </div>
         </div>
@@ -609,7 +609,7 @@
         <div class="cms-header">
           <h3>Habilidades Técnicas</h3>
           <div class="cms-actions">
-            <button class="btn-cms" onclick="seedDefaults('skills')">📥 Importar datos locales</button>
+            <button class="btn-cms" onclick="seedDefaults('skills')">� Restaurar datos plantilla</button>
             <button class="btn-cms btn-cms-success" onclick="saveSkillsData()">💾 Guardar todo</button>
           </div>
         </div>
@@ -1221,7 +1221,7 @@
     function renderProjectsList() {
       const el = document.getElementById('cmsProjectsList');
       if (!cmsProjects.length) {
-        el.innerHTML = '<div class="cms-empty"><p>No hay proyectos en la base de datos.</p><p>Usa "Importar datos locales" para cargar los datos actuales o crea uno nuevo.</p></div>';
+        el.innerHTML = '<div class="cms-empty"><p>No hay proyectos en la base de datos.</p><p>Usa "Restaurar datos plantilla" para cargar los datos por defecto o crea uno nuevo.</p></div>';
         return;
       }
       el.innerHTML = '<div class="cms-project-list">' + cmsProjects.map((p, i) => `
@@ -1702,57 +1702,39 @@
     };
 
     // ================================================================
-    //  SEED FROM DEFAULTS
+    //  RESTAURAR DATOS PLANTILLA
     // ================================================================
 
-    const DEFAULT_PROJECTS = [
-      {id:1,featured:true,title:{es:'Portfolio Dashboard',en:'Portfolio Dashboard'},description:{es:'Plantilla moderna y elegante para crear tu portfolio profesional como desarrollador.',en:'Modern and elegant template to create your professional developer portfolio.'},tech:['React','TypeScript','Vite','CSS3','WebLLM'],github:'https://github.com/xabware/portfolio',demo:'https://xabware.github.io/portfolio',details:{es:{overview:['Este proyecto es una plantilla de portfolio diseñada para desarrolladores que buscan destacar en el mercado laboral.'],challenge:['Crear un portfolio que no sea solo una página estática, sino una experiencia interactiva.'],solution:['Implementé una arquitectura modular con React y TypeScript.'],features:['Chatbot con IA local','Diseño dashboard moderno','Tema claro/oscuro','Sistema multilingüe','Búsqueda global','Optimizado con Vite','Responsive','Animaciones elegantes'],techDetails:'React 18 + TypeScript + Vite + WebLLM + CSS Variables.',results:'Plantilla personalizable en minutos.',date:'2026',team:'Proyecto personal'},en:{overview:['A portfolio template designed for developers looking to stand out.'],challenge:['Create an interactive portfolio that demonstrates real technical skills.'],solution:['Modular architecture with React and TypeScript.'],features:['Local AI chatbot','Modern dashboard','Light/dark theme','Multilingual system','Global search','Vite optimized','Responsive','Elegant animations'],techDetails:'React 18 + TypeScript + Vite + WebLLM + CSS Variables.',results:'A customizable template any developer can use.',date:'2026',team:'Personal project'}}},
-      {id:2,featured:true,title:{es:'Medidor de Raíces',en:'Root Measurement Tool'},description:{es:'Herramienta web para la medición de objetos en imágenes.',en:'Web tool for measuring objects in images.'},tech:['React','Vite','ArUco','Visión Artificial'],github:'https://github.com/xabware/medidor',demo:'https://xabware.github.io/medidor/',details:{es:{overview:['Herramienta web para la medición de objetos en imágenes.'],challenge:['Proceso lento de medición manual de raíces.'],solution:['Fotografías a contraluz + interfaz de dibujo de líneas + referencia de escala.'],features:[],techDetails:'',results:'',date:'2026',team:'Proyecto personal'},en:{overview:['Web tool for measuring objects in images.'],challenge:['Slow manual root measurement process.'],solution:['Backlit photos + line drawing interface + scale reference.'],features:[],techDetails:'',results:'',date:'2026',team:'Personal project'}}},
-      {id:5,featured:true,title:{es:'Sistema Solar Interactivo',en:'Interactive Solar System'},description:{es:'Visualización 3D interactiva de un sistema solar.',en:'Interactive 3D solar system visualization.'},tech:['React','Three.js','React Three Fiber','WebGL'],github:'https://github.com/xabware/portfolio',demo:'#space',details:{es:{overview:['Sistema solar 3D interactivo.'],challenge:['Experiencia 3D fluida en el navegador.'],solution:['React Three Fiber + ruido Simplex 3D.'],features:['Planetas procedurales','Atmósferas volumétricas','Navegación 3D','Paneles informativos'],techDetails:'React Three Fiber + Three.js + GLSL shaders.',results:'Experiencia visual impactante.',date:'2026',team:'Proyecto personal'},en:{overview:['Interactive 3D solar system.'],challenge:['Smooth 3D experience in the browser.'],solution:['React Three Fiber + 3D Simplex noise.'],features:['Procedural planets','Volumetric atmospheres','3D navigation','Info panels'],techDetails:'React Three Fiber + Three.js + GLSL shaders.',results:'Stunning visual experience.',date:'2026',team:'Personal project'}}},
-      {id:6,featured:true,title:{es:'Chatbot RAG con WebLLM',en:'RAG Chatbot with WebLLM'},description:{es:'Chatbot con IA local usando RAG.',en:'AI chatbot with local RAG.'},tech:['WebLLM','WebGPU','RAG','React','TypeScript'],github:'https://github.com/xabware/portfolio',demo:'#chat',details:{es:{overview:['Chatbot IA en el navegador con RAG.'],challenge:['Ejecutar LLM + RAG en el navegador.'],solution:['WebLLM + vector store + similitud coseno.'],features:['IA 100% local','RAG semántico','Carga de PDFs','Múltiples modelos','Panel debug'],techDetails:'WebLLM + WebGPU + pdf.js + embeddings.',results:'Asistente IA sin costes de infraestructura.',date:'2026',team:'Proyecto personal'},en:{overview:['AI chatbot in the browser with RAG.'],challenge:['Run LLM + RAG in the browser.'],solution:['WebLLM + vector store + cosine similarity.'],features:['100% local AI','Semantic RAG','PDF loading','Multiple models','Debug panel'],techDetails:'WebLLM + WebGPU + pdf.js + embeddings.',results:'AI assistant with no infrastructure costs.',date:'2026',team:'Personal project'}}},
-    ];
-
-    const DEFAULT_ABOUT = {
-      personalInfo:{description:{es:['Soy una persona curiosa e implicada. Elegí como carrera la ingeniería de software por su carácter transversal.','A día de hoy, soy consciente de que lo que me llamó de la informática es su capacidad para transformar cada área del mundo.','Los avances en inteligencia artificial me resultan extremadamente atractivos.'],en:['I am a curious and engaged person. I chose software engineering for its cross-cutting nature.','Today, what drew me to computer science is its ability to transform every area of the world.','Advances in artificial intelligence are extremely attractive to me.']}},
-      experiences:[
-        {title:{es:'Full-Stack Developer',en:'Full-Stack Developer'},company:{es:'Tracasa Instrumental',en:'Tracasa Instrumental'},description:{es:'Desarrollo de aplicaciones gubernamentales.',en:'Government application development.'},period:{es:'2021 - Presente',en:'2021 - Present'},startDate:'2021-08-01'},
-        {title:{es:'Prácticas extracurriculares',en:'Extracurricular Internship'},company:{es:'Veridas',en:'Veridas'},description:{es:'Preparación de datasets para reconocimiento facial.',en:'Dataset preparation for facial recognition.'},period:{es:'2020',en:'2020'},startDate:'2020-06-01',endDate:'2020-07-31'},
-      ],
-      education:[
-        {degree:{es:'Máster en Ingeniería Informática',en:"Master's in Computer Engineering"},institution:{es:'Universidad Pública de Navarra',en:'Public University of Navarre'},description:{es:'Máster generalista.',en:"Generalist master's program."},period:{es:'2021 - 2024',en:'2021 - 2024'}},
-        {degree:{es:'Ingeniería Informática',en:'Computer Engineering'},institution:{es:'Universidad Pública de Navarra',en:'Public University of Navarre'},description:{es:'Especialización en Computación y Sistemas Inteligentes.',en:'Specialization in Computing and Intelligent Systems.'},period:{es:'2017 - 2021',en:'2017 - 2021'}},
-      ],
-    };
-
-    const DEFAULT_SKILLS = {
-      categories:[
-        {title:{es:'Frontend',en:'Frontend'},skills:[{name:'React',description:{es:'React con Vite para proyectos personales.',en:'React with Vite for personal projects.'}},{name:'CSS',description:{es:'Flexbox, Tailwind, SCSS.',en:'Flexbox, Tailwind, SCSS.'}}]},
-        {title:{es:'Backend',en:'Backend'},skills:[{name:'.NET',description:{es:'Framework con más experiencia.',en:'Most experienced framework.'}},{name:'Python',description:{es:'Scripts, IA, APIs.',en:'Scripts, AI, APIs.'}}]},
-        {title:{es:'Bases de Datos',en:'Databases'},skills:[{name:'SQL Server',description:{es:'Administración, optimización.',en:'Administration, optimization.'}},{name:'T-SQL',description:{es:'Stored procedures, triggers.',en:'Stored procedures, triggers.'}}]},
-        {title:{es:'DevOps y Herramientas',en:'DevOps & Tools'},skills:[{name:'Git',description:{es:'Comprensión total.',en:'Comprehensive understanding.'}},{name:'Docker',description:{es:'Contenerización.',en:'Containerization.'}}]},
-      ],
-      additionalSkills:{es:['Metodologías Ágiles / Scrum','APIs REST','Arquitectura de Microservicios','Testing Automatizado','Diseño UI/UX','Responsive','Optimización de Rendimiento','Seguridad','Liderazgo de Equipos'],en:['Agile / Scrum','REST APIs','Microservices Architecture','Automated Testing','UI/UX Design','Responsive','Performance Optimization','Security','Team Leadership']},
-    };
+    let _defaultsCache = null;
+    async function loadDefaults() {
+      if (_defaultsCache) return _defaultsCache;
+      const resp = await fetch('./data-defaults.json');
+      if (!resp.ok) throw new Error('No se pudo cargar data-defaults.json');
+      _defaultsCache = await resp.json();
+      return _defaultsCache;
+    }
 
     window.seedDefaults = async function(section) {
-      if (!confirm('Esto reemplazará los datos actuales de "' + section + '" en la base de datos con los datos por defecto. ¿Continuar?')) return;
+      if (!confirm('Esto restaurará los datos de "' + section + '" a los valores plantilla originales. ¿Continuar?')) return;
       try {
+        const defaults = await loadDefaults();
         if (section === 'projects') {
-          cmsProjects = JSON.parse(JSON.stringify(DEFAULT_PROJECTS));
+          cmsProjects = JSON.parse(JSON.stringify(defaults.projects));
           await saveCmsDoc('projects', { items: cmsProjects });
           renderProjectsList();
         } else if (section === 'about') {
-          cmsAbout = JSON.parse(JSON.stringify(DEFAULT_ABOUT));
+          cmsAbout = JSON.parse(JSON.stringify(defaults.about));
           await saveCmsDoc('about', cmsAbout);
           renderAboutEditor();
         } else if (section === 'skills') {
-          cmsSkills = JSON.parse(JSON.stringify(DEFAULT_SKILLS));
+          cmsSkills = JSON.parse(JSON.stringify(defaults.skills));
           await saveCmsDoc('skills', cmsSkills);
           renderSkillsEditor();
         }
+        showToast('✅ Datos plantilla restaurados correctamente');
       } catch (e) {
         console.error('Seed error:', e);
-        showToast('❌ Error al importar', true);
+        showToast('❌ Error al restaurar datos plantilla', true);
       }
     };
 

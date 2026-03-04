@@ -11,10 +11,7 @@ export function CMSLoader({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(cmsStore.loaded);
 
   useEffect(() => {
-    if (cmsStore.loaded) {
-      setReady(true);
-      return;
-    }
+    if (cmsStore.loaded) return;
 
     loadAllCMSData()
       .then(({ projects, about, skills }) => {
