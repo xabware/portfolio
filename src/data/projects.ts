@@ -9,6 +9,7 @@
  * PLANTILLA:
  * {
  *   id: NUMERO_UNICO,
+ *   featured: true,  // true = proyecto destacado, false = proyecto secundario
  *   title: {
  *     es: 'Título en español',
  *     en: 'Title in English',
@@ -71,6 +72,7 @@ export interface ProjectDetails {
 // Interfaz para un proyecto completo
 export interface Project {
   id: number;
+  featured?: boolean;
   title: {
     es: string;
     en: string;
@@ -91,6 +93,7 @@ export interface Project {
 // Interfaz para proyecto con idioma resuelto (usado en componentes)
 export interface ResolvedProject {
   id: number;
+  featured: boolean;
   title: string;
   description: string;
   tech: string[];
@@ -110,6 +113,7 @@ export interface ResolvedProject {
 export const projects: Project[] = [
   {
     id: 1,
+    featured: true,
     title: {
       es: 'Portfolio Dashboard',
       en: 'Portfolio Dashboard',
@@ -166,6 +170,7 @@ export const projects: Project[] = [
   },
   {
     id: 2,
+    featured: true,
     title: {
       es: 'Medidor de Raíces',
       en: 'Root Measurement Tool',
@@ -204,6 +209,7 @@ export const projects: Project[] = [
   },
   {
     id: 3,
+    featured: false,
     title: {
       es: 'Mapa Procedural Infinito',
       en: 'Infinite Procedural Map',
@@ -242,6 +248,7 @@ export const projects: Project[] = [
   },
   {
     id: 4,
+    featured: false,
     title: {
       es: 'Juego RTS de navegador',
       en: 'RTS Browser Game',
@@ -280,6 +287,7 @@ export const projects: Project[] = [
   },
   {
     id: 5,
+    featured: true,
     title: {
       es: 'Sistema Solar Interactivo',
       en: 'Interactive Solar System',
@@ -332,6 +340,7 @@ export const projects: Project[] = [
   },
   {
     id: 6,
+    featured: true,
     title: {
       es: 'Chatbot RAG con WebLLM',
       en: 'RAG Chatbot with WebLLM',
@@ -392,6 +401,7 @@ export const projects: Project[] = [
 export function resolveProject(project: Project, language: Language): ResolvedProject {
   return {
     id: project.id,
+    featured: project.featured ?? false,
     title: project.title[language],
     description: project.description[language],
     tech: project.tech,

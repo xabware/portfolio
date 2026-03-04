@@ -38,6 +38,9 @@ export const translations = {
     // Projects
     myProjects: 'Mis Proyectos',
     projectsSubtitle: 'Una selección de proyectos en los que he trabajado',
+    featuredProjects: 'Proyectos Destacados',
+    otherProjects: 'Otros Proyectos',
+    featuredProject: 'Destacado',
     code: 'Código',
     demo: 'Demo',
     learnMore: 'Leer más',
@@ -195,6 +198,9 @@ export const translations = {
     // Projects
     myProjects: 'My Projects',
     projectsSubtitle: 'A selection of projects I have worked on',
+    featuredProjects: 'Featured Projects',
+    otherProjects: 'Other Projects',
+    featuredProject: 'Featured',
     code: 'Code',
     demo: 'Demo',
     learnMore: 'Learn More',
