@@ -173,23 +173,24 @@ function getConnectionInfo() {
 
 async function getGeoData(): Promise<VisitorData['geo']> {
   try {
-    // freeipapi.com: gratis, HTTPS, CORS habilitado
-    const response = await fetch('https://freeipapi.com/api/json');
-    if (!response.ok) throw new Error('freeipapi failed');
+    // ipwho.is: gratis, HTTPS, CORS habilitado
+    const response = await fetch('https://ipwho.is/');
+    if (!response.ok) throw new Error('ipwho failed');
 
     const data = await response.json();
+    if (!data.success) throw new Error('ipwho returned error');
 
     return {
-      ip: data.ipAddress || '',
-      country: data.countryName || '',
-      countryCode: data.countryCode || '',
-      region: data.regionName || '',
-      city: data.cityName || '',
+      ip: data.ip || '',
+      country: data.country || '',
+      countryCode: data.country_code || '',
+      region: data.region || '',
+      city: data.city || '',
       lat: data.latitude || 0,
       lon: data.longitude || 0,
-      isp: '',
-      org: '',
-      as: '',
+      isp: data.connection?.isp || '',
+      org: data.connection?.org || '',
+      as: data.connection?.asn ? String(data.connection.asn) : '',
     };
   } catch {
     // Fallback: ipapi.co (gratis, HTTPS, 1000 req/día)

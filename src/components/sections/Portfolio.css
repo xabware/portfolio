@@ -2,6 +2,46 @@
    HERO SECTION
    ============================================ */
 
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.download-cv-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 0.7rem 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.download-cv-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(var(--primary-rgb, 99, 102, 241), 0.28);
+}
+
+.download-cv-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.download-cv-button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 3px;
+}
+
+.download-cv-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .hero-section {
   text-align: center;
   margin-bottom: 1rem;

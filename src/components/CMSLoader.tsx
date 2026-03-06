@@ -8,7 +8,7 @@ import { loadAllCMSData } from '../services/cmsService';
 import { cmsStore } from '../stores/cmsDataStore';
 
 export function CMSLoader({ children }: { children: ReactNode }) {
-  const [ready, setReady] = useState(cmsStore.loaded);
+  const [, setReady] = useState(cmsStore.loaded);
 
   useEffect(() => {
     if (cmsStore.loaded) return;
@@ -35,6 +35,7 @@ export function CMSLoader({ children }: { children: ReactNode }) {
       });
   }, []);
 
-  if (!ready) return null;
+  // Renderiza inmediatamente con datos estáticos; cuando Firebase responde
+  // setReady(true) dispara un re-render y los hijos usan los datos CMS.
   return <>{children}</>;
 }

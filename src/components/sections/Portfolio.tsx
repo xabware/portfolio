@@ -1,3 +1,4 @@
+import { Download } from 'lucide-react';
 import { memo, useMemo, useState, useEffect, useCallback } from 'react';
 import Card from '../Card';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -5,6 +6,7 @@ import { useTranslations } from '../../translations';
 import { projects } from '../../data/projects';
 import { getPersonalInfo, getExperiences, getEducation, getTotalExperienceMs } from '../../data/about';
 import { getSkillCategories, getAdditionalSkills } from '../../data/skills';
+import { generateCVPdf } from '../../services/cvPdfService';
 import './Portfolio.css';
 
 interface PortfolioProps {
@@ -34,6 +36,19 @@ const Portfolio = memo(({ onNavigate }: PortfolioProps) => {
   }, []);
 
   const [elapsed, setElapsed] = useState(calcElapsed);
+  const [isGeneratingCv, setIsGeneratingCv] = useState(false);
+
+  const handleDownloadCv = useCallback(() => {
+    if (isGeneratingCv) return;
+    setIsGeneratingCv(true);
+    try {
+      generateCVPdf(language);
+    } catch (error) {
+      console.error('Error generating CV PDF:', error);
+    } finally {
+      setIsGeneratingCv(false);
+    }
+  }, [isGeneratingCv, language]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -60,6 +75,18 @@ const Portfolio = memo(({ onNavigate }: PortfolioProps) => {
           </button>
         </h1>
         <p className="hero-subtitle">{t.welcomeSubtitle}</p>
+
+        <div className="hero-actions">
+          <button
+            type="button"
+            className="download-cv-button"
+            onClick={handleDownloadCv}
+            disabled={isGeneratingCv}
+          >
+            <Download size={18} aria-hidden="true" />
+            <span>{isGeneratingCv ? t.generatingCv : t.downloadCv}</span>
+          </button>
+        </div>
 
         <div className="counters-row">
           <div className="experience-counter" onClick={() => document.getElementById('experience-section')?.scrollIntoView({ behavior: 'smooth' })} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById('experience-section')?.scrollIntoView({ behavior: 'smooth' }); } }}>

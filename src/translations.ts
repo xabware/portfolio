@@ -18,6 +18,8 @@ export const translations = {
     // Home
     welcomeTitle: 'Xabier Cía Valencia',
     welcomeSubtitle: 'Desarrollador Full-Stack e IA | Arquitectura Cloud',
+    downloadCv: 'Descargar CV en PDF',
+    generatingCv: 'Generando CV...',
     yearsExperience: 'Años de experiencia',
     projectsCompleted: 'Proyectos',
     aboutDashboard: 'Sobre este Dashboard',
@@ -176,6 +178,8 @@ export const translations = {
     // Home
     welcomeTitle: 'Xabier Cía Valencia',
     welcomeSubtitle: 'Full-Stack & AI Developer | Cloud Architecture',
+    downloadCv: 'Download CV as PDF',
+    generatingCv: 'Generating CV...',
     yearsExperience: 'Years of experience',
     projectsCompleted: 'Projects',
     satisfiedClients: 'Satisfied clients',
