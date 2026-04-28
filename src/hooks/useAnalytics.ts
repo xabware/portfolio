@@ -1,5 +1,16 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { analytics } from '../services/analyticsService';
+import { isAnalyticsEnabled } from '../config/analyticsConfig';
+
+type AnalyticsModule = typeof import('../services/analyticsService');
+
+let analyticsModulePromise: Promise<AnalyticsModule> | null = null;
+
+function loadAnalyticsModule(): Promise<AnalyticsModule> | null {
+  if (!isAnalyticsEnabled) return null;
+
+  analyticsModulePromise ??= import('../services/analyticsService');
+  return analyticsModulePromise;
+}
 
 /**
  * Hook para integrar el servicio de analíticas en la app.
@@ -12,40 +23,61 @@ export function useAnalytics() {
 
   // Inicializar analíticas una sola vez al montar el componente raíz
   useEffect(() => {
+    if (!isAnalyticsEnabled) return;
     if (initialized.current) return;
     initialized.current = true;
 
-    // Registrar visitante (async, no bloquea el render)
-    analytics.trackVisitor();
+    let cleanupListeners: (() => void) | undefined;
+    let cancelled = false;
 
-    // Registrar fin de sesión al cerrar/salir
-    const handleBeforeUnload = () => {
-      analytics.trackSessionEnd();
-    };
+    loadAnalyticsModule()?.then(({ analytics }) => {
+      if (cancelled) return;
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
+      // Registrar visitante (async, no bloquea el render)
+      analytics.trackVisitor();
+
+      // Registrar fin de sesión al cerrar/salir
+      const handleBeforeUnload = () => {
         analytics.trackSessionEnd();
-      }
-    };
+      };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'hidden') {
+          analytics.trackSessionEnd();
+        }
+      };
+
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      cleanupListeners = () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    });
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      cancelled = true;
+      cleanupListeners?.();
     };
   }, []);
 
   // Trackear cambio de sección/página
   const trackPageView = useCallback((page: string) => {
-    analytics.trackPageView(page);
+    if (!isAnalyticsEnabled) return;
+
+    loadAnalyticsModule()?.then(({ analytics }) => {
+      analytics.trackPageView(page);
+    });
   }, []);
 
   // Trackear evento custom
   const trackEvent = useCallback((eventName: string, eventData: Record<string, unknown> = {}) => {
-    analytics.trackEvent(eventName, eventData);
+    if (!isAnalyticsEnabled) return;
+
+    loadAnalyticsModule()?.then(({ analytics }) => {
+      analytics.trackEvent(eventName, eventData);
+    });
   }, []);
 
   return { trackPageView, trackEvent };

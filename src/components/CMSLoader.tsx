@@ -4,7 +4,7 @@
  * Si falla, se usan los datos estáticos.
  */
 import { useState, useEffect, type ReactNode } from 'react';
-import { loadAllCMSData } from '../services/cmsService';
+import { isFirebaseCmsEnabled } from '../config/cmsConfig';
 import { cmsStore } from '../stores/cmsDataStore';
 
 export function CMSLoader({ children }: { children: ReactNode }) {
@@ -13,8 +13,19 @@ export function CMSLoader({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (cmsStore.loaded) return;
 
-    loadAllCMSData()
+    if (!isFirebaseCmsEnabled) {
+      cmsStore.loaded = true;
+      setReady(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    import('../services/cmsService')
+      .then(({ loadAllCMSData }) => loadAllCMSData())
       .then(({ projects, about, skills }) => {
+        if (cancelled) return;
+
         if (projects) cmsStore.projects = projects;
         if (about) {
           cmsStore.personalInfo = about.personalInfo;
@@ -30,9 +41,15 @@ export function CMSLoader({ children }: { children: ReactNode }) {
         console.warn('[CMS] Failed to load, using static data:', err);
       })
       .finally(() => {
+        if (cancelled) return;
+
         cmsStore.loaded = true;
         setReady(true);
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Renderiza inmediatamente con datos estáticos; cuando Firebase responde

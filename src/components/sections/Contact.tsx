@@ -59,8 +59,8 @@ const Contact = memo(() => {
     {
       icon: LinkedinIcon,
       title: 'LinkedIn',
-      value: 'linkedin.com/in/xabier-cía-valencia-a7a097132',
-      link: 'https://www.linkedin.com/in/xabier-c%C3%ADa-valencia-a7a097132/',
+      value: 'linkedin.com/in/xabier-cia',
+      link: 'https://www.linkedin.com/in/xabier-cia',
     },
     {
       icon: GithubIcon,

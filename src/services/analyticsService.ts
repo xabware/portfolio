@@ -1,4 +1,5 @@
 import { db } from '../config/firebaseConfig';
+import { isAnalyticsEnabled } from '../config/analyticsConfig';
 import { collection, addDoc, serverTimestamp, doc, increment, setDoc } from 'firebase/firestore';
 
 // ==========================================
@@ -222,17 +223,33 @@ async function getGeoData(): Promise<VisitorData['geo']> {
 // ==========================================
 
 class AnalyticsService {
-  private sessionId: string;
-  private fingerprint: string;
+  private sessionId = '';
+  private fingerprint = '';
   private lastPageChangeTime: number;
   private currentPage: string;
   private initialized = false;
 
   constructor() {
-    this.sessionId = generateSessionId();
-    this.fingerprint = generateFingerprint();
     this.lastPageChangeTime = Date.now();
     this.currentPage = 'portfolio';
+
+    if (isAnalyticsEnabled) {
+      this.initializeSession();
+    }
+  }
+
+  private initializeSession(): void {
+    if (this.sessionId && this.fingerprint) return;
+
+    this.sessionId = generateSessionId();
+    this.fingerprint = generateFingerprint();
+  }
+
+  private canTrack(): boolean {
+    if (!isAnalyticsEnabled) return false;
+
+    this.initializeSession();
+    return true;
   }
 
   /**
@@ -240,6 +257,7 @@ class AnalyticsService {
    * Se llama una sola vez al cargar la página.
    */
   async trackVisitor(): Promise<void> {
+    if (!this.canTrack()) return;
     if (this.initialized) return;
     this.initialized = true;
 
@@ -310,6 +328,8 @@ class AnalyticsService {
    * Registra un cambio de página/sección dentro de la SPA.
    */
   async trackPageView(page: string): Promise<void> {
+    if (!this.canTrack()) return;
+
     const now = Date.now();
     const timeOnPreviousPage = this.currentPage !== page
       ? Math.round((now - this.lastPageChangeTime) / 1000) // en segundos
@@ -337,6 +357,8 @@ class AnalyticsService {
    * Registra un evento personalizado (ej: click en proyecto, uso del chat, etc.)
    */
   async trackEvent(eventName: string, eventData: Record<string, unknown> = {}): Promise<void> {
+    if (!this.canTrack()) return;
+
     try {
       const event: EventData = {
         sessionId: this.sessionId,
@@ -357,6 +379,8 @@ class AnalyticsService {
    * Usa setDoc con merge para no necesitar leer antes de escribir.
    */
   private async updateUniqueVisitorCount(): Promise<void> {
+    if (!this.canTrack()) return;
+
     try {
       const visitorRef = doc(db, 'unique_visitors', this.fingerprint);
       // merge: true crea el doc si no existe, o actualiza si ya existe
@@ -377,6 +401,8 @@ class AnalyticsService {
    * Se llama en beforeunload/visibilitychange.
    */
   trackSessionEnd(): void {
+    if (!this.canTrack()) return;
+
     try {
       const sessionDuration = Math.round((Date.now() - (this.lastPageChangeTime - (Date.now() - this.lastPageChangeTime))) / 1000);
 

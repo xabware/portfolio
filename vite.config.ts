@@ -33,8 +33,6 @@ export default defineConfig({
           'emailjs': ['@emailjs/browser'],
           // Three.js separado (solo usado en skills galaxy)
           'three': ['three', '@react-three/fiber', '@react-three/drei'],
-          // Firebase separado (analíticas)
-          'firebase': ['firebase/app', 'firebase/firestore'],
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
