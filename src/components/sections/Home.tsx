@@ -1,10 +1,10 @@
 import { Download } from 'lucide-react';
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
 import Card from '../Card';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
 import { getProjectCount } from '../../data/projects';
-import { generateCVPdf } from '../../services/cvPdfService';
+import { getCVDownload } from '../../services/cvDownloadService';
 import './Home.css';
 
 interface HomeProps {
@@ -14,27 +14,12 @@ interface HomeProps {
 const Home = memo(({ onNavigate }: HomeProps) => {
   const { language } = useLanguage();
   const t = useTranslations(language);
-  const [isGeneratingCv, setIsGeneratingCv] = useState(false);
+  const cvDownload = useMemo(() => getCVDownload(language), [language]);
   
   const stats = useMemo(() => [
     { number: '5+', label: t.yearsExperience, clickable: false },
     { number: `${getProjectCount()}`, label: t.projectsCompleted, clickable: true, navigateTo: 'projects' },
   ], [t]);
-
-  const handleDownloadCv = useCallback(() => {
-    if (isGeneratingCv) {
-      return;
-    }
-
-    setIsGeneratingCv(true);
-    try {
-      generateCVPdf(language);
-    } catch (error) {
-      console.error('Error generating CV PDF:', error);
-    } finally {
-      setIsGeneratingCv(false);
-    }
-  }, [isGeneratingCv, language]);
 
   return (
     <div className="section-content home-no-scroll">
@@ -43,15 +28,14 @@ const Home = memo(({ onNavigate }: HomeProps) => {
         <p className="hero-subtitle">{t.welcomeSubtitle}</p>
 
         <div className="hero-actions">
-          <button
-            type="button"
+          <a
             className="download-cv-button"
-            onClick={handleDownloadCv}
-            disabled={isGeneratingCv}
+            href={cvDownload.href}
+            download={cvDownload.fileName}
           >
             <Download size={18} aria-hidden="true" />
-            <span>{isGeneratingCv ? t.generatingCv : t.downloadCv}</span>
-          </button>
+            <span>{t.downloadCv}</span>
+          </a>
         </div>
         
         <div className="stats-inline">

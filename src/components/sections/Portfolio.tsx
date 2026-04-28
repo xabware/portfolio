@@ -6,7 +6,7 @@ import { useTranslations } from '../../translations';
 import { projects } from '../../data/projects';
 import { getPersonalInfo, getExperiences, getEducation, getTotalExperienceMs } from '../../data/about';
 import { getSkillCategories, getAdditionalSkills } from '../../data/skills';
-import { generateCVPdf } from '../../services/cvPdfService';
+import { getCVDownload } from '../../services/cvDownloadService';
 import './Portfolio.css';
 
 interface PortfolioProps {
@@ -36,19 +36,7 @@ const Portfolio = memo(({ onNavigate }: PortfolioProps) => {
   }, []);
 
   const [elapsed, setElapsed] = useState(calcElapsed);
-  const [isGeneratingCv, setIsGeneratingCv] = useState(false);
-
-  const handleDownloadCv = useCallback(() => {
-    if (isGeneratingCv) return;
-    setIsGeneratingCv(true);
-    try {
-      generateCVPdf(language);
-    } catch (error) {
-      console.error('Error generating CV PDF:', error);
-    } finally {
-      setIsGeneratingCv(false);
-    }
-  }, [isGeneratingCv, language]);
+  const cvDownload = useMemo(() => getCVDownload(language), [language]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -77,15 +65,14 @@ const Portfolio = memo(({ onNavigate }: PortfolioProps) => {
         <p className="hero-subtitle">{t.welcomeSubtitle}</p>
 
         <div className="hero-actions">
-          <button
-            type="button"
+          <a
             className="download-cv-button"
-            onClick={handleDownloadCv}
-            disabled={isGeneratingCv}
+            href={cvDownload.href}
+            download={cvDownload.fileName}
           >
             <Download size={18} aria-hidden="true" />
-            <span>{isGeneratingCv ? t.generatingCv : t.downloadCv}</span>
-          </button>
+            <span>{t.downloadCv}</span>
+          </a>
         </div>
 
         <div className="counters-row">
