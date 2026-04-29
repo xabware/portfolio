@@ -117,19 +117,25 @@ src/
 
 El workflow `.github/workflows/deploy.yml` publica `dist/` en GitHub Pages cuando hay push a `main` o ejecucion manual.
 
-Para el sitio de proyecto `https://xabware.github.io/portfolio`, el build usa:
-
-```bash
-VITE_BASE_PATH=/portfolio/
-```
-
-Si despliegas en dominio raiz, usa:
+El despliegue de este repo esta preparado para el dominio propio `https://xabiercia.com`, asi que el workflow usa por defecto:
 
 ```bash
 VITE_BASE_PATH=/
 ```
 
-El workflow permite activar analiticas y CMS en despliegues manuales mediante inputs.
+Para el sitio de proyecto `https://xabware.github.io/portfolio`, lanza el workflow manualmente con `base_path=/portfolio/` o builda con:
+
+```bash
+VITE_BASE_PATH=/portfolio/
+```
+
+Si despliegas en otro dominio raiz, usa:
+
+```bash
+VITE_BASE_PATH=/
+```
+
+El workflow permite activar analiticas, CMS y ajustar `base_path` en despliegues manuales mediante inputs.
 
 ## Notas de rendimiento
 
