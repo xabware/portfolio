@@ -6,6 +6,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
 import { getProjects } from '../../data/projects';
 import type { ResolvedProject } from '../../data/projects';
+import { useCMSDataVersion } from '../../stores/cmsDataStore';
 import ProjectDetail from './ProjectDetail';
 import './Projects.css';
 
@@ -71,11 +72,12 @@ ProjectCard.displayName = 'ProjectCard';
 const Projects = memo(({ onNavigate }: ProjectsProps) => {
   const { language } = useLanguage();
   const t = useTranslations(language);
+  useCMSDataVersion();
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
   
   // Los proyectos ahora se cargan desde src/data/projects.ts
   // Edita ese archivo para añadir, modificar o eliminar proyectos
-  const projects = useMemo(() => getProjects(language), [language]);
+  const projects = getProjects(language);
   const featuredProjects = useMemo(() => projects.filter(p => p.featured), [projects]);
   const secondaryProjects = useMemo(() => projects.filter(p => !p.featured), [projects]);
 

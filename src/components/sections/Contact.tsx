@@ -1,15 +1,28 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useState, type ComponentType } from 'react';
 import Card from '../Card';
-import { Mail } from 'lucide-react';
+import { Globe, Mail } from 'lucide-react';
 import { LinkedinIcon, GithubIcon } from '../BrandIcons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
+import { useCMSDataVersion } from '../../stores/cmsDataStore';
+import { getContactMethods, getEmailJSSettings, type ContactMethodType } from '../../data/siteSettings';
 import emailjs from '@emailjs/browser';
 import './Contact.css';
+
+type ContactIcon = ComponentType<{ size?: number; className?: string }>;
+
+const contactIcons: Record<ContactMethodType, ContactIcon> = {
+  email: Mail,
+  linkedin: LinkedinIcon,
+  github: GithubIcon,
+  website: Globe,
+  custom: Mail,
+};
 
 const Contact = memo(() => {
   const { language } = useLanguage();
   const t = useTranslations(language);
+  useCMSDataVersion();
   const [showNotification, setShowNotification] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -22,10 +35,13 @@ const Contact = memo(() => {
     const form = e.currentTarget;
     
     try {
-      const serviceId = 'service_p926wet';
-      const templateId = 'template_4aupjtt';
-      const publicKey = 'Dg-aiS2kIuJ66I-Us';
-      await emailjs.sendForm(serviceId, templateId, form, publicKey);
+      const emailSettings = getEmailJSSettings();
+      await emailjs.sendForm(
+        emailSettings.serviceId,
+        emailSettings.templateId,
+        form,
+        emailSettings.publicKey
+      );
       //Si has llegado a leer esto es que estás hurgando en mi página. Sí, son las credenciales para mandarme correos, enhorabuena.
 
       setShowNotification(true);
@@ -49,26 +65,8 @@ const Contact = memo(() => {
     }
   };
 
-  const contactMethods = useMemo(() => [
-    {
-      icon: Mail,
-      title: t.email,
-      value: 'xabierciava@gmail.com',
-      link: 'mailto:xabierciava@gmail.com',
-    },
-    {
-      icon: LinkedinIcon,
-      title: 'LinkedIn',
-      value: 'linkedin.com/in/xabier-cia',
-      link: 'https://www.linkedin.com/in/xabier-cia',
-    },
-    {
-      icon: GithubIcon,
-      title: 'GitHub',
-      value: 'github.com/xabware',
-      link: 'https://github.com/xabware',
-    }
-  ], [t]);
+  const contactMethods = getContactMethods(language);
+  const emailSettings = getEmailJSSettings();
   
   return (
     <div className="section-content">
@@ -80,20 +78,20 @@ const Contact = memo(() => {
         <Card title={t.contactInfo} className="contact-card">
           <div className="contact-methods">
             {contactMethods.map((method, idx) => {
-              const Icon = method.icon;
+              const Icon = contactIcons[method.type] ?? Mail;
               return (
                 <a
                   key={`contact-${idx}`}
-                  href={method.link}
+                  href={method.href}
                   className="contact-method"
-                  target={method.link.startsWith('http') ? '_blank' : undefined}
-                  rel={method.link.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  target={method.href.startsWith('http') ? '_blank' : undefined}
+                  rel={method.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                 >
                   <div className="contact-icon">
                     <Icon size={24} />
                   </div>
                   <div className="contact-details">
-                    <h3>{method.title}</h3>
+                    <h3>{method.displayTitle}</h3>
                     <p>{method.value}</p>
                   </div>
                 </a>
@@ -109,7 +107,7 @@ const Contact = memo(() => {
             </div>
           )}
           <form className="contact-form" onSubmit={handleSubmit}>
-            <input type="hidden" name="to_email" value="tu@email.com" />
+            <input type="hidden" name="to_email" value={emailSettings.toEmail} />
             
             <div className="form-group">
               <label htmlFor="name">{t.name}</label>

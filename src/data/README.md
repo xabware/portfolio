@@ -45,6 +45,18 @@ Las fechas `startDate` y `endDate` de `experiences` alimentan el contador de exp
 
 Construye el contexto textual que usa el chatbot. Si anades nuevas secciones de datos y quieres que el chat las conozca, integralo aqui.
 
+### `siteSettings.ts`
+
+Define datos editables de configuracion publica: metodos de contacto, rutas/nombres de descarga de CV y parametros publicos de EmailJS.
+
+### `spaceContent.ts`
+
+Define los textos y parametros visibles de los planetas de la escena 3D del portfolio.
+
+### `cmsDefaults.ts`
+
+Construye la plantilla completa que usa el editor autenticado (`/#admin`) para restaurar datos por defecto.
+
 ## Helpers exportados
 
 - `getProjects(language)`
@@ -62,11 +74,21 @@ Los componentes deberian consumir estos helpers en vez de resolver textos biling
 
 La app puede cargar datos desde Firebase CMS si `VITE_FIREBASE_CMS_ENABLED=true`. Si esta apagado, usa estos archivos estaticos.
 
-El panel CMS usa `public/data-defaults.json` como plantilla para restaurar datos. Cuando cambies la forma de los datos, revisa:
+El editor autenticado esta disponible en `/#admin` y guarda documentos en `portfolio_content`:
+
+- `projects`: `{ items: Project[] }`
+- `about`: `personalInfo`, `experiences`, `education`
+- `skills`: `categories`, `additionalSkills`
+- `translations`: textos ES/EN de interfaz
+- `settings`: contacto, CV y EmailJS
+- `space`: contenido editable de la escena 3D
+
+El panel CMS usa `src/data/cmsDefaults.ts` como plantilla principal y `public/data-defaults.json` para compatibilidad con herramientas estaticas. Cuando cambies la forma de los datos, revisa:
 
 - `src/data/*.ts`
 - `src/stores/cmsDataStore.ts`
 - `src/services/cmsService.ts`
+- `src/data/cmsDefaults.ts`
 - `public/data-defaults.json`
 - `public/analytics.html`
 

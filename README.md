@@ -56,16 +56,35 @@ Si no defines `VITE_BASE_PATH`, Vite usa `/` en desarrollo local y `/portfolio/`
 
 ## Contenido editable
 
-El contenido principal vive en `src/data/`:
+El portfolio tiene un editor autenticado en `/#admin`. Usa Firebase Auth para entrar y Firestore para guardar documentos en la coleccion `portfolio_content`. El editor permite modificar:
+
+- paginas de contenido: presentacion, experiencia y educacion;
+- proyectos y sus detalles ES/EN;
+- habilidades, categorias y competencias adicionales;
+- textos de interfaz usados por navegacion, chat, busqueda, contacto y 3D;
+- metodos de contacto, rutas de CV y parametros publicos de EmailJS;
+- etiquetas y configuracion visible de los planetas de la escena 3D.
+
+En local necesitas crear `.env.local` a partir de `.env.example` con los valores reales de tu proyecto Firebase. Si falta alguna variable `VITE_FIREBASE_*`, el editor mostrara el listado exacto de claves pendientes. En Firebase Authentication activa un metodo de acceso, por ejemplo Email/Password, y anade el usuario editor desde la consola.
+
+Para que el sitio publico lea Firestore en vez de los datos estaticos, despliega con:
+
+```bash
+VITE_FIREBASE_CMS_ENABLED=true
+```
+
+Los fallbacks estaticos viven en `src/data/`:
 
 - `projects.ts`: proyectos, demos, tecnologias y detalle ES/EN.
 - `about.ts`: descripcion personal, experiencia, educacion y fechas para el contador.
 - `skills.ts`: categorias, skills y descripciones ES/EN.
+- `siteSettings.ts`: contacto, CV y EmailJS.
+- `spaceContent.ts`: textos/configuracion editable de la escena 3D.
 - `contextGenerator.ts`: contexto que consume el chatbot.
 
-Al editar estos archivos, se actualizan las secciones del portfolio, la busqueda y el contexto del chatbot. Hay una guia especifica en `src/data/README.md`.
+Al editar estos archivos o guardar desde el CMS, se actualizan las secciones del portfolio, la busqueda y el contexto del chatbot. Hay una guia especifica en `src/data/README.md`.
 
-Los datos plantilla del panel CMS estan en `public/data-defaults.json`. Si cambias mucho la estructura de `src/data`, revisa tambien ese JSON.
+Los datos plantilla del panel CMS estan en `public/data-defaults.json` y en `src/data/cmsDefaults.ts`. Si cambias mucho la estructura de `src/data`, revisa ambos.
 
 ## Estructura
 

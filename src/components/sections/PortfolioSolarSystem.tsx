@@ -3,9 +3,12 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Stars, Html, Line } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Language } from '../../contexts/LanguageContext';
+import { useTranslations } from '../../translations';
 import { getProjects } from '../../data/projects';
 import { getExperiences, getEducation } from '../../data/about';
 import { getSkillCategories } from '../../data/skills';
+import { getSpacePlanetContent } from '../../data/spaceContent';
+import { useCMSDataVersion } from '../../stores/cmsDataStore';
 
 // Generador pseudoaleatorio con seed para resultados determinísticos
 function seededRandom(seed: number): () => number {
@@ -505,6 +508,7 @@ function getInitialAngle(id: string): number {
 
 // Componente del Planeta con LOD (Level of Detail)
 function Planet({ data, language, cameraPosition, onSelect, onLabelAction, selectedPlanet, onPositionUpdate }: PlanetProps) {
+  const t = useTranslations(language);
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   const [angle, setAngle] = useState(() => getInitialAngle(data.id));
@@ -540,19 +544,19 @@ function Planet({ data, language, cameraPosition, onSelect, onLabelAction, selec
 
   const labelActionText = useMemo(() => {
     if (data.id === 'projects') {
-      return language === 'es' ? 'Ver destacados' : 'View featured';
+      return t.spaceViewFeatured;
     }
     if (data.id === 'experience') {
-      return language === 'es' ? 'Ver cronología' : 'View timeline';
+      return t.spaceViewTimeline;
     }
     if (data.id === 'education') {
-      return language === 'es' ? 'Aterrizar' : 'Land now';
+      return t.spaceLandNow;
     }
     if (data.id === 'skills') {
-      return language === 'es' ? 'Top habilidades' : 'Top skills';
+      return t.spaceTopSkills;
     }
-    return language === 'es' ? 'Abrir' : 'Open';
-  }, [data.id, language]);
+    return t.spaceOpen;
+  }, [data.id, t]);
 
   return (
     <group ref={groupRef}>
@@ -2772,6 +2776,7 @@ function AtmosphericFlightControls({
   onDisembark,
   onExitSurface
 }: AtmosphericFlightControlsProps) {
+  const t = useTranslations(language);
   const { camera } = useThree();
   const baseFov = useRef<number | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -3084,13 +3089,7 @@ function AtmosphericFlightControls({
       {showLandingPrompt && (
         <Html fullscreen style={{ pointerEvents: 'none' }}>
           <div className="surface-boarding-indicator">
-            {canLand
-              ? (language === 'es'
-                  ? 'Pulsa Shift para aterrizar y bajar a pie'
-                  : 'Press Shift to land and continue on foot')
-              : (language === 'es'
-                  ? 'Acércate más al relieve para poder aterrizar'
-                  : 'Get closer to terrain to enable landing')}
+            {canLand ? t.spaceLandingReady : t.spaceLandingTooHigh}
           </div>
         </Html>
       )}
@@ -3119,6 +3118,7 @@ function SurfaceOnFootControls({
   onBoardShip,
   onCanBoardChange
 }: SurfaceOnFootControlsProps) {
+  const t = useTranslations(language);
   const { camera } = useThree();
   const keys = useRef<Set<string>>(new Set());
   const initialized = useRef(false);
@@ -3310,9 +3310,7 @@ function SurfaceOnFootControls({
       {canBoard && (
         <Html fullscreen style={{ pointerEvents: 'none' }}>
           <div className="surface-boarding-indicator">
-            {language === 'es'
-              ? 'Pulsa E para volver a la nave'
-              : 'Press E to board the ship again'}
+            {t.spaceBoardPrompt}
           </div>
         </Html>
       )}
@@ -3925,6 +3923,7 @@ interface MobileControlsProps {
 }
 
 function MobileControls({ surfaceActive, traversalMode, showBoardButton, language }: MobileControlsProps) {
+  const t = useTranslations(language);
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
     return isTouchDevice();
@@ -3986,7 +3985,7 @@ function MobileControls({ surfaceActive, traversalMode, showBoardButton, languag
               onTouchCancel={handleBoardEnd}
               onContextMenu={(e) => e.preventDefault()}
             >
-              {language === 'es' ? 'Subir' : 'Board'}
+              {t.spaceBoardButton}
             </button>
           )}
         </div>
@@ -4192,6 +4191,8 @@ const savedCameraPosition = {
 };
 
 export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemProps) {
+  const t = useTranslations(language);
+  const cmsVersion = useCMSDataVersion();
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null);
   const [selectedPlanetItemsOverride, setSelectedPlanetItemsOverride] = useState<PlanetItem[] | null>(null);
   const [surfaceMode, setSurfaceMode] = useState<{ active: boolean; planet: PlanetData | null; entryPosition: THREE.Vector3 | null }>({
@@ -4205,25 +4206,29 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
   const [surfaceCanBoardShip, setSurfaceCanBoardShip] = useState(false);
   
   // Obtener datos del portfolio
-  const projects = useMemo(() => getProjects(language), [language]);
-  const experiences = useMemo(() => getExperiences(language), [language]);
-  const educationItems = useMemo(() => getEducation(language), [language]);
-  const skillCategories = useMemo(() => getSkillCategories(language), [language]);
+  const projects = useMemo(() => {
+    void cmsVersion;
+    return getProjects(language);
+  }, [language, cmsVersion]);
+  const experiences = useMemo(() => {
+    void cmsVersion;
+    return getExperiences(language);
+  }, [language, cmsVersion]);
+  const educationItems = useMemo(() => {
+    void cmsVersion;
+    return getEducation(language);
+  }, [language, cmsVersion]);
+  const skillCategories = useMemo(() => {
+    void cmsVersion;
+    return getSkillCategories(language);
+  }, [language, cmsVersion]);
   
   // Convertir datos a planetas
-  const planets: PlanetData[] = useMemo(() => [
+  const planets: PlanetData[] = useMemo(() => {
+    void cmsVersion;
+    return [
     {
-      id: 'projects',
-      name: { es: 'Proyectos', en: 'Projects' },
-      description: { 
-        es: 'Mis proyectos destacados y trabajos realizados', 
-        en: 'My featured projects and completed works' 
-      },
-      color: '#60a5fa',
-      size: 5,
-      orbitRadius: 50,
-      orbitSpeed: 0.02,
-      planetType: 'terrestrial' as PlanetType,
+      ...getSpacePlanetContent('projects'),
       items: projects.map(p => ({
         id: `project-${p.id}`,
         title: p.title,
@@ -4232,17 +4237,7 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
       })),
     },
     {
-      id: 'experience',
-      name: { es: 'Experiencia', en: 'Experience' },
-      description: { 
-        es: 'Mi trayectoria profesional', 
-        en: 'My professional journey' 
-      },
-      color: '#e8a850',
-      size: 9,
-      orbitRadius: 85,
-      orbitSpeed: 0.012,
-      planetType: 'gas_giant' as PlanetType,
+      ...getSpacePlanetContent('experience'),
       items: experiences.map((exp, idx) => ({
         id: `exp-${idx}`,
         title: exp.title,
@@ -4251,17 +4246,7 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
       })),
     },
     {
-      id: 'education',
-      name: { es: 'Educación', en: 'Education' },
-      description: { 
-        es: 'Mi formación académica', 
-        en: 'My academic background' 
-      },
-      color: '#88ccff',
-      size: 4,
-      orbitRadius: 125,
-      orbitSpeed: 0.01,
-      planetType: 'ice' as PlanetType,
+      ...getSpacePlanetContent('education'),
       items: educationItems.map((edu, idx) => ({
         id: `edu-${idx}`,
         title: edu.degree,
@@ -4270,17 +4255,7 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
       })),
     },
     {
-      id: 'skills',
-      name: { es: 'Habilidades', en: 'Skills' },
-      description: { 
-        es: 'Tecnologías y herramientas que domino', 
-        en: 'Technologies and tools I master' 
-      },
-      color: '#ff6644',
-      size: 4.5,
-      orbitRadius: 160,
-      orbitSpeed: 0.008,
-      planetType: 'volcanic' as PlanetType,
+      ...getSpacePlanetContent('skills'),
       items: skillCategories.flatMap(cat => 
         cat.skills.slice(0, 3).map(skill => ({
           id: `skill-${skill.name}`,
@@ -4290,7 +4265,8 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
         }))
       ),
     },
-  ], [projects, experiences, educationItems, skillCategories]);
+  ];
+  }, [projects, experiences, educationItems, skillCategories, cmsVersion]);
 
   const handleSelectPlanet = useCallback((planet: PlanetData | null) => {
     setSelectedPlanet(planet);
@@ -4394,24 +4370,24 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
       <button 
         className="instructions-toggle"
         onClick={() => setInstructionsCollapsed(!instructionsCollapsed)}
-        title={instructionsCollapsed ? (language === 'es' ? 'Mostrar controles' : 'Show controls') : (language === 'es' ? 'Ocultar controles' : 'Hide controls')}
+        title={instructionsCollapsed ? t.spaceShowControls : t.spaceHideControls}
       >
         {instructionsCollapsed ? '◀' : '▶'}
       </button>
       {surfaceMode.active ? (
         <>
-          <span>⌨️ WASD {language === 'es' ? 'mover' : 'move'}</span>
-          <span>🎯 {language === 'es' ? 'Flechas mirar' : 'Arrows look'}</span>
-          <span>⬆️ {language === 'es' ? 'Espacio ascender' : 'Space ascend'}</span>
-          <span>⬇️ {language === 'es' ? 'Shift aterrizar/bajar' : 'Shift land/descend'}</span>
-          <span>🧍 {language === 'es' ? 'E subir a la nave (a pie)' : 'E board ship (on foot)'}</span>
+          <span>⌨️ WASD {t.spaceMove}</span>
+          <span>🎯 {t.spaceLook}</span>
+          <span>⬆️ {t.spaceAscend}</span>
+          <span>⬇️ {t.spaceLandDescend}</span>
+          <span>🧍 {t.spaceBoardShip}</span>
         </>
       ) : (
         <>
-          <span>⌨️ WASD {language === 'es' ? 'mover' : 'move'}</span>
-          <span>🎯 {language === 'es' ? 'Flechas mirar' : 'Arrows look'}</span>
-          <span>⬆️ {language === 'es' ? 'Espacio subir' : 'Space up'}</span>
-          <span>⬇️ {language === 'es' ? 'Shift bajar' : 'Shift down'}</span>
+          <span>⌨️ WASD {t.spaceMove}</span>
+          <span>🎯 {t.spaceLook}</span>
+          <span>⬆️ {t.spaceUp}</span>
+          <span>⬇️ {t.spaceDown}</span>
         </>
       )}
     </div>
@@ -4481,7 +4457,7 @@ export default function PortfolioSolarSystem({ language }: PortfolioSolarSystemP
           <h3 style={{ color: selectedPlanet.color }}>{selectedPlanet.name[language]}</h3>
           <p className="planet-info-description">{selectedPlanet.description[language]}</p>
           <div className="planet-info-items">
-            <h4>{language === 'es' ? 'Contenido' : 'Contents'} ({selectedPlanetItems.length})</h4>
+            <h4>{t.spaceContents} ({selectedPlanetItems.length})</h4>
             <ul>
               {selectedPlanetItems.map((item) => (
                 <li key={item.id}>

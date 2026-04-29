@@ -5,7 +5,7 @@
  */
 import { useState, useEffect, type ReactNode } from 'react';
 import { isFirebaseCmsEnabled } from '../config/cmsConfig';
-import { cmsStore } from '../stores/cmsDataStore';
+import { applyCMSData, cmsStore } from '../stores/cmsDataStore';
 
 export function CMSLoader({ children }: { children: ReactNode }) {
   const [, setReady] = useState(cmsStore.loaded);
@@ -15,6 +15,7 @@ export function CMSLoader({ children }: { children: ReactNode }) {
 
     if (!isFirebaseCmsEnabled) {
       cmsStore.loaded = true;
+      applyCMSData({});
       setReady(true);
       return;
     }
@@ -23,19 +24,10 @@ export function CMSLoader({ children }: { children: ReactNode }) {
 
     import('../services/cmsService')
       .then(({ loadAllCMSData }) => loadAllCMSData())
-      .then(({ projects, about, skills }) => {
+      .then(({ projects, about, skills, translations, settings, space }) => {
         if (cancelled) return;
 
-        if (projects) cmsStore.projects = projects;
-        if (about) {
-          cmsStore.personalInfo = about.personalInfo;
-          cmsStore.experiences = about.experiences;
-          cmsStore.education = about.education;
-        }
-        if (skills) {
-          cmsStore.skillCategories = skills.categories;
-          cmsStore.additionalSkills = skills.additionalSkills;
-        }
+        applyCMSData({ projects, about, skills, translations, settings, space });
       })
       .catch((err) => {
         console.warn('[CMS] Failed to load, using static data:', err);
@@ -43,7 +35,7 @@ export function CMSLoader({ children }: { children: ReactNode }) {
       .finally(() => {
         if (cancelled) return;
 
-        cmsStore.loaded = true;
+        if (!cmsStore.loaded) applyCMSData({});
         setReady(true);
       });
 

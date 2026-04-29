@@ -1,12 +1,13 @@
 import { Download } from 'lucide-react';
-import { memo, useMemo, useState, useEffect, useCallback } from 'react';
+import { memo, useState, useEffect, useCallback } from 'react';
 import Card from '../Card';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslations } from '../../translations';
-import { projects } from '../../data/projects';
+import { getProjectCount } from '../../data/projects';
 import { getPersonalInfo, getExperiences, getEducation, getTotalExperienceMs } from '../../data/about';
 import { getSkillCategories, getAdditionalSkills } from '../../data/skills';
 import { getCVDownload } from '../../services/cvDownloadService';
+import { useCMSDataVersion } from '../../stores/cmsDataStore';
 import './Portfolio.css';
 
 interface PortfolioProps {
@@ -16,6 +17,7 @@ interface PortfolioProps {
 const Portfolio = memo(({ onNavigate }: PortfolioProps) => {
   const { language } = useLanguage();
   const t = useTranslations(language);
+  useCMSDataVersion();
 
   const calcElapsed = useCallback(() => {
     const totalMs = getTotalExperienceMs();
@@ -36,7 +38,7 @@ const Portfolio = memo(({ onNavigate }: PortfolioProps) => {
   }, []);
 
   const [elapsed, setElapsed] = useState(calcElapsed);
-  const cvDownload = useMemo(() => getCVDownload(language), [language]);
+  const cvDownload = getCVDownload(language);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -47,11 +49,12 @@ const Portfolio = memo(({ onNavigate }: PortfolioProps) => {
 
   const pad = (n: number) => String(n).padStart(2, '0');
 
-  const personalDescription = useMemo(() => getPersonalInfo(language), [language]);
-  const experiences = useMemo(() => getExperiences(language), [language]);
-  const educationItems = useMemo(() => getEducation(language), [language]);
-  const skillCategories = useMemo(() => getSkillCategories(language), [language]);
-  const additionalSkills = useMemo(() => getAdditionalSkills(language), [language]);
+  const personalDescription = getPersonalInfo(language);
+  const experiences = getExperiences(language);
+  const educationItems = getEducation(language);
+  const skillCategories = getSkillCategories(language);
+  const additionalSkills = getAdditionalSkills(language);
+  const projectCount = getProjectCount();
 
   return (
     <div className="section-content">
@@ -111,7 +114,7 @@ const Portfolio = memo(({ onNavigate }: PortfolioProps) => {
             }}
           >
             <div className="counter-label">{t.projectsCompleted}</div>
-            <div className="projects-number">{projects.length}</div>
+            <div className="projects-number">{projectCount}</div>
           </div>
         </div>
       </div>

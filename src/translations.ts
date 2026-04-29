@@ -1,10 +1,15 @@
 import { useMemo } from 'react';
 import type { Language } from './contexts/LanguageContext';
+import { cmsStore, useCMSDataVersion } from './stores/cmsDataStore';
+
+export type TranslationOverrides = Partial<Record<Language, Record<string, string>>>;
 
 export const translations = {
   es: {
     // Header
     dashboardPortfolio: 'Dashboard Portfolio',
+    appLoading: 'Cargando...',
+    appChatLoading: 'Cargando chat y modelo de IA...',
     
     // Sidebar
     portfolio: 'Portfolio',
@@ -21,6 +26,8 @@ export const translations = {
     downloadCv: 'Descargar CV en PDF',
     yearsExperience: 'Años de experiencia',
     projectsCompleted: 'Proyectos',
+    satisfiedClients: 'Clientes satisfechos',
+    techMastered: 'Tecnologías dominadas',
     aboutDashboard: 'Sobre este Dashboard',
     dashboardDescription: 'Este dashboard es un proyecto que he creado para compartir y unificar en un sitio todos los otros proyectos que vaya desarrollando. En mi repositorio de GitHub tengo una rama con la plantilla sin mis datos personales, y animo a cualquiera que esté leyendo esto a utilizarla como base para su propio portfolio.',
     features: 'Características',
@@ -147,6 +154,56 @@ export const translations = {
     ragOpenViewer: 'Abrir visor de PDF',
     debugMode: 'Debug',
     debugToggle: 'Activar/Desactivar modo debug',
+    pdfViewerOf: 'de',
+    pdfViewerClose: 'Cerrar visor',
+    pdfViewerZoomIn: 'Acercar',
+    pdfViewerZoomOut: 'Alejar',
+    pdfViewerReferencedPage: 'Referenciada',
+    debugPanelTitle: 'Debug RAG',
+    debugPanelNoData: 'Envía un mensaje con RAG activo para ver los pasos intermedios',
+    debugPanelQuery: 'Consulta del usuario',
+    debugPanelSourcesFound: 'Fuentes encontradas',
+    debugPanelPrompt: 'Prompt RAG enviado',
+    debugPanelRawResponse: 'Respuesta cruda del LLM',
+    debugPanelReverseSearch: 'Búsqueda inversa',
+    debugPanelAnnotatedResponse: 'Respuesta anotada final',
+    debugPanelRelevance: 'Relevancia',
+    debugPanelMainChunk: 'Chunk principal',
+    debugPanelExpandedContext: 'Contexto expandido',
+    debugPanelSentence: 'Oración',
+    debugPanelAssigned: 'Asignada',
+    debugPanelNotAssigned: 'Sin asignar',
+    debugPanelReason: 'Razón',
+    debugPanelScores: 'Puntuaciones',
+    debugPanelCoverage: 'Cobert.',
+    debugPanelDistinctive: 'Distint.',
+    debugPanelNoSources: 'No se encontraron fuentes',
+    debugPanelStatusSearching: 'Buscando...',
+    debugPanelStatusPrompting: 'Prompt...',
+    debugPanelStatusGenerating: 'Generando...',
+    debugPanelStatusAnnotating: 'Anotando...',
+    debugPanelStatusComplete: 'Hecho',
+    debugPanelStatusError: 'Error',
+    spaceShowControls: 'Mostrar controles',
+    spaceHideControls: 'Ocultar controles',
+    spaceMove: 'mover',
+    spaceLook: 'Flechas mirar',
+    spaceAscend: 'Espacio ascender',
+    spaceLandDescend: 'Shift aterrizar/bajar',
+    spaceBoardShip: 'E subir a la nave (a pie)',
+    spaceUp: 'Espacio subir',
+    spaceDown: 'Shift bajar',
+    spaceContents: 'Contenido',
+    spaceViewFeatured: 'Ver destacados',
+    spaceViewTimeline: 'Ver cronología',
+    spaceLandNow: 'Aterrizar',
+    spaceTopSkills: 'Top habilidades',
+    spaceOpen: 'Abrir',
+    spaceLandingReady: 'Pulsa Shift para aterrizar y bajar a pie',
+    spaceLandingTooHigh: 'Acércate más al relieve para poder aterrizar',
+    spaceBoardPrompt: 'Pulsa E para volver a la nave',
+    spaceBoardButton: 'Subir',
+    spaceLoading: 'Cargando sistema solar...',
     
     // Sidebar
     sidebarExpandLabel: 'Expandir sidebar',
@@ -164,6 +221,8 @@ export const translations = {
   en: {
     // Header
     dashboardPortfolio: 'Dashboard Portfolio',
+    appLoading: 'Loading...',
+    appChatLoading: 'Loading chat and AI model...',
     
     // Sidebar
     portfolio: 'Portfolio',
@@ -308,6 +367,56 @@ export const translations = {
     ragOpenViewer: 'Open PDF viewer',
     debugMode: 'Debug',
     debugToggle: 'Enable/Disable debug mode',
+    pdfViewerOf: 'of',
+    pdfViewerClose: 'Close viewer',
+    pdfViewerZoomIn: 'Zoom in',
+    pdfViewerZoomOut: 'Zoom out',
+    pdfViewerReferencedPage: 'Referenced',
+    debugPanelTitle: 'RAG Debug',
+    debugPanelNoData: 'Send a message with RAG active to see intermediate steps',
+    debugPanelQuery: 'User query',
+    debugPanelSourcesFound: 'Sources found',
+    debugPanelPrompt: 'RAG prompt sent',
+    debugPanelRawResponse: 'Raw LLM response',
+    debugPanelReverseSearch: 'Reverse search',
+    debugPanelAnnotatedResponse: 'Final annotated response',
+    debugPanelRelevance: 'Relevance',
+    debugPanelMainChunk: 'Main chunk',
+    debugPanelExpandedContext: 'Expanded context',
+    debugPanelSentence: 'Sentence',
+    debugPanelAssigned: 'Assigned',
+    debugPanelNotAssigned: 'Unassigned',
+    debugPanelReason: 'Reason',
+    debugPanelScores: 'Scores',
+    debugPanelCoverage: 'Cover.',
+    debugPanelDistinctive: 'Distinct.',
+    debugPanelNoSources: 'No sources found',
+    debugPanelStatusSearching: 'Searching...',
+    debugPanelStatusPrompting: 'Prompting...',
+    debugPanelStatusGenerating: 'Generating...',
+    debugPanelStatusAnnotating: 'Annotating...',
+    debugPanelStatusComplete: 'Done',
+    debugPanelStatusError: 'Error',
+    spaceShowControls: 'Show controls',
+    spaceHideControls: 'Hide controls',
+    spaceMove: 'move',
+    spaceLook: 'Arrows look',
+    spaceAscend: 'Space ascend',
+    spaceLandDescend: 'Shift land/descend',
+    spaceBoardShip: 'E board ship (on foot)',
+    spaceUp: 'Space up',
+    spaceDown: 'Shift down',
+    spaceContents: 'Contents',
+    spaceViewFeatured: 'View featured',
+    spaceViewTimeline: 'View timeline',
+    spaceLandNow: 'Land now',
+    spaceTopSkills: 'Top skills',
+    spaceOpen: 'Open',
+    spaceLandingReady: 'Press Shift to land and continue on foot',
+    spaceLandingTooHigh: 'Get closer to terrain to enable landing',
+    spaceBoardPrompt: 'Press E to board the ship again',
+    spaceBoardButton: 'Board',
+    spaceLoading: 'Loading solar system...',
     
     // Sidebar
     sidebarExpandLabel: 'Expand sidebar',
@@ -325,5 +434,14 @@ export const translations = {
 } as const;
 
 export const useTranslations = (language: Language) => {
-  return useMemo(() => translations[language], [language]);
+  const cmsVersion = useCMSDataVersion();
+
+  return useMemo(() => {
+    void cmsVersion;
+
+    return {
+      ...translations[language],
+      ...(cmsStore.translations?.[language] ?? {}),
+    };
+  }, [language, cmsVersion]);
 };
