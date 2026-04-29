@@ -13,6 +13,9 @@ const Sidebar = memo(({ activeSection, onSectionChange }: SidebarProps) => {
   const { language } = useLanguage();
   const t = useTranslations(language);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const assetBaseUrl = import.meta.env.BASE_URL.endsWith('/')
+    ? import.meta.env.BASE_URL
+    : `${import.meta.env.BASE_URL}/`;
   
   useEffect(() => {
     if (isCollapsed) {
@@ -42,7 +45,7 @@ const Sidebar = memo(({ activeSection, onSectionChange }: SidebarProps) => {
           onClick={() => onSectionChange('portfolio')}
           aria-label="Home"
         >
-          <img src="/logo.svg" alt="Logo" className="sidebar-logo" />
+          <img src={`${assetBaseUrl}logo.svg`} alt="Logo" className="sidebar-logo" />
         </button>
       </div>
       <nav className="sidebar-nav">

@@ -30,7 +30,7 @@
             "Diseño totalmente responsive",
             "Animaciones suaves y transiciones elegantes"
           ],
-          "techDetails": "El frontend está construido con React 18 y TypeScript para type-safety. Vite proporciona un bundling ultrarrápido con HMR instantáneo. Los estilos utilizan CSS moderno con variables CSS para theming dinámico. El chatbot utiliza WebLLM con modelos Llama/Qwen que se ejecutan en WebGPU. El estado global se gestiona con React Context para temas e idiomas. La estructura de componentes sigue el patrón de composición con memo para optimización de renderizado.",
+          "techDetails": "El frontend está construido con React 19 y TypeScript para type-safety. Vite proporciona un bundling ultrarrápido con HMR instantáneo. Los estilos utilizan CSS moderno con variables CSS para theming dinámico. El chatbot utiliza WebLLM con modelos Llama/Qwen que se ejecutan en WebGPU. El estado global se gestiona con React Context para temas e idiomas. La estructura de componentes sigue el patrón de composición con memo para optimización de renderizado.",
           "results": "Una plantilla de portfolio que cualquier desarrollador puede clonar y personalizar en minutos. El diseño ha recibido feedback positivo por su profesionalismo y modernidad. El chatbot integrado demuestra capacidades técnicas avanzadas sin costos de API. El código está bien documentado y estructurado para facilitar modificaciones.",
           "date": "2026",
           "team": "Proyecto personal"
@@ -50,7 +50,7 @@
             "Fully responsive design",
             "Smooth animations and elegant transitions"
           ],
-          "techDetails": "The frontend is built with React 18 and TypeScript for type-safety. Vite provides ultra-fast bundling with instant HMR. Styles use modern CSS with CSS variables for dynamic theming. The chatbot uses WebLLM with Llama/Qwen models running on WebGPU. Global state is managed with React Context for themes and languages. The component structure follows the composition pattern with memo for render optimization.",
+          "techDetails": "The frontend is built with React 19 and TypeScript for type-safety. Vite provides ultra-fast bundling with instant HMR. Styles use modern CSS with CSS variables for dynamic theming. The chatbot uses WebLLM with Llama/Qwen models running on WebGPU. Global state is managed with React Context for themes and languages. The component structure follows the composition pattern with memo for render optimization.",
           "results": "A portfolio template that any developer can clone and customize in minutes. The design has received positive feedback for its professionalism and modernity. The integrated chatbot demonstrates advanced technical capabilities without API costs. The code is well documented and structured for easy modifications.",
           "date": "2026",
           "team": "Personal project"

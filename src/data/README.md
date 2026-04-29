@@ -1,148 +1,79 @@
-# Guía de Configuración de Datos del Portfolio
+# Datos del portfolio
 
-Esta carpeta contiene todos los datos configurables de tu portfolio. Editar estos archivos te permite actualizar fácilmente el contenido sin tocar el código de los componentes.
+Esta carpeta es la fuente de verdad del contenido visible del portfolio. La UI, la busqueda global y el contexto del chatbot se alimentan desde aqui.
 
-## 📁 Archivos disponibles
+## Archivos
 
 ### `projects.ts`
-Contiene todos tus proyectos con información detallada.
 
-**Cómo añadir un proyecto:**
-1. Copia la plantilla que está al inicio del archivo
-2. Asigna un ID único (usa `getNextProjectId()` como referencia)
-3. Rellena los campos en español e inglés
-4. Añade el objeto al array `projects`
+Define los proyectos del portfolio.
 
-**Estructura:**
-- `title`: Título del proyecto (es/en)
-- `description`: Descripción corta (es/en)
-- `tech`: Array de tecnologías usadas
-- `github`: URL del repositorio
-- `demo`: URL de la demo
-- `details`: Información detallada del proyecto (es/en)
-  - `overview`: Visión general
-  - `challenge`: Desafío que resolviste
-  - `solution`: Cómo lo resolviste
-  - `features`: Array de características
-  - `techDetails`: Detalles técnicos
-  - `results`: Resultados e impacto
-  - `date`: Fecha o período
-  - `team`: Tipo de proyecto (personal, equipo, etc.)
+Campos principales:
 
----
+- `id`: numero unico y estable.
+- `featured`: destaca el proyecto en la lista.
+- `title` y `description`: textos ES/EN.
+- `tech`: tecnologias mostradas como tags.
+- `github`: enlace al repositorio.
+- `demo`: enlace externo o ruta interna con `#chat` / `#space`.
+- `details`: contenido largo ES/EN para el modal de detalle.
+
+Usa `getNextProjectId()` como ayuda al anadir proyectos y manten el orden que quieras mostrar en UI.
 
 ### `skills.ts`
-Contiene todas tus habilidades organizadas por categorías.
 
-**Cómo añadir una categoría de habilidades:**
-1. Añade un nuevo objeto al array `skillCategories`
-2. Define el título de la categoría en ambos idiomas
-3. Añade las habilidades con sus niveles (0-100)
+Define categorias de habilidades.
 
-**Estructura de categoría:**
-```typescript
-{
-  title: {
-    es: 'Nombre de la Categoría',
-    en: 'Category Name',
-  },
-  skills: [
-    { name: 'Nombre de habilidad', level: 85 },
-    // más habilidades...
-  ],
-}
-```
+Cada skill tiene:
 
-**Cómo añadir habilidades adicionales:**
-- Edita el objeto `additionalSkills`
-- Añade strings en ambos idiomas (`es` y `en`)
-- Estas habilidades se muestran como tags sin nivel numérico
+- `name`: nombre mostrado.
+- `description`: explicacion ES/EN mostrada en el desplegable.
 
----
+`additionalSkills` contiene competencias transversales como tags simples.
 
 ### `about.ts`
-Contiene tu información personal, experiencia profesional y educación.
 
-**Secciones editables:**
+Define:
 
-#### 1. Información Personal (`personalInfo`)
-- Edita los párrafos de descripción en ambos idiomas
-- Puedes añadir o eliminar párrafos del array
+- `personalInfo`: parrafos ES/EN de presentacion.
+- `experiences`: experiencia profesional, empresa, descripcion, periodo y fechas.
+- `education`: formacion.
 
-#### 2. Experiencia Profesional (`experiences`)
-Añade o edita tus experiencias laborales:
-```typescript
-{
-  title: {
-    es: 'Título del puesto',
-    en: 'Job title',
-  },
-  company: {
-    es: 'Nombre de la empresa',
-    en: 'Company name',
-  },
-  description: {
-    es: 'Descripción de responsabilidades...',
-    en: 'Description of responsibilities...',
-  },
-  period: '2020 - 2023', // Opcional
-}
-```
+Las fechas `startDate` y `endDate` de `experiences` alimentan el contador de experiencia total. Si una experiencia sigue activa, deja `endDate` vacio.
 
-#### 3. Educación (`education`)
-Añade tus estudios y certificaciones:
-```typescript
-{
-  degree: {
-    es: 'Título o certificación',
-    en: 'Degree or certification',
-  },
-  institution: {
-    es: 'Nombre de la institución',
-    en: 'Institution name',
-  },
-  description: {
-    es: 'Descripción...',
-    en: 'Description...',
-  },
-  period: '2015 - 2019', // Opcional
-}
-```
+### `contextGenerator.ts`
 
----
+Construye el contexto textual que usa el chatbot. Si anades nuevas secciones de datos y quieres que el chat las conozca, integralo aqui.
 
-## 🌍 Multilingüe
+## Helpers exportados
 
-Todos los archivos soportan español (`es`) e inglés (`en`). Asegúrate de proporcionar ambas versiones para mantener la consistencia del portfolio.
+- `getProjects(language)`
+- `resolveProject(project, language)`
+- `getSkillCategories(language)`
+- `getAdditionalSkills(language)`
+- `getPersonalInfo(language)`
+- `getExperiences(language)`
+- `getEducation(language)`
+- `getTotalExperienceMs()`
 
-## 🔧 Funciones útiles
+Los componentes deberian consumir estos helpers en vez de resolver textos bilingues a mano.
 
-Cada archivo exporta funciones helper que resuelven automáticamente el idioma:
+## Relacion con CMS
 
-- **projects.ts**: `getProjects(language)`, `resolveProject(project, language)`, `getNextProjectId()`
-- **skills.ts**: `getSkillCategories(language)`, `getAdditionalSkills(language)`
-- **about.ts**: `getPersonalInfo(language)`, `getExperiences(language)`, `getEducation(language)`
+La app puede cargar datos desde Firebase CMS si `VITE_FIREBASE_CMS_ENABLED=true`. Si esta apagado, usa estos archivos estaticos.
 
-Los componentes ya usan estas funciones, así que solo necesitas editar los datos.
+El panel CMS usa `public/data-defaults.json` como plantilla para restaurar datos. Cuando cambies la forma de los datos, revisa:
 
----
+- `src/data/*.ts`
+- `src/stores/cmsDataStore.ts`
+- `src/services/cmsService.ts`
+- `public/data-defaults.json`
+- `public/analytics.html`
 
-## 📝 Consejos
+## Checklist al editar datos
 
-1. **IDs únicos**: En `projects.ts`, asegúrate de que cada proyecto tenga un ID único
-2. **Niveles de habilidad**: Usa valores entre 0-100 para representar tu nivel de competencia
-3. **Orden cronológico**: En `about.ts`, ordena las experiencias de más reciente a más antigua
-4. **Coherencia**: Mantén un estilo y tono similar en todas las descripciones
-5. **TypeScript**: Los tipos te ayudarán a evitar errores, presta atención a las advertencias del editor
-
----
-
-## 🚀 Resultado
-
-Una vez que edites estos archivos, los cambios se reflejarán automáticamente en las secciones correspondientes de tu portfolio:
-
-- **Projects** → Muestra todos los proyectos de `projects.ts`
-- **Skills** → Muestra las categorías y habilidades de `skills.ts`
-- **About** → Muestra la información personal, experiencia y educación de `about.ts`
-
-¡No necesitas tocar ningún componente React para actualizar tu contenido!
+1. Mantener siempre versiones `es` y `en`.
+2. No reutilizar IDs de proyectos.
+3. Usar demos internas solo con secciones existentes: `#chat` o `#space`.
+4. Ejecutar `npm run check`.
+5. Si cambias estructura, ejecutar tambien `npm run build`.

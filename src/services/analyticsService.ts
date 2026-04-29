@@ -317,8 +317,6 @@ class AnalyticsService {
 
       // Registrar la primera pageview
       await this.trackPageView(this.currentPage);
-
-      console.log('[Analytics] Visitor tracked successfully');
     } catch (error) {
       console.warn('[Analytics] Error tracking visitor:', error);
     }
